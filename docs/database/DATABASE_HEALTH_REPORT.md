@@ -185,6 +185,17 @@ sin aplicar, pendientes de autorización explícita para pasar de
 documentación a DDL real. Detalle:
 [NORMALIZATION_REPORT.md](./NORMALIZATION_REPORT.md).
 
+**Parte 6 (validación funcional, ferretería Enterprise):** simulación
+completa de ~95 procesos de negocio (apertura, catálogo, compras,
+inventario, ventas, caja, bancos, contabilidad, clientes, proveedores,
+reportes) — 96% de cobertura funcional. 2 gaps nuevos encontrados (Costo
+Específico de inventario serializado, Contratos de Proveedor formales),
+sumados a los 2 ya conocidos (materiales peligrosos, país/idioma/timezone)
+— los 4 consolidados con problema/justificación/beneficio/impacto/
+complejidad en [FUNCTIONAL_GAPS.md](./FUNCTIONAL_GAPS.md). Ningún proceso
+de negocio simulado requiere rediseño estructural. Detalle:
+[BUSINESS_VALIDATION.md](./BUSINESS_VALIDATION.md).
+
 ## 9. Trazabilidad
 
 | Punto pedido en la fase                                                                 | Cerrado en                                                                                                                                                                                |
