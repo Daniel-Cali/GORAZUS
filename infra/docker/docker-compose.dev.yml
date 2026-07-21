@@ -83,7 +83,12 @@ services:
   pgadmin:
     image: dpage/pgadmin4:8
     environment:
-      PGADMIN_DEFAULT_EMAIL: dev@gorazus.local
+      # pgAdmin valida el dominio del email incluso con
+      # CHECK_EMAIL_DELIVERABILITY=False — `.local` no pasa la
+      # validación de `email_validator` y el contenedor nunca llegaba a
+      # arrancar (crash-loop silencioso, ver `docker logs`). `.dev` es
+      # un TLD real y sí valida.
+      PGADMIN_DEFAULT_EMAIL: dev@gorazus.dev
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-gorazus_dev}
       PGADMIN_CONFIG_SERVER_MODE: 'False' # single-user, sin login real en dev
     ports:

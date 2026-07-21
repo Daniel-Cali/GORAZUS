@@ -12,17 +12,20 @@
 
 ## 1. Qué se instaló y dónde
 
-| Herramienta                          | Ubicación                                      | Versión                                                             |
-| ------------------------------------ | ---------------------------------------------- | ------------------------------------------------------------------- |
-| DBeaver Community Edition (portable) | `tools/database/dbeaver/`                      | Última CE estable (ZIP portable oficial, con JRE embebido)          |
-| Graphviz                             | `tools/database/graphviz/`                     | 15.1.0 (instalado vía `winget install --location`, sin tocar `C:\`) |
-| SchemaSpy                            | `tools/database/schemaspy/schemaspy.jar`       | 6.2.4                                                               |
-| Driver JDBC de PostgreSQL            | `tools/database/schemaspy/postgresql-jdbc.jar` | 42.7.4                                                              |
+| Herramienta                          | Ubicación                                      | Versión                                                               |
+| ------------------------------------ | ---------------------------------------------- | --------------------------------------------------------------------- |
+| DBeaver Community Edition (portable) | `tools/database/dbeaver/`                      | Última CE estable (ZIP portable oficial, con JRE embebido)            |
+| Graphviz                             | `tools/database/graphviz/`                     | 15.1.0 (instalado vía `winget install --location`, sin tocar `C:\`)   |
+| SchemaSpy                            | `tools/database/schemaspy/schemaspy.jar`       | 6.2.4                                                                 |
+| Driver JDBC de PostgreSQL            | `tools/database/schemaspy/postgresql-jdbc.jar` | 42.7.4                                                                |
+| Java JDK (para correr SchemaSpy)     | `tools/database/jdk-21/`                       | Eclipse Temurin 21.0.11+10 LTS (ZIP portable oficial, `adoptium.net`) |
 
 Nada de esto se instaló como servicio de Windows ni modificó el `PATH` del sistema —
-Graphviz se referencia por ruta completa o agregando
-`tools/database/graphviz/bin` al `PATH` de la sesión de terminal donde se trabaje
-(ver §4).
+Graphviz y el JDK se referencian por ruta completa o agregando
+`tools/database/graphviz/bin`/`tools/database/jdk-21/bin` al `PATH` de la sesión de
+terminal donde se trabaje (ver §4). El JDK 21 es exclusivamente para ejecutar
+SchemaSpy (`java -jar schemaspy.jar`) — DBeaver trae su propio JRE embebido
+(§2) y no lo necesita.
 
 ## 2. Cómo abrir DBeaver
 
@@ -67,7 +70,7 @@ usa SchemaSpy, que sí es 100% scriptable:
 
 ```
 # Desde la raíz del repositorio, con Postgres corriendo (ver §5):
-export PATH="$PATH:tools/database/graphviz/bin"   # o el equivalente en PowerShell: $env:PATH += ";tools\database\graphviz\bin"
+export PATH="$PATH:tools/database/graphviz/bin:tools/database/jdk-21/bin"   # o el equivalente en PowerShell: $env:PATH += ";tools\database\graphviz\bin;tools\database\jdk-21\bin"
 
 java -jar tools/database/schemaspy/schemaspy.jar \
   -t pgsql \
@@ -157,6 +160,39 @@ Esto expone el puerto `5432` al host (`docker-compose.dev.yml`, comentario expl�
 "acceso directo para clientes SQL locales (pgAdmin, DBeaver, etc.)"). Verificar salud:
 `docker inspect --format='{{.State.Health.Status}}' docker-postgres-1` debe devolver
 `healthy`.
+
+### 5.1 — psql/pg_dump nativos (sin `docker exec`)
+
+`tools/database/pgsql-client-17/bin/` trae únicamente las herramientas cliente de
+PostgreSQL 17 (`psql`, `pg_dump`, `pg_restore`, `createdb`, etc.) — instaladas vía
+`winget install --id PostgreSQL.PostgreSQL.17 --override "--prefix ... --disable-components server,pgAdmin,stackbuilder --enable-components commandlinetools"`,
+sin servidor ni pgAdmin (ambos ya cubiertos por Docker, ver §5 y §5.2 — instalar un
+segundo servidor nativo habría competido por el puerto `5432` con el de Docker, que
+es la fuente de verdad del proyecto). No modifica el `PATH` del sistema:
+
+```
+"tools/database/pgsql-client-17/bin/psql.exe" -h localhost -p 5432 -U gorazus_app -d gorazus
+```
+
+### 5.2 — pgAdmin (contenedor Docker, no instalado en el host)
+
+pgAdmin **no** se instala nativamente — ya viene como servicio de
+`docker-compose.dev.yml` (`dpage/pgadmin4:8`, puerto `5050`). El contenedor nunca
+había llegado a arrancar con éxito hasta ahora: `PGADMIN_DEFAULT_EMAIL=dev@gorazus.local`
+falla la validación de email de pgAdmin (el validador rechaza el TLD `.local` incluso
+con `CHECK_EMAIL_DELIVERABILITY=False`) y el proceso moría en el arranque sin
+reintentar — corregido a `dev@gorazus.dev` (TLD real, sí valida). Levantarlo:
+
+```
+docker compose --env-file .env -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml up -d pgadmin
+```
+
+Abrir `http://localhost:5050/` — usuario `dev@gorazus.dev`, password la de
+`PGADMIN_PASSWORD` en `.env` (o `gorazus_dev` por defecto). **Importante:** no pasar
+`--project-directory` a mano al invocar `docker compose` — cambia el nombre del
+proyecto (de `docker` a otro) y crea un stack duplicado que compite por el puerto
+`5432` del Postgres real. Si `.env` no se detecta automáticamente, usar
+`--env-file .env` explícito (no `--project-directory`) como en el comando de arriba.
 
 ## 6. Cómo exportar diagramas a PNG/SVG/PDF
 

@@ -38,12 +38,14 @@ Thumbs.db
 # Coverage
 coverage/
 
-# Herramientas portables de terceros (DBeaver, Graphviz, SchemaSpy — ~260MB,
+# Herramientas portables de terceros (DBeaver, Graphviz, SchemaSpy, JDK — ~450MB,
 # binarios descargados, no código propio) — ver tools/database/README.md
 # para cómo reinstalarlas, nunca se commitean.
 tools/database/dbeaver/
 tools/database/graphviz/
 tools/database/schemaspy/
+tools/database/jdk-21/
+tools/database/pgsql-client-17/
 
 # ERDs generados por SchemaSpy (~2.3GB, regenerable desde la base real vía
 # docs/database/DATABASE_VISUALIZATION.md §4) — "no se versionan como fuente
