@@ -19,6 +19,14 @@ FROM base AS development
 COPY . .
 RUN pnpm install --frozen-lockfile
 EXPOSE 3000
+# wget viene en busybox (base de Alpine), sin paquete extra que instalar.
+# Apunta a /health/live (no /health/ready): HEALTHCHECK decide si Docker
+# reinicia el contenedor, igual que el liveness probe de Kubernetes (ver
+# core/health/health.controller.ts) — no debe fallar solo porque Postgres/
+# Redis/RabbitMQ están momentáneamente caídos, eso es responsabilidad de
+# /health/ready vía depends_on/readinessProbe, no de un reinicio del proceso.
+HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=5 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health/live || exit 1
 CMD ["pnpm", "nx", "serve", "api"]
 
 # -----------------------------------------------------------------------------
@@ -47,4 +55,6 @@ COPY . .
 RUN pnpm install --frozen-lockfile
 EXPOSE 3000
 USER node
+HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=5 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health/live || exit 1
 CMD ["node_modules/.bin/ts-node", "--transpile-only", "apps/api/src/main.ts"]
