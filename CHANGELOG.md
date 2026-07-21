@@ -2,6 +2,22 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Este proyecto está en desarrollo activo, pre-1.0 — no hay versiones publicadas todavía, se registra por fecha.
 
+> El **modelo de datos** tiene su propio track de versión, documentado en
+> [docs/database/DATABASE_CHANGELOG.md](docs/database/DATABASE_CHANGELOG.md) —
+> no se mezcla con las entradas de código de abajo. Ver
+> [VERSION.md](VERSION.md#versionado-del-modelo-de-datos-track-independiente).
+
+## [database-v1.0.0] — 2026-07-21 — Database Enterprise v1.0.0 (certificación)
+
+Cierre y congelación del modelo de datos tras 8 partes de auditoría
+exhaustiva contra Postgres 17 real ("Database Enterprise v1.0", ramas
+`feature/database-audit` → `release/database-v1`). 94/100 de
+calificación general, 0 DDL aplicado — es documentación y verificación,
+no una reescritura del schema. Detalle completo:
+[docs/database/DATABASE_CERTIFICATION.md](docs/database/DATABASE_CERTIFICATION.md),
+[docs/database/DATABASE_RELEASE_NOTES.md](docs/database/DATABASE_RELEASE_NOTES.md),
+[docs/database/DATABASE_CHANGELOG.md](docs/database/DATABASE_CHANGELOG.md).
+
 ## [No liberado]
 
 ### Añadido

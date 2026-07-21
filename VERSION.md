@@ -31,3 +31,22 @@ FASE 02 — Backend Core + Gestión de Versiones. Ver `CHANGELOG.md` para el det
 
 `0.3.0` — módulo de negocio Inventario y Productos (primer módulo con movimiento de stock real),
 sobre la base de Core ya construida en `0.2.0`. Sin fecha comprometida.
+
+## Versionado del modelo de datos (track independiente)
+
+El **modelo de datos** de GORAZUS tiene su propio track de versión,
+independiente del código de aplicación de arriba — un cambio de schema
+no necesariamente implica una nueva versión de código, y viceversa.
+
+### Database actual: **Enterprise v1.0.0** (2026-07-21)
+
+Certificación formal tras 8 partes de auditoría exhaustiva (rama
+`release/database-v1`) — 501 tablas, 5.164 relaciones, 22 schemas, 94/100
+de calificación general. Ver
+[docs/database/DATABASE_CERTIFICATION.md](docs/database/DATABASE_CERTIFICATION.md)
+para la certificación completa y
+[docs/database/DATABASE_CHANGELOG.md](docs/database/DATABASE_CHANGELOG.md)
+para el historial de las 8 partes. **A partir de esta versión, el modelo
+de datos queda congelado en su estructura fundamental** — todo cambio
+estructural futuro requiere una migración versionada (`sql/NN_*.sql`)
+que incremente esta versión.
