@@ -9,9 +9,9 @@ name: Security Scan
 
 on:
   pull_request:
-    branches: [main]
+    branches: [gorazus2]
   push:
-    branches: [main]
+    branches: [gorazus2]
   schedule:
     - cron: '0 6 * * 1' # semanal, lunes 06:00 UTC — captura CVEs nuevos aunque no haya cambios de código
 

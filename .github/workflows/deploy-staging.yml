@@ -1,4 +1,5 @@
-# GORAZUS ERP — deploy automático a staging tras merge a main.
+# GORAZUS ERP — deploy automático a staging tras merge a gorazus2 (rama por
+# defecto real del repo, corregido en esta sesión — apuntaba a `main`, que no existe).
 # Ver docs/architecture/31-infraestructura-completa.md §8.
 # Build completo de imágenes Docker (no solo lo afectado — el
 # artefacto desplegado debe ser reproducible completo, a diferencia
@@ -13,7 +14,7 @@ name: Deploy Staging
 
 on:
   push:
-    branches: [main]
+    branches: [gorazus2]
 
 concurrency:
   group: deploy-staging

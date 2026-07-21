@@ -1,7 +1,10 @@
 # GORAZUS ERP — validación de Pull Request.
 # Ver docs/architecture/31-infraestructura-completa.md §7-8.
 # Las 4 etapas del pipeline (affected → build+lint → test → deploy),
-# acotadas a `nx affected` contra `main`. Gate de merge: falla cualquier
+# acotadas a `nx affected` contra `gorazus2` — la rama por defecto real
+# del repo (ver `git ls-remote --symref origin HEAD`; no existe `main`
+# acá, corregido en esta sesión — el pipeline apuntaba a una rama
+# inexistente y nunca había corrido). Gate de merge: falla cualquier
 # test/lint de lo afectado, o el lint de fronteras de Nx (import
 # prohibido entre módulos, ver 01-estructura-monorepo.md §5).
 
@@ -9,7 +12,7 @@ name: PR Validation
 
 on:
   pull_request:
-    branches: [main]
+    branches: [gorazus2]
 
 concurrency:
   group: pr-validation-${{ github.head_ref }}
@@ -21,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # nx affected necesita el historial completo para diff contra main
+          fetch-depth: 0 # nx affected necesita el historial completo para diff contra gorazus2
 
       - uses: pnpm/action-setup@v4
 
@@ -35,8 +38,23 @@ jobs:
       # Lint de fronteras de Nx (@nx/enforce-module-boundaries) corre
       # como parte de `lint` sobre cada proyecto afectado — no es un
       # paso separado, es una regla más del lint estándar.
-      - run: pnpm nx affected -t lint --base=origin/main
+      - run: pnpm nx affected -t lint --base=origin/gorazus2
 
-      - run: pnpm nx affected -t build --base=origin/main
+      - run: pnpm nx affected -t build --base=origin/gorazus2
 
-      - run: pnpm nx affected -t test --base=origin/main
+      - run: pnpm nx affected -t test --base=origin/gorazus2
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Solo valida que ambas imágenes compilan (mismo Dockerfile/target que
+      # deploy-staging.yml usa para el deploy real) — sin push, sin registry.
+      # Antes esto solo se descubría recién al desplegar a staging; ahora
+      # cualquier PR que rompa el build de imagen falla acá primero.
+      - name: Build imagen api
+        run: docker build -f apps/api/Dockerfile --target production -t gorazus/api:pr-check .
+
+      - name: Build imagen web
+        run: docker build -f apps/web/Dockerfile --target production -t gorazus/web:pr-check .
