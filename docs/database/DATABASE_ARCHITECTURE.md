@@ -5,6 +5,12 @@
 > corrigió una inconsistencia real de conteo de tablas lógicas (474 vs. las 501 ya
 > correctas en `DATABASE_STRUCTURE.md`/`TABLE_CATALOG.md`, marcada 🔧 en §3) y
 > actualizó particiones/triggers, que habían crecido desde la verificación anterior.
+> **Actualización 2026-07-21 (Fase 1 Parte 2, auditoría de schemas):** la
+> organización lógica de los 22 schemas (responsabilidad, cohesión,
+> acoplamiento, reconciliación contra la lista de schemas esperada del
+> pedido) se auditó en detalle en
+> [SCHEMA_CATALOG.md](./SCHEMA_CATALOG.md) y
+> [SCHEMA_DEPENDENCIES.md](./SCHEMA_DEPENDENCIES.md) — no se repite aquí.
 > Vista consolidada de
 > arquitectura de la base de datos **real y verificada**, complementaria a
 > `docs/database/00-modelo-general.md` (diseño de origen) y
