@@ -6,6 +6,97 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). E
 
 ### Añadido
 
+- **FASE 02 — Backend Core + Gestión de Versiones: Empresas/Sucursales/Configuración/Monedas/
+  Impuestos, y extensión de Seguridad + Usuarios (2026-07-20/21).**
+  - **`modules/configuracion/backend`** (nuevo paquete, Core): CRUD completo de Empresas
+    (`core.companies`) y Sucursales (`core.branches`, ligadas a una empresa existente), catálogo de
+    Parámetros del sistema (`core.system_parameters`) + valor efectivo por tenant con
+    override-o-default (`core.system_settings`), catálogo de Monedas ISO 4217 (`configuration.currencies`
+    — primer consumidor real de `PRISMA_CONFIGURATION`, cliente Prisma independiente que existía en
+    `database.module.ts` desde Paso 3 pero nunca se había usado), e Impuestos de alcance mínimo
+    (`taxes.taxes` + `taxes.tax_rates` — primer consumidor real de `PRISMA_TAXES` — perfil + tasas,
+    deliberadamente sin motor de reglas/cálculo/percepciones/retenciones, eso es una fase fiscal
+    futura sin documento propio). `taxes.jurisdiction_id` es una FK obligatoria sin catálogo de
+    países/jurisdicciones construido todavía — en vez de expandir el alcance a ese catálogo completo
+    (fuera de lo pedido), se agregó un script de seed mínimo e idempotente
+    (`scripts/seed-tax-jurisdictions.ts`, mismo patrón que `seed-rbac.ts`) que solo desbloquea el
+    caso de uso real. Cada submódulo sigue el patrón Clean Architecture ya establecido en `seguridad`
+    (entidad con invariantes + spec, repositorio puerto/adaptador Prisma, validadores Zod, servicio
+    con excepciones de dominio propias, controlador con Swagger, e2e real). Nuevos tipos exportados
+    bajo demanda desde `@gorazus/core-database`: `companies`/`branches`/`system_parameters`/
+    `system_settings`/`audit_logs`/`tokens` (schema `core`), `currencies`/`countries` +
+    `ConfigurationPrismaClient` (schema `configuration`), `taxes`/`tax_rates`/`tax_jurisdictions` +
+    `TaxesPrismaClient` (schema `taxes`), `two_factor_credentials` + `SecurityPrismaClient` (schema
+    `security`) — cuatro clientes Prisma independientes en uso simultáneo por primera vez.
+  - **`modules/seguridad/backend` — Auditoría** (nuevo): `GET /seguridad/auditoria` sobre
+    `core.audit_logs`, filtrable por tabla/operación/actor. El repositorio NO extiende
+    `BaseRepository`: `audit_logs` está particionada por `occurred_at`
+    (`docs/database/sql/29_partitioning.sql`), así que Prisma solo expone claves únicas compuestas
+    (`id_occurred_at`/`local_id_occurred_at`), nunca `id` a secas — y la tabla la escribe
+    exclusivamente el trigger `fn_audit_log` (`docs/database/sql/26_triggers.sql`), nunca la
+    aplicación. Verificado contra el trigger real: crear un rol vía el endpoint ya existente deja
+    una fila `table_name='roles'` legible de inmediato.
+  - **`modules/seguridad/backend` — Sesiones** (nuevo): `GET /seguridad/sesiones` (por usuario) +
+    `POST /seguridad/sesiones/:id/revocar`, sobre `core.sessions` — deliberadamente separado del
+    `SessionRepository` de `modules/auth/backend` (ese resuelve sesiones durante login/refresh; este
+    las administra después, sin importar repositorios entre módulos de negocio).
+  - **`modules/auth/backend` — Recuperación de contraseña** (nuevo): `POST /auth/forgot-password` +
+    `POST /auth/reset-password` sobre `core.tokens` (`purpose='password_reset'`, columna ya modelada
+    para exactamente este caso, sin cambio de schema). Ambos endpoints exigen `tenantSlug`
+    explícito, igual que login, para que la búsqueda del token quede tenant-scoped por el camino RLS
+    normal — evita agregar una política de bypass pre-auth nueva para `core.tokens`.
+    `forgot-password` responde 200 siempre (exista o no el tenant/email, mismo criterio
+    anti-enumeración que `LoginUseCase`); el token real solo se entrega vía el puerto nuevo
+    `PasswordResetNotifier`, nunca en el body de la respuesta. Única implementación hoy:
+    `LoggingPasswordResetNotifier` (lo deja en el log estructurado) — Notification Center todavía no
+    tiene canal de email (solo WhatsApp, Fase 1), swap pendiente de una fase futura.
+    `reset-password` es de un solo uso (marca `used_at`), rechaza token inválido/usado/expirado con
+    un único mensaje genérico, y revoca todas las sesiones del usuario al cambiar la contraseña.
+  - **`modules/seguridad/backend` — 2FA "preparado"** (nuevo, explícitamente no exigido en login
+    todavía): `POST /seguridad/2fa/setup`, `POST /seguridad/2fa/confirmar`, `DELETE /seguridad/2fa`
+    sobre `security.two_factor_credentials` (primer consumidor de `PRISMA_SECURITY`). TOTP (RFC 6238)
+    implementado directo sobre `node:crypto` en `packages/tooling/utils/totp.ts` — sin agregar
+    `otplib` ni ninguna librería nueva, el algoritmo (HMAC-SHA1 + truncamiento dinámico RFC 4226) ya
+    está cubierto por un módulo nativo. Verificado contra los vectores de prueba oficiales de RFC
+    4226 Apéndice D. El secreto se cifra en reposo con el mismo mecanismo AES-256-GCM que
+    `WhatsAppCredentialsService` (`packages/tooling/utils/encryption.ts`), con una clave propia
+    `SEGURIDAD_ENCRYPTION_KEY` (nueva variable de entorno, mismo criterio de "una clave por feature"
+    que ya usa Notification Center) — agregada a `env.schema.ts`/`config.module.ts`/`.env.example`.
+    Endpoints self-service (sin `@RequirePermission`: un usuario gestiona su propio 2FA, no el de
+    otro).
+  - **`modules/seguridad/backend` — Usuarios (autogestión)**: `GET`/`PATCH /seguridad/usuarios/me`
+    (perfil propio, solo nombre — email/roles siguen siendo administrativos vía los endpoints ya
+    existentes), `PATCH /seguridad/usuarios/me/password` (exige la contraseña actual, verificada con
+    argon2 — distinto del alta administrativa con contraseña temporal), `POST
+/seguridad/usuarios/:id/activar` (la acción simétrica que faltaba a `desactivar`, completa
+    Activación/Bloqueo), `GET /seguridad/usuarios/:id/historial` (reusa Auditoría en vez de construir
+    un mecanismo de historial paralelo — `AuditoriaService.historialDeFila`, nuevo método genérico,
+    filtra `core.audit_logs` por `table_name`+`row_id`).
+  - **Dos bugs reales encontrados por los tests nuevos, corregidos en el mismo pase:**
+    1. `core/http/interceptors/serialization.interceptor.ts` destructuraba cualquier objeto (incluido
+       un `Prisma.Decimal`, ej. `tax_rates.rate_percentage`) vía `Object.entries` para normalizar
+       `bigint`, perdiendo el `toJSON` propio de `Decimal` (decimal.js) y serializando `{s,e,d}`
+       crudo en vez de `"19.000"` — el cliente parseaba `NaN`. Ningún módulo había usado una columna
+       `Decimal` hasta Impuestos esta fase, así que el bug era latente desde siempre. Corregido:
+       cualquier objeto con `toJSON` propio se respeta tal cual (mismo criterio ya aplicado a `Date`).
+    2. `packages/tooling/utils/totp.ts`: la ventana de tolerancia ±1 paso de `verifyTotpCode` podía
+       computar un contador negativo cerca del epoch 0 (irrelevante en producción, pero real
+       ejercitando los vectores de prueba de RFC 4226), que `Buffer.writeBigUInt64BE` rechaza con
+       `RangeError`. Corregido salteando offsets que producirían un contador `< 0`.
+  - **Hallazgo operativo, no de código:** `SesionRepository.findMany` heredado de `BaseRepository`
+    no ordena — el usuario de prueba `admin@demo.local` acumuló 500+ filas de `core.sessions` a lo
+    largo de esta sesión de trabajo (entorno de dev persistente, nunca reseteado), y una página sin
+    `ORDER BY` confiablemente no incluía una fila recién creada. Corregido con
+    `SesionRepository.listarPorUsuario`, una query dedicada con `ORDER BY created_at DESC` — no un
+    parche de test, es la UX correcta para un administrador viendo sesiones de un usuario.
+  - **111 tests nuevos/verificados en este pase** (`configuracion-backend` 35, `seguridad-backend`
+    46, `auth-backend` 21, `core-http` 4, `core-config` 5), todos e2e reales contra Postgres +
+    JWT construido con `jsonwebtoken` (mismo patrón ya establecido), salvo las specs de entidad y la
+    de TOTP (unitarias, sin base de datos). Nuevos permisos RBAC sembrados vía `seed-rbac.ts`:
+    `configuracion.gestionar_{empresas,sucursales,parametros,monedas,impuestos}`,
+    `seguridad.{ver_auditoria,gestionar_sesiones}` (los endpoints self-service de perfil/2FA no
+    requieren permiso — solo autenticación).
+
 - **FASE 05 — Playwright real (`apps/web-e2e`) + testing de carga/estrés (`infra/k6`) + escaneo de
   seguridad en CI (2026-07-20).**
   - **`apps/web-e2e`** (nuevo, committeado — antes toda verificación en navegador era un script ad

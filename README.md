@@ -6,6 +6,13 @@ modular (Clean Architecture + DDD), preparado para extracción a
 microservicios sin reescritura (ver
 [docs/architecture/10-evolucion-a-microservicios.md](docs/architecture/10-evolucion-a-microservicios.md)).
 
+## Estado del proyecto
+
+- [VERSION.md](VERSION.md) — versión actual y qué significa cada número.
+- [ROADMAP.md](ROADMAP.md) — qué módulo de negocio tiene backend/frontend real hoy, fase actual y siguiente.
+- [CHANGELOG.md](CHANGELOG.md) — historial detallado por sesión de trabajo (qué se construyó, bugs reales encontrados).
+- [docs/api/](docs/api/) — OpenAPI exportado automáticamente al arrancar el backend (`openapi.json`), documentación de API en `docs/api/API.md`.
+
 ## Documentación
 
 La documentación es la fuente oficial de arquitectura y no se repite

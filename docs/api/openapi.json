@@ -90,6 +90,37 @@
         ]
       }
     },
+    "/api/v1/auth/forgot-password": {
+      "post": {
+        "operationId": "AuthController_forgotPassword",
+        "summary": "Solicitar restablecimiento de contraseña",
+        "description": "Siempre responde 200 (evita enumeración de tenants/emails) — el token real se entrega vía PasswordResetNotifier, nunca en esta respuesta.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Solicitud procesada (genérico, sin importar el resultado real)."
+          }
+        },
+        "tags": ["auth"]
+      }
+    },
+    "/api/v1/auth/reset-password": {
+      "post": {
+        "operationId": "AuthController_resetPassword",
+        "summary": "Restablecer contraseña",
+        "description": "Consume el token de restablecimiento, fija la nueva contraseña y revoca todas las sesiones activas del usuario.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Contraseña actualizada."
+          },
+          "400": {
+            "description": "Token inválido, ya usado o expirado."
+          }
+        },
+        "tags": ["auth"]
+      }
+    },
     "/api/v1/seguridad/roles": {
       "get": {
         "operationId": "RolesController_listar",
@@ -143,6 +174,60 @@
         ],
         "responses": {
           "201": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/usuarios/me": {
+      "get": {
+        "operationId": "UsuariosController_obtenerMiPerfil",
+        "summary": "Ver mi propio perfil",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "UsuariosController_actualizarMiPerfil",
+        "summary": "Editar mi propio perfil",
+        "description": "Solo el nombre — email y roles son administrativos.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/usuarios/me/password": {
+      "patch": {
+        "operationId": "UsuariosController_cambiarMiPassword",
+        "summary": "Cambiar mi propia contraseña",
+        "description": "Exige la contraseña actual — distinto del alta administrativa con contraseña temporal.",
+        "parameters": [],
+        "responses": {
+          "200": {
             "description": ""
           }
         },
@@ -218,6 +303,62 @@
         ]
       }
     },
+    "/api/v1/seguridad/usuarios/{id}/activar": {
+      "post": {
+        "operationId": "UsuariosController_activar",
+        "summary": "Activar usuario",
+        "description": "Reactivación — simétrico a desactivar. Requiere seguridad.gestionar_usuarios.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/usuarios/{id}/historial": {
+      "get": {
+        "operationId": "UsuariosController_historial",
+        "summary": "Historial de cambios de un usuario",
+        "description": "Reusa core.audit_logs filtrado por este usuario. Requiere seguridad.gestionar_usuarios.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/seguridad/usuarios/{id}/roles": {
       "post": {
         "operationId": "UsuariosController_asignarRol",
@@ -239,6 +380,601 @@
           }
         },
         "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/auditoria": {
+      "get": {
+        "operationId": "AuditoriaController_listar",
+        "summary": "Listar registros de auditoría",
+        "description": "Requiere seguridad.ver_auditoria. Filtrable por tableName/operation/actorUserId.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/sesiones": {
+      "get": {
+        "operationId": "SesionesController_listar",
+        "summary": "Listar sesiones de un usuario",
+        "description": "Requiere seguridad.gestionar_sesiones.",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/sesiones/{id}/revocar": {
+      "post": {
+        "operationId": "SesionesController_revocar",
+        "summary": "Revocar una sesión",
+        "description": "Requiere seguridad.gestionar_sesiones.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/2fa/setup": {
+      "post": {
+        "operationId": "DosFactoresController_setup",
+        "summary": "Iniciar configuración de 2FA",
+        "description": "Genera un secreto TOTP nuevo, sin confirmar todavía.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/2fa/confirmar": {
+      "post": {
+        "operationId": "DosFactoresController_confirmar",
+        "summary": "Confirmar 2FA",
+        "description": "Verifica un código TOTP real y activa la configuración pendiente.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/2fa": {
+      "delete": {
+        "operationId": "DosFactoresController_deshabilitar",
+        "summary": "Deshabilitar 2FA",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/configuracion/empresas": {
+      "get": {
+        "operationId": "EmpresasController_listar",
+        "summary": "Listar empresas",
+        "description": "Requiere configuracion.gestionar_empresas.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "EmpresasController_crear",
+        "summary": "Crear empresa",
+        "description": "Requiere configuracion.gestionar_empresas.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/configuracion/empresas/{id}": {
+      "get": {
+        "operationId": "EmpresasController_obtener",
+        "summary": "Obtener empresa por id",
+        "description": "Requiere configuracion.gestionar_empresas.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "EmpresasController_actualizar",
+        "summary": "Actualizar empresa",
+        "description": "Requiere configuracion.gestionar_empresas.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/configuracion/sucursales": {
+      "get": {
+        "operationId": "SucursalesController_listar",
+        "summary": "Listar sucursales",
+        "description": "Requiere configuracion.gestionar_sucursales. Filtrable por companyId.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "SucursalesController_crear",
+        "summary": "Crear sucursal",
+        "description": "Requiere configuracion.gestionar_sucursales.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/configuracion/sucursales/{id}": {
+      "get": {
+        "operationId": "SucursalesController_obtener",
+        "summary": "Obtener sucursal por id",
+        "description": "Requiere configuracion.gestionar_sucursales.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "SucursalesController_actualizar",
+        "summary": "Actualizar sucursal",
+        "description": "Requiere configuracion.gestionar_sucursales.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/configuracion/parametros": {
+      "get": {
+        "operationId": "ParametrosController_listar",
+        "summary": "Listar parámetros",
+        "description": "Requiere configuracion.gestionar_parametros.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "ParametrosController_crear",
+        "summary": "Crear parámetro",
+        "description": "Requiere configuracion.gestionar_parametros.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/configuracion/parametros/{key}": {
+      "get": {
+        "operationId": "ParametrosController_obtener",
+        "summary": "Obtener parámetro por clave",
+        "description": "Requiere configuracion.gestionar_parametros.",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/configuracion/valores/{key}": {
+      "get": {
+        "operationId": "ConfiguracionController_obtener",
+        "summary": "Obtener valor efectivo de un parámetro",
+        "description": "Requiere configuracion.gestionar_parametros.",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/configuracion/valores": {
+      "put": {
+        "operationId": "ConfiguracionController_fijar",
+        "summary": "Fijar el valor de un parámetro para el tenant actual",
+        "description": "Requiere configuracion.gestionar_parametros.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/configuracion/monedas": {
+      "get": {
+        "operationId": "MonedasController_listar",
+        "summary": "Listar monedas",
+        "description": "Requiere configuracion.gestionar_monedas.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "MonedasController_crear",
+        "summary": "Crear moneda",
+        "description": "Requiere configuracion.gestionar_monedas.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/configuracion/monedas/{isoCode}": {
+      "get": {
+        "operationId": "MonedasController_obtener",
+        "summary": "Obtener moneda por código ISO",
+        "description": "Requiere configuracion.gestionar_monedas.",
+        "parameters": [
+          {
+            "name": "isoCode",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/configuracion/impuestos": {
+      "get": {
+        "operationId": "ImpuestosController_listar",
+        "summary": "Listar impuestos",
+        "description": "Requiere configuracion.gestionar_impuestos.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "ImpuestosController_crear",
+        "summary": "Crear impuesto",
+        "description": "Requiere configuracion.gestionar_impuestos.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/configuracion/impuestos/{id}": {
+      "get": {
+        "operationId": "ImpuestosController_obtener",
+        "summary": "Obtener impuesto por id",
+        "description": "Requiere configuracion.gestionar_impuestos.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/configuracion/tasas-impuesto": {
+      "get": {
+        "operationId": "TasasImpuestoController_listar",
+        "summary": "Listar tasas de un impuesto",
+        "description": "Requiere configuracion.gestionar_impuestos. Filtrable por taxId.",
+        "parameters": [
+          {
+            "name": "taxId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "TasasImpuestoController_crear",
+        "summary": "Crear tasa para un impuesto",
+        "description": "Requiere configuracion.gestionar_impuestos.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
         "security": [
           {
             "bearer": []
