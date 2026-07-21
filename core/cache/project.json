@@ -6,12 +6,10 @@
   "tags": ["type:core"],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/core/cache"],
       "options": {
-        "outputPath": "dist/core/cache",
-        "main": "core/cache/index.ts",
-        "tsConfig": "core/cache/tsconfig.json"
+        "command": "tsc -p core/cache/tsconfig.json"
       }
     },
     "lint": {
