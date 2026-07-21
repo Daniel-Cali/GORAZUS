@@ -35,6 +35,7 @@ const PERMISSIONS: Array<{ moduleCode: string; actionCode: string }> = [
   { moduleCode: 'seguridad', actionCode: 'gestionar_usuarios' },
   { moduleCode: 'configuracion', actionCode: 'gestionar_empresas' },
   { moduleCode: 'configuracion', actionCode: 'gestionar_sucursales' },
+  { moduleCode: 'configuracion', actionCode: 'gestionar_parametros' },
 ];
 
 async function main(): Promise<void> {
