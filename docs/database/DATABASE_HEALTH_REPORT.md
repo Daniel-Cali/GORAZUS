@@ -148,15 +148,33 @@ Nada nuevo que agregar a los hallazgos ya abiertos (185 FK cross-schema, `core.r
 sin RLS) — siguen exactamente como se documentaron, pendientes de la misma decisión de negocio/
 confirmación.
 
-## 7. Trazabilidad
+## 7. Tercera pasada (2026-07-21, rama `feature/database-audit`) — auditoría "Database Enterprise
 
-| Punto pedido en la fase                           | Cerrado en                                                                                                                                                                                |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Optimizar el modelo sin romper compatibilidad     | §1, §3 — todo aplicado como archivos SQL nuevos, cero ediciones a los 30 originales                                                                                                       |
-| Detectar tablas duplicadas                        | Ninguna encontrada (verificado por nombre/estructura contra `docs/database/logico/`)                                                                                                      |
-| Detectar relaciones innecesarias                  | §2.1 — 185 FK que, por la arquitectura ya documentada, no deberían existir como FK física                                                                                                 |
-| Detectar índices faltantes/duplicados             | §3 (575 agregados), §4 (0 duplicados)                                                                                                                                                     |
-| Detectar cuellos de botella                       | Ver [PERFORMANCE.md](./PERFORMANCE.md) — sin datos reales suficientes todavía, procedimiento fijado                                                                                       |
-| Detectar tablas sin documentación                 | 0 — las 501 tablas tienen entrada en `docs/database/logico/` y `docs/database/dictionary/`                                                                                                |
-| **(2026-07-20)** Completar seguridad/multiempresa | §6 — causa raíz exacta de por qué RLS no protege nada hoy (`gorazus_app` superusuario, no solo dueño de tabla); corrección recomendada, no aplicada (fuera de alcance de un pase solo-BD) |
-| **(2026-07-20)** Re-verificar métricas en vivo    | §6 — 23 schemas, 501/701 tablas, 3.201 índices, 2.414 triggers, 76 funciones, 4 procedimientos, 5.164 FK, 1.200 particiones — `DATABASE_STRUCTURE.md` actualizado                         |
+v1.0" orientada a ferretería/distribución
+
+Re-verificación en vivo de vistas/vistas materializadas/triggers/funciones/procedimientos/
+secuencias: **10 vistas, 4 vistas materializadas (schema `bi`), 2.414 triggers, 501 secuencias
+(0 sin uso) — idéntico a la pasada del 2026-07-20, sin drift**. Primera verificación explícita de
+formas normales (1NF/2NF/3NF/BCNF): sin violaciones reales, 2 columnas `ARRAY` encontradas
+(`core.audit_logs.changed_columns`, `security.oauth_clients.redirect_uris`) y evaluadas como
+justificadas. 2 gaps reales nuevos, específicos del vertical ferretería/distribución pedido:
+ausencia de campos de materiales peligrosos (`is_hazardous_material`/`hazard_class`/
+`safety_data_sheet_url`) en `products.products`, y ausencia de columnas de primera clase para
+peso/longitud/volumen (mitigado parcialmente por el sistema de atributos genérico ya existente).
+Ningún hallazgo bloquea el uso del sistema. Detalle completo, informe final con % de calidad y
+recomendaciones para una Fase 2 de aplicación de DDL:
+[AUDIT_DATABASE_ENTERPRISE_V2_FERRETERIA.md](./AUDIT_DATABASE_ENTERPRISE_V2_FERRETERIA.md).
+
+## 8. Trazabilidad
+
+| Punto pedido en la fase                                                                 | Cerrado en                                                                                                                                                                                |
+| --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **(2026-07-21)** Auditoría Database Enterprise v1.0 orientada a ferretería/distribución | §7 — sin drift en vistas/triggers/funciones/secuencias, formas normales verificadas, 2 gaps reales de vertical documentados                                                               |
+| Optimizar el modelo sin romper compatibilidad                                           | §1, §3 — todo aplicado como archivos SQL nuevos, cero ediciones a los 30 originales                                                                                                       |
+| Detectar tablas duplicadas                                                              | Ninguna encontrada (verificado por nombre/estructura contra `docs/database/logico/`)                                                                                                      |
+| Detectar relaciones innecesarias                                                        | §2.1 — 185 FK que, por la arquitectura ya documentada, no deberían existir como FK física                                                                                                 |
+| Detectar índices faltantes/duplicados                                                   | §3 (575 agregados), §4 (0 duplicados)                                                                                                                                                     |
+| Detectar cuellos de botella                                                             | Ver [PERFORMANCE.md](./PERFORMANCE.md) — sin datos reales suficientes todavía, procedimiento fijado                                                                                       |
+| Detectar tablas sin documentación                                                       | 0 — las 501 tablas tienen entrada en `docs/database/logico/` y `docs/database/dictionary/`                                                                                                |
+| **(2026-07-20)** Completar seguridad/multiempresa                                       | §6 — causa raíz exacta de por qué RLS no protege nada hoy (`gorazus_app` superusuario, no solo dueño de tabla); corrección recomendada, no aplicada (fuera de alcance de un pase solo-BD) |
+| **(2026-07-20)** Re-verificar métricas en vivo                                          | §6 — 23 schemas, 501/701 tablas, 3.201 índices, 2.414 triggers, 76 funciones, 4 procedimientos, 5.164 FK, 1.200 particiones — `DATABASE_STRUCTURE.md` actualizado                         |
