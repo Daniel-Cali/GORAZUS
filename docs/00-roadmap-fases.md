@@ -193,6 +193,27 @@ existentes en vez de ser fases nuevas):
   `DATABASE_DEPENDENCIES.md`/`dictionary/05-products.md`. Ver `CHANGELOG.md` para el
   detalle completo.
 
+- **FASE 6 (usuario) — Domain-Driven Design** (completado 2026-07-21):
+  `docs/ddd/`, 20 documentos + README. Arquitectura de dominio completa
+  sobre los 29 módulos de negocio y el Core Platform ya diseñados:
+  Bounded Contexts clasificados Core/Supporting/Generic Subdomain,
+  Context Map con patrones DDD estándar (_Customer/Supplier_,
+  _Partnership_, _ACL_), lenguaje ubicuo, y el modelado táctico
+  completo (~33 Aggregate Roots sobre las 501 tablas reales, 7
+  patrones de entidad hija, Value Objects, catálogo completo de
+  Domain Events con trazabilidad ✅/🆕, Domain Services, Repositories,
+  2 patrones genuinamente nuevos sin antecedente previo — Factories y
+  Specifications —, Application Services, reconciliación Domain Event
+  ↔ `event_code` contable, Anti-Corruption Layer para las 5 fronteras
+  externas pedidas, 12 Domain Policies y 21 Invariants nombrados,
+  mapa de Business Capabilities, grafo de dependencias de 6 niveles).
+  Hallazgo clave que evitó duplicación mayor: `32-core-platform/
+09-base-transaccional-y-modelado-ddd.md` ya diseñaba Security
+  Context/Transaction Manager/Repository Base/Base Entity/Aggregate
+  Root/Value Objects/Shared Kernel — referenciado y aplicado, no
+  rediseñado. Cero SQL, cero código, cero tabla nueva, cero cambio a
+  documentación previa.
+
 ## Orden sugerido para las fases pendientes (histórico — ya no quedan módulos de negocio con modelo de datos completo por diseñar)
 
 1. ~~**Impuestos**~~ — ✅ completado 2026-07-13, ver arriba.

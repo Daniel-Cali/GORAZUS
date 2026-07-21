@@ -93,6 +93,13 @@ archivo.
   `00-convenciones.md`) — especificación de navegación/menú por
   módulo de negocio, preexistente al inicio de este trabajo,
   completa, no cubierta por ninguno de los 31 puntos pedidos.
+- **`docs/ddd/`** (20 documentos + README, Fase 6, 2026-07-21) —
+  arquitectura de dominio completa (Bounded Contexts, Context Map,
+  lenguaje ubicuo, Aggregates/Entities/Value Objects/Domain
+  Events/Domain Services/Repositories/Factories/Specifications/
+  Application Services) sobre los 29 módulos de negocio y el Core
+  Platform ya existentes — capa de vocabulario y modelado táctico DDD,
+  no un punto nuevo de la lista de 31, cero tabla/columna nueva.
 - **`docs/database/sql/`** (30 archivos) — la fuente de verdad
   ejecutable del schema completo (498 tablas + vistas, funciones,
   triggers, particionamiento, respaldo — 494 originales, 3 agregadas
