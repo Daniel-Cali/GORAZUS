@@ -43,6 +43,17 @@ export type {
   system_parameters,
   system_settings,
 } from '../prisma/schemas/core/generated';
+/**
+ * Cliente Prisma del schema `configuration` — a diferencia de `core` de
+ * arriba, este es OTRO cliente independiente (`PRISMA_CONFIGURATION`, no
+ * `PRISMA_CORE`), ver comentario de cabecera de `database.module.ts`.
+ * Primer consumidor: `modules/configuracion/backend` (Monedas, Fase 02).
+ */
+export type {
+  PrismaClient as ConfigurationPrismaClient,
+  Prisma as ConfigurationPrisma,
+} from '../prisma/schemas/configuration/generated';
+export type { currencies } from '../prisma/schemas/configuration/generated';
 // prisma.service.ts (cliente único monolítico) queda superado por el
 // enfoque de 21 clientes por schema en database.module.ts — ver el
 // comentario de cabecera de ese archivo. No se elimina el archivo
