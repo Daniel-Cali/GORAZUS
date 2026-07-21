@@ -13,6 +13,7 @@
     "build": "nx run-many -t build",
     "lint": "nx run-many -t lint",
     "test": "nx run-many -t test",
+    "test:cov": "nx run-many -t test --codeCoverage --coverageReporters=text-summary --coverageReporters=lcov",
     "test:affected": "nx affected -t test",
     "lint:affected": "nx affected -t lint",
     "build:affected": "nx affected -t build",
