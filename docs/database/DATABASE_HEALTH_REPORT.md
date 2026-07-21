@@ -214,6 +214,26 @@ de rendimiento (diseño Enterprise-Ready, validación bajo carga real
 pendiente de un entorno dedicado). Detalle:
 [PERFORMANCE_REPORT.md](./PERFORMANCE_REPORT.md).
 
+**Parte 8 (seguridad, auditoría, cumplimiento, multiempresa):** 🟠
+**Hallazgo principal de las 8 partes** — verificado con precisión total
+contra `pg_policies` real que **solo existe la política `tenant_isolation`**;
+no hay ninguna política de RLS para `company_id` ni `branch_id` (corrige
+y precisa un gap que `00-modelo-general.md §13` ya señalaba de forma
+menos exacta). Sin impacto en tenants de una sola Empresa; real para
+Grupos Corporativos multiempresa (Fase 5) — diseño de la política
+faltante especificado, no aplicado. Resto de la auditoría: RBAC plano
+(sin jerarquía, decisión defendible), cifrado de claves/tokens ya
+diseñado, GDPR/retención documental ya soportados
+(`data_subject_requests`/`consent_records`/`data_retention_policies`),
+columnas de auditoría extendidas (`ip_address`/`device`/`user_agent`)
+correctamente no-universales, trazabilidad de los 11 procesos pedidos
+confirmada completa, backup/recuperación ya completos sin cambios. 88%
+de seguridad. Detalle:
+[RLS_DESIGN.md](./RLS_DESIGN.md),
+[SECURITY_REPORT.md](./SECURITY_REPORT.md),
+[AUDIT_REPORT.md](./AUDIT_REPORT.md),
+[MULTITENANT_REPORT.md](./MULTITENANT_REPORT.md).
+
 ## 9. Trazabilidad
 
 | Punto pedido en la fase                                                                 | Cerrado en                                                                                                                                                                                |
