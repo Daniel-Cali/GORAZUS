@@ -93,6 +93,10 @@ archivo.
   `00-convenciones.md`) — especificación de navegación/menú por
   módulo de negocio, preexistente al inicio de este trabajo,
   completa, no cubierta por ninguno de los 31 puntos pedidos.
+- **`PROJECT_STATUS.md`** (raíz, 2026-07-21) — foto de una sola página del
+  estado general del proyecto (código + documentación + base de datos),
+  entregable de la auditoría "Fase 1 Parte 1" de base de datos — no un punto
+  nuevo de la lista de 31, síntesis de lo que ya existía.
 - **`docs/ddd/`** (20 documentos + README, Fase 6, 2026-07-21) —
   arquitectura de dominio completa (Bounded Contexts, Context Map,
   lenguaje ubicuo, Aggregates/Entities/Value Objects/Domain

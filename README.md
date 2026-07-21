@@ -11,6 +11,7 @@ microservicios sin reescritura (ver
 - [VERSION.md](VERSION.md) — versión actual y qué significa cada número.
 - [ROADMAP.md](ROADMAP.md) — qué módulo de negocio tiene backend/frontend real hoy, fase actual y siguiente.
 - [CHANGELOG.md](CHANGELOG.md) — historial detallado por sesión de trabajo (qué se construyó, bugs reales encontrados).
+- [PROJECT_STATUS.md](PROJECT_STATUS.md) — foto de una sola página del estado general (código + documentación + base de datos).
 - [docs/api/](docs/api/) — OpenAPI exportado automáticamente al arrancar el backend (`openapi.json`), documentación de API en `docs/api/API.md`.
 
 ## Documentación
