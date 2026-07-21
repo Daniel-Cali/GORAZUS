@@ -11,6 +11,14 @@
 > `dashboard_widgets`, reportes ad-hoc, export a imagen) y deja
 > explícitamente fuera de alcance Power BI y Forecast/ML por falta de
 > necesidad de negocio confirmada. No se repite acá.
+>
+> **Ampliación (Fase 3 del usuario — plataforma analítica Enterprise,
+> 2026-07-21):** ver
+> [database/12-arquitectura-data-warehouse.md](../database/12-arquitectura-data-warehouse.md)
+> — agrega la capa de Fact/Dimension Tables (modelo estrella/copo de
+> nieve) y el pipeline de ETL/carga incremental que faltaba **debajo**
+> de `bi.data_mart_tables`, sin cambiar ninguna tabla ni interfaz de
+> este documento.
 
 ## 0. Alcance — el pedido cruza tres conceptos ya distinguidos, más dos que no son tablas
 
