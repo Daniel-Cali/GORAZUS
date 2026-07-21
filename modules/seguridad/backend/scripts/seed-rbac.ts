@@ -34,6 +34,7 @@ const PERMISSIONS: Array<{ moduleCode: string; actionCode: string }> = [
   { moduleCode: 'seguridad', actionCode: 'gestionar_roles' },
   { moduleCode: 'seguridad', actionCode: 'gestionar_usuarios' },
   { moduleCode: 'seguridad', actionCode: 'ver_auditoria' },
+  { moduleCode: 'seguridad', actionCode: 'gestionar_sesiones' },
   { moduleCode: 'configuracion', actionCode: 'gestionar_empresas' },
   { moduleCode: 'configuracion', actionCode: 'gestionar_sucursales' },
   { moduleCode: 'configuracion', actionCode: 'gestionar_parametros' },

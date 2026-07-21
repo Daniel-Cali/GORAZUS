@@ -4,10 +4,12 @@ import { PERMISSIONS_RESOLVER } from '@gorazus/core-http';
 import { RolesController } from './controllers/roles.controller';
 import { UsuariosController } from './controllers/usuarios.controller';
 import { AuditoriaController } from './controllers/auditoria.controller';
+import { SesionesController } from './controllers/sesiones.controller';
 import { RolesService } from './services/roles.service';
 import { UsuariosAdminService } from './services/usuarios-admin.service';
 import { PermissionsResolverService } from './services/permissions-resolver.service';
 import { AuditoriaService } from './services/auditoria.service';
+import { SesionesService } from './services/sesiones.service';
 import { RolRepository } from './repositories/rol.repository';
 import { RolRepositoryPrisma } from './repositories/rol.repository.prisma';
 import { PermisoRepository } from './repositories/permiso.repository';
@@ -18,6 +20,8 @@ import { UsuarioAdminRepository } from './repositories/usuario-admin.repository'
 import { UsuarioAdminRepositoryPrisma } from './repositories/usuario-admin.repository.prisma';
 import { AuditoriaRepository } from './repositories/auditoria.repository';
 import { AuditoriaRepositoryPrisma } from './repositories/auditoria.repository.prisma';
+import { SesionRepository } from './repositories/sesion.repository';
+import { SesionRepositoryPrisma } from './repositories/sesion.repository.prisma';
 
 /**
  * `@Global()` a propósito — el `PermissionsGuard` global de `core/http`
@@ -31,18 +35,20 @@ import { AuditoriaRepositoryPrisma } from './repositories/auditoria.repository.p
 @Global()
 @Module({
   imports: [DatabaseModule],
-  controllers: [RolesController, UsuariosController, AuditoriaController],
+  controllers: [RolesController, UsuariosController, AuditoriaController, SesionesController],
   providers: [
     RolesService,
     UsuariosAdminService,
     PermissionsResolverService,
     AuditoriaService,
+    SesionesService,
     { provide: PERMISSIONS_RESOLVER, useExisting: PermissionsResolverService },
     { provide: RolRepository, useClass: RolRepositoryPrisma },
     { provide: PermisoRepository, useClass: PermisoRepositoryPrisma },
     { provide: AsignacionRepository, useClass: AsignacionRepositoryPrisma },
     { provide: UsuarioAdminRepository, useClass: UsuarioAdminRepositoryPrisma },
     { provide: AuditoriaRepository, useClass: AuditoriaRepositoryPrisma },
+    { provide: SesionRepository, useClass: SesionRepositoryPrisma },
   ],
   exports: [PERMISSIONS_RESOLVER],
 })
