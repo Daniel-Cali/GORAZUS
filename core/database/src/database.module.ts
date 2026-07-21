@@ -69,114 +69,180 @@ export * from './tokens';
  * (`@Inject(PRISMA_VENTAS)`), nunca los 21 — mismo principio de
  * frontera que ya aplica el lint de Nx a nivel de import.
  */
+
+/**
+ * Cada uno de los 21 clientes abre su propio pool — sin `connection_limit`,
+ * el default de Prisma es `num_physical_cpus * 2 + 1` POR CLIENTE (ver
+ * https://www.prisma.io/docs/orm/prisma-client/setup-and-configuration/databases-connections/connection-pool),
+ * así que en un host de 8 cores serían hasta 17 × 21 = 357 conexiones
+ * posibles — muy por encima de `max_connections = 100`
+ * (infra/postgres/postgresql.conf) incluso en dev, con hoy solo 3 de
+ * los 21 schemas realmente en uso (`auth`, `seguridad`, `configuracion`).
+ * 4 por cliente × 21 = 84, dejando margen para pgAdmin/`gorazus_backup`/
+ * migraciones/`psql` directo. El sizing real de producción (contra el
+ * `max_connections` que decida el operator de Postgres, ver comentario
+ * de postgresql.conf) es una decisión de ops posterior — este valor es
+ * el piso seguro para no agotar conexiones ya en desarrollo.
+ */
+const DATABASE_CONNECTION_LIMIT = 4;
+const DATABASE_POOL_TIMEOUT_SECONDS = 10;
+
+function withPoolParams(url: string | undefined): string | undefined {
+  if (!url) {
+    return url;
+  }
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}connection_limit=${DATABASE_CONNECTION_LIMIT}&pool_timeout=${DATABASE_POOL_TIMEOUT_SECONDS}`;
+}
+
 @Global()
 @Module({
   providers: [
     {
       provide: PRISMA_CORE,
       useFactory: () =>
-        new CorePrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new CorePrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_SECURITY,
       useFactory: () =>
-        new SecurityPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new SecurityPrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_CUSTOMERS,
       useFactory: () =>
-        new CustomersPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new CustomersPrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_SUPPLIERS,
       useFactory: () =>
-        new SuppliersPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new SuppliersPrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_PRODUCTS,
       useFactory: () =>
-        new ProductsPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new ProductsPrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_INVENTORY,
       useFactory: () =>
-        new InventoryPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new InventoryPrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_SALES,
       useFactory: () =>
-        new SalesPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new SalesPrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_PURCHASES,
       useFactory: () =>
-        new PurchasesPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new PurchasesPrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_CASH,
       useFactory: () =>
-        new CashPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new CashPrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_BANKS,
       useFactory: () =>
-        new BanksPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new BanksPrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_ACCOUNTING,
       useFactory: () =>
-        new AccountingPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new AccountingPrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_TAXES,
       useFactory: () =>
-        new TaxesPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new TaxesPrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_HR,
       useFactory: () =>
-        new HrPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new HrPrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_PAYROLL,
       useFactory: () =>
-        new PayrollPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new PayrollPrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_CRM,
       useFactory: () =>
-        new CrmPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new CrmPrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_SERVICES,
       useFactory: () =>
-        new ServicesPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new ServicesPrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_PROJECTS,
       useFactory: () =>
-        new ProjectsPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new ProjectsPrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_ASSETS,
       useFactory: () =>
-        new AssetsPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new AssetsPrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_REPORTS,
       useFactory: () =>
-        new ReportsPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new ReportsPrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_BI,
       useFactory: () =>
-        new BiPrismaClient({ datasources: { db: { url: process.env['DATABASE_URL'] } } }),
+        new BiPrismaClient({
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
+        }),
     },
     {
       provide: PRISMA_CONFIGURATION,
       useFactory: () =>
         new ConfigurationPrismaClient({
-          datasources: { db: { url: process.env['DATABASE_URL'] } },
+          datasources: { db: { url: withPoolParams(process.env['DATABASE_URL']) } },
         }),
     },
   ],
