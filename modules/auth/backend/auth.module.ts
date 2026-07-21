@@ -4,12 +4,18 @@ import { AuthController } from './controllers/auth.controller';
 import { LoginUseCase } from './services/login.usecase';
 import { RefreshTokenUseCase } from './services/refresh-token.usecase';
 import { LogoutUseCase } from './services/logout.usecase';
+import { ForgotPasswordUseCase } from './services/forgot-password.usecase';
+import { ResetPasswordUseCase } from './services/reset-password.usecase';
+import { PasswordResetNotifier } from './services/password-reset-notifier.port';
+import { LoggingPasswordResetNotifier } from './services/logging-password-reset-notifier';
 import { TenantRepository } from './repositories/tenant.repository';
 import { TenantRepositoryPrisma } from './repositories/tenant.repository.prisma';
 import { UserRepository } from './repositories/user.repository';
 import { UserRepositoryPrisma } from './repositories/user.repository.prisma';
 import { SessionRepository } from './repositories/session.repository';
 import { SessionRepositoryPrisma } from './repositories/session.repository.prisma';
+import { TokenRepository } from './repositories/token.repository';
+import { TokenRepositoryPrisma } from './repositories/token.repository.prisma';
 
 /**
  * Wiring de Nest (docs/architecture/02 §5) — `auth` no exporta ningún
@@ -25,9 +31,13 @@ import { SessionRepositoryPrisma } from './repositories/session.repository.prism
     LoginUseCase,
     RefreshTokenUseCase,
     LogoutUseCase,
+    ForgotPasswordUseCase,
+    ResetPasswordUseCase,
     { provide: TenantRepository, useClass: TenantRepositoryPrisma },
     { provide: UserRepository, useClass: UserRepositoryPrisma },
     { provide: SessionRepository, useClass: SessionRepositoryPrisma },
+    { provide: TokenRepository, useClass: TokenRepositoryPrisma },
+    { provide: PasswordResetNotifier, useClass: LoggingPasswordResetNotifier },
   ],
 })
 export class AuthModule {}

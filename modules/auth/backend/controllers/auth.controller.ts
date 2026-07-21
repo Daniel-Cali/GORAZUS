@@ -4,9 +4,17 @@ import type { Request, Response } from 'express';
 import { CurrentUser, Public, ZodValidationPipe } from '@gorazus/core-http';
 import type { UserContext } from '@gorazus/contracts';
 import { loginSchema, type LoginInput } from '../validators/login.schema';
+import {
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  type ForgotPasswordInput,
+  type ResetPasswordInput,
+} from '../validators/password-reset.schema';
 import { LoginUseCase } from '../services/login.usecase';
 import { RefreshTokenUseCase } from '../services/refresh-token.usecase';
 import { LogoutUseCase } from '../services/logout.usecase';
+import { ForgotPasswordUseCase } from '../services/forgot-password.usecase';
+import { ResetPasswordUseCase } from '../services/reset-password.usecase';
 import { LoginResponseEnvelopeDto, RefreshResponseEnvelopeDto } from '../dto/login-response.dto';
 
 const REFRESH_COOKIE = 'refreshToken';
@@ -19,6 +27,8 @@ export class AuthController {
     private readonly loginUseCase: LoginUseCase,
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
     private readonly logoutUseCase: LogoutUseCase,
+    private readonly forgotPasswordUseCase: ForgotPasswordUseCase,
+    private readonly resetPasswordUseCase: ResetPasswordUseCase,
   ) {}
 
   @ApiOperation({
@@ -86,6 +96,40 @@ export class AuthController {
   ): Promise<void> {
     await this.logoutUseCase.execute(user);
     response.clearCookie(REFRESH_COOKIE);
+  }
+
+  @ApiOperation({
+    summary: 'Solicitar restablecimiento de contraseña',
+    description:
+      'Siempre responde 200 (evita enumeración de tenants/emails) — el token real se entrega vía PasswordResetNotifier, nunca en esta respuesta.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Solicitud procesada (genérico, sin importar el resultado real).',
+  })
+  @Public()
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  async forgotPassword(
+    @Body(new ZodValidationPipe(forgotPasswordSchema)) body: ForgotPasswordInput,
+  ) {
+    await this.forgotPasswordUseCase.execute(body.tenantSlug, body.email);
+    return { data: { message: 'Si el correo existe, se envió un enlace de restablecimiento.' } };
+  }
+
+  @ApiOperation({
+    summary: 'Restablecer contraseña',
+    description:
+      'Consume el token de restablecimiento, fija la nueva contraseña y revoca todas las sesiones activas del usuario.',
+  })
+  @ApiResponse({ status: 200, description: 'Contraseña actualizada.' })
+  @ApiResponse({ status: 400, description: 'Token inválido, ya usado o expirado.' })
+  @Public()
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(@Body(new ZodValidationPipe(resetPasswordSchema)) body: ResetPasswordInput) {
+    await this.resetPasswordUseCase.execute(body.tenantSlug, body.token, body.newPassword);
+    return { data: { message: 'Contraseña actualizada correctamente.' } };
   }
 }
 
