@@ -24,11 +24,19 @@
 | Comportamiento        | Cantidad | Nota                                                                                                                                           |
 | --------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
 | `NO ACTION` (default) | 5,163    | Ya fijado como criterio conservador — un `DELETE` que dejaría huérfanos se rechaza explícitamente, nunca se propaga en cascada silenciosamente |
-| `CASCADE`             | 1        | Caso puntual — verificar en `docs/database/logico/` cuál es antes de asumir que es intencional o un descuido aislado                           |
+| `CASCADE`             | 1        | Identificado — ver nota debajo                                                                                                                 |
 
 Consistente con "Enterprise, auditable" — un ERP financiero no debe permitir que
 borrar una fila padre elimine silenciosamente historial relacionado (facturas,
 asientos, movimientos). El único `CASCADE` es la excepción, no la regla.
+
+> **Resuelto (2026-07-21, Fase 1 Parte 4 — auditoría de relaciones):** el
+> único `CASCADE` es `partman.part_config_sub_sub_parent_fkey` — una
+> constraint interna de la extensión `pg_partman`, no una tabla de negocio
+> de GORAZUS. Conclusión: **el 100% de las FK propias de GORAZUS usan
+> `NO ACTION`**, sin ninguna excepción real dentro del modelo de negocio.
+> Detalle completo de esta pasada:
+> [RELATIONSHIP_CATALOG.md §2.1](./RELATIONSHIP_CATALOG.md#21--el-único-cascade-identificado-cierra-el-punto-abierto-de-foreign_keysmd-2).
 
 ## 3. Hallazgo real: 185 FK cruzan schemas de módulos de negocio
 
