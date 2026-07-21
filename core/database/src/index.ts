@@ -26,6 +26,7 @@ export type {
   user_roles,
   sessions,
   tenants,
+  audit_logs,
 } from '../prisma/schemas/core/generated';
 /** Consumidos por `core/notifications` (Notification Center, Fase 1 — canal WhatsApp). */
 export type {

@@ -33,6 +33,7 @@ const SEED_TENANT_ID = '00000000-0000-0000-0000-000000000000';
 const PERMISSIONS: Array<{ moduleCode: string; actionCode: string }> = [
   { moduleCode: 'seguridad', actionCode: 'gestionar_roles' },
   { moduleCode: 'seguridad', actionCode: 'gestionar_usuarios' },
+  { moduleCode: 'seguridad', actionCode: 'ver_auditoria' },
   { moduleCode: 'configuracion', actionCode: 'gestionar_empresas' },
   { moduleCode: 'configuracion', actionCode: 'gestionar_sucursales' },
   { moduleCode: 'configuracion', actionCode: 'gestionar_parametros' },
