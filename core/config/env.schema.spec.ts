@@ -23,6 +23,7 @@ describe('validateEnv', () => {
     NOTIFICATIONS_ENCRYPTION_KEY:
       'b7a2a0c58672d7ea480a686123fc954a31b9e90e2e6e124a5e25c8f78ddca35e',
     OLLAMA_DEFAULT_MODEL: 'llama3.1',
+    SEGURIDAD_ENCRYPTION_KEY: '7e13520c36aaf41a49d282182e8cf50ea58455007d60f1f5fa02e86dc4cc2d68',
   };
 
   it('parsea un entorno completo y válido sin lanzar', () => {

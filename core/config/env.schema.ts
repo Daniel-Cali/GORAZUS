@@ -52,6 +52,21 @@ export const envSchema = z.object({
   WHATSAPP_GRAPH_API_VERSION: z.string().min(1).default('v21.0'),
 
   /**
+   * Clave AES-256-GCM (hex, 32 bytes = 64 caracteres) para
+   * `packages/tooling/utils/encryption.ts` — cifra
+   * `security.two_factor_credentials.encrypted_secret` (2FA TOTP, Fase 02
+   * "preparado" — ver `modules/seguridad/backend/services/dos-factores.service.ts`).
+   * Clave propia, separada de `NOTIFICATIONS_ENCRYPTION_KEY`, mismo criterio
+   * de "una clave por feature" que ya usa Notification Center.
+   */
+  SEGURIDAD_ENCRYPTION_KEY: z
+    .string()
+    .regex(
+      /^[0-9a-fA-F]{64}$/,
+      'debe ser una clave AES-256 en hexadecimal de 64 caracteres (32 bytes)',
+    ),
+
+  /**
    * Ollama (FASE 04 — infraestructura de IA, `core/ollama`) — sin necesidad de
    * negocio confirmada todavía para ningún asistente específico (Ventas/Compras/
    * Inventario/Contabilidad/CRM/Reportes, Predicciones, Alertas, Automatizaciones),

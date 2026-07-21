@@ -68,6 +68,17 @@ export type {
   Prisma as TaxesPrisma,
 } from '../prisma/schemas/taxes/generated';
 export type { taxes, tax_rates, tax_jurisdictions } from '../prisma/schemas/taxes/generated';
+/**
+ * Cliente Prisma del schema `security` — cuarto cliente independiente
+ * (`PRISMA_SECURITY`), mismo criterio que `ConfigurationPrismaClient`/
+ * `TaxesPrismaClient` de arriba. Primer consumidor:
+ * `modules/seguridad/backend` (2FA "preparado", Fase 02).
+ */
+export type {
+  PrismaClient as SecurityPrismaClient,
+  Prisma as SecurityPrisma,
+} from '../prisma/schemas/security/generated';
+export type { two_factor_credentials } from '../prisma/schemas/security/generated';
 // prisma.service.ts (cliente único monolítico) queda superado por el
 // enfoque de 21 clientes por schema en database.module.ts — ver el
 // comentario de cabecera de ese archivo. No se elimina el archivo

@@ -8,6 +8,7 @@ import storageConfig from './namespaces/storage.config';
 import authConfig from './namespaces/auth.config';
 import notificationsConfig from './namespaces/notifications.config';
 import ollamaConfig from './namespaces/ollama.config';
+import seguridadConfig from './namespaces/seguridad.config';
 
 /**
  * Envuelve el ConfigModule oficial de Nest en vez de reemplazarlo —
@@ -31,6 +32,7 @@ import ollamaConfig from './namespaces/ollama.config';
         authConfig,
         notificationsConfig,
         ollamaConfig,
+        seguridadConfig,
       ],
       envFilePath: ['.env'],
     }),

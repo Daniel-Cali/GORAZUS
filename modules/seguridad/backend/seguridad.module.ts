@@ -5,11 +5,13 @@ import { RolesController } from './controllers/roles.controller';
 import { UsuariosController } from './controllers/usuarios.controller';
 import { AuditoriaController } from './controllers/auditoria.controller';
 import { SesionesController } from './controllers/sesiones.controller';
+import { DosFactoresController } from './controllers/dos-factores.controller';
 import { RolesService } from './services/roles.service';
 import { UsuariosAdminService } from './services/usuarios-admin.service';
 import { PermissionsResolverService } from './services/permissions-resolver.service';
 import { AuditoriaService } from './services/auditoria.service';
 import { SesionesService } from './services/sesiones.service';
+import { DosFactoresService } from './services/dos-factores.service';
 import { RolRepository } from './repositories/rol.repository';
 import { RolRepositoryPrisma } from './repositories/rol.repository.prisma';
 import { PermisoRepository } from './repositories/permiso.repository';
@@ -22,6 +24,8 @@ import { AuditoriaRepository } from './repositories/auditoria.repository';
 import { AuditoriaRepositoryPrisma } from './repositories/auditoria.repository.prisma';
 import { SesionRepository } from './repositories/sesion.repository';
 import { SesionRepositoryPrisma } from './repositories/sesion.repository.prisma';
+import { CredencialDosFactoresRepository } from './repositories/credencial-dos-factores.repository';
+import { CredencialDosFactoresRepositoryPrisma } from './repositories/credencial-dos-factores.repository.prisma';
 
 /**
  * `@Global()` a propósito — el `PermissionsGuard` global de `core/http`
@@ -35,13 +39,20 @@ import { SesionRepositoryPrisma } from './repositories/sesion.repository.prisma'
 @Global()
 @Module({
   imports: [DatabaseModule],
-  controllers: [RolesController, UsuariosController, AuditoriaController, SesionesController],
+  controllers: [
+    RolesController,
+    UsuariosController,
+    AuditoriaController,
+    SesionesController,
+    DosFactoresController,
+  ],
   providers: [
     RolesService,
     UsuariosAdminService,
     PermissionsResolverService,
     AuditoriaService,
     SesionesService,
+    DosFactoresService,
     { provide: PERMISSIONS_RESOLVER, useExisting: PermissionsResolverService },
     { provide: RolRepository, useClass: RolRepositoryPrisma },
     { provide: PermisoRepository, useClass: PermisoRepositoryPrisma },
@@ -49,6 +60,7 @@ import { SesionRepositoryPrisma } from './repositories/sesion.repository.prisma'
     { provide: UsuarioAdminRepository, useClass: UsuarioAdminRepositoryPrisma },
     { provide: AuditoriaRepository, useClass: AuditoriaRepositoryPrisma },
     { provide: SesionRepository, useClass: SesionRepositoryPrisma },
+    { provide: CredencialDosFactoresRepository, useClass: CredencialDosFactoresRepositoryPrisma },
   ],
   exports: [PERMISSIONS_RESOLVER],
 })
