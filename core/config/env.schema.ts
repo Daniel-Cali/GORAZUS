@@ -11,6 +11,12 @@ import { z } from 'zod';
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 
+  // Intencionalmente afuera de este schema: POSTGRES_PASSWORD/POSTGRES_BACKUP_PASSWORD/
+  // RABBITMQ_PASSWORD/PGADMIN_PASSWORD (ver .env.example). Esas variables las consume
+  // Docker Compose para interpolar DATABASE_URL/RABBITMQ_URL y arrancar los contenedores
+  // de infraestructura (infra/docker/docker-compose.yml) — el proceso Node de apps/api
+  // nunca lee process.env de esos nombres, solo la URL ya compuesta de abajo. Agregarlas
+  // acá las haría "requeridas" para el proceso de la app sin que este las use jamás.
   DATABASE_URL: z.string().url(),
 
   REDIS_URL: z.string().url(),
