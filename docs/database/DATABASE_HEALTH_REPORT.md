@@ -234,6 +234,19 @@ de seguridad. Detalle:
 [AUDIT_REPORT.md](./AUDIT_REPORT.md),
 [MULTITENANT_REPORT.md](./MULTITENANT_REPORT.md).
 
+**Parte 10 (cierre, certificación y congelación — Database Enterprise
+v1.0.0):** re-verificación final en vivo, 0 drift contra la Parte 8 (mismo
+conteo de schemas/tablas/FK/índices/triggers/views/matviews/políticas
+RLS). Checklist final de 16 puntos: 14 en verde, RLS con nota heredada,
+Mobile no aplicable todavía (sin `apps/mobile`, sin bloqueante
+estructural). Compatibilidad Backend confirmada (21 clientes Prisma = 21
+schemas reales, 1:1). **Score final: 94/100.** Certificado formalmente
+como GORAZUS Database Enterprise v1.0.0, modelo congelado — cambios
+estructurales futuros solo vía migración versionada. Detalle:
+[DATABASE_FINAL_REPORT.md](./DATABASE_FINAL_REPORT.md),
+[DATABASE_SCORE.md](./DATABASE_SCORE.md),
+[DATABASE_CERTIFICATION.md](./DATABASE_CERTIFICATION.md).
+
 ## 9. Trazabilidad
 
 | Punto pedido en la fase                                                                 | Cerrado en                                                                                                                                                                                |
