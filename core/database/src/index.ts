@@ -36,6 +36,13 @@ export type {
   notifications,
   notification_delivery_logs,
 } from '../prisma/schemas/core/generated';
+/** Consumidos por `modules/configuracion/backend` (Fase 02 — Empresas, Sucursales, Parámetros). */
+export type {
+  companies,
+  branches,
+  system_parameters,
+  system_settings,
+} from '../prisma/schemas/core/generated';
 // prisma.service.ts (cliente único monolítico) queda superado por el
 // enfoque de 21 clientes por schema en database.module.ts — ver el
 // comentario de cabecera de ese archivo. No se elimina el archivo

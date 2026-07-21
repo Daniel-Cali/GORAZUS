@@ -14,6 +14,8 @@ import { OllamaModule } from '@gorazus/core-ollama';
 import { AuthModule } from '../../../../modules/auth/backend/auth.module';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- mismo motivo que arriba
 import { SeguridadModule } from '../../../../modules/seguridad/backend/seguridad.module';
+// eslint-disable-next-line @nx/enforce-module-boundaries -- mismo motivo que arriba
+import { ConfiguracionModule } from '../../../../modules/configuracion/backend/configuracion.module';
 
 /**
  * Composition root — ver docs/architecture/01-estructura-monorepo.md §3:
@@ -41,6 +43,7 @@ import { SeguridadModule } from '../../../../modules/seguridad/backend/seguridad
     OllamaModule,
     AuthModule,
     SeguridadModule,
+    ConfiguracionModule,
   ],
 })
 export class AppModule {}
