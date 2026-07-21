@@ -8,7 +8,7 @@ import { DomainException } from '@gorazus/core-http';
 // modules/auth/backend/services/login.usecase.ts (packages/tooling no es
 // un paquete pnpm real, el alias solo resuelve en tipo, no en runtime).
 // eslint-disable-next-line @nx/enforce-module-boundaries -- packages/tooling no tiene project.json propio, ver comentario arriba
-import { hashPassword } from '../../../../packages/tooling/utils';
+import { hashPassword, verifyPassword } from '../../../../packages/tooling/utils';
 import { UsuarioAdminRepository } from '../repositories/usuario-admin.repository';
 import { AsignacionRepository } from '../repositories/asignacion.repository';
 
@@ -19,6 +19,18 @@ export class EmailYaRegistradoException extends DomainException {
       `Ya existe un usuario con el correo "${email}" en esta organización.`,
       409,
     );
+  }
+}
+
+export class UsuarioNoEncontradoException extends DomainException {
+  constructor(id: string) {
+    super('USUARIO_NO_ENCONTRADO', `No existe el usuario "${id}".`, 404);
+  }
+}
+
+export class PasswordActualInvalidaException extends DomainException {
+  constructor() {
+    super('PASSWORD_ACTUAL_INVALIDA', 'La contraseña actual no es correcta.', 400);
   }
 }
 
@@ -75,6 +87,42 @@ export class UsuariosAdminService {
 
   async desactivar(context: UserContext, userId: string): Promise<users> {
     return this.usuarioAdminRepository.update(context, { id: userId }, { is_active: false });
+  }
+
+  /** Reactivación — simétrico a `desactivar` (Activación/Bloqueo). */
+  async activar(context: UserContext, userId: string): Promise<users> {
+    return this.usuarioAdminRepository.update(context, { id: userId }, { is_active: true });
+  }
+
+  async obtenerPerfil(context: UserContext, userId: string): Promise<users> {
+    const usuario = await this.usuarioAdminRepository.findById(context, { id: userId });
+    if (!usuario) throw new UsuarioNoEncontradoException(userId);
+    return usuario;
+  }
+
+  /** Autoedición del propio perfil — nunca email/roles (eso es administración, ver `asignarRol`). */
+  async actualizarPerfil(context: UserContext, userId: string, fullName: string): Promise<users> {
+    await this.obtenerPerfil(context, userId);
+    return this.usuarioAdminRepository.update(context, { id: userId }, { full_name: fullName });
+  }
+
+  /** Cambio de contraseña self-service — exige la contraseña actual, a diferencia del alta administrativa (`crear`) que fija una temporal sin verificación previa. */
+  async cambiarPassword(
+    context: UserContext,
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void> {
+    const usuario = await this.obtenerPerfil(context, userId);
+    const passwordValida = await verifyPassword(currentPassword, usuario.password_hash ?? '');
+    if (!passwordValida) throw new PasswordActualInvalidaException();
+
+    const passwordHash = await hashPassword(newPassword);
+    await this.usuarioAdminRepository.update(
+      context,
+      { id: userId },
+      { password_hash: passwordHash },
+    );
   }
 
   async asignarRol(context: UserContext, userId: string, rolId: string): Promise<void> {
