@@ -5,11 +5,15 @@ import { SucursalesController } from './controllers/sucursales.controller';
 import { ParametrosController } from './controllers/parametros.controller';
 import { ConfiguracionController } from './controllers/configuracion.controller';
 import { MonedasController } from './controllers/monedas.controller';
+import { ImpuestosController } from './controllers/impuestos.controller';
+import { TasasImpuestoController } from './controllers/tasas-impuesto.controller';
 import { EmpresasService } from './services/empresas.service';
 import { SucursalesService } from './services/sucursales.service';
 import { ParametrosService } from './services/parametros.service';
 import { ConfiguracionService } from './services/configuracion.service';
 import { MonedasService } from './services/monedas.service';
+import { ImpuestosService } from './services/impuestos.service';
+import { TasasImpuestoService } from './services/tasas-impuesto.service';
 import { EmpresaRepository } from './repositories/empresa.repository';
 import { EmpresaRepositoryPrisma } from './repositories/empresa.repository.prisma';
 import { SucursalRepository } from './repositories/sucursal.repository';
@@ -20,6 +24,12 @@ import { ConfiguracionValorRepository } from './repositories/configuracion-valor
 import { ConfiguracionValorRepositoryPrisma } from './repositories/configuracion-valor.repository.prisma';
 import { MonedaRepository } from './repositories/moneda.repository';
 import { MonedaRepositoryPrisma } from './repositories/moneda.repository.prisma';
+import { ImpuestoRepository } from './repositories/impuesto.repository';
+import { ImpuestoRepositoryPrisma } from './repositories/impuesto.repository.prisma';
+import { TasaImpuestoRepository } from './repositories/tasa-impuesto.repository';
+import { TasaImpuestoRepositoryPrisma } from './repositories/tasa-impuesto.repository.prisma';
+import { JurisdiccionRepository } from './repositories/jurisdiccion.repository';
+import { JurisdiccionRepositoryPrisma } from './repositories/jurisdiccion.repository.prisma';
 
 @Module({
   imports: [DatabaseModule],
@@ -29,6 +39,8 @@ import { MonedaRepositoryPrisma } from './repositories/moneda.repository.prisma'
     ParametrosController,
     ConfiguracionController,
     MonedasController,
+    ImpuestosController,
+    TasasImpuestoController,
   ],
   providers: [
     EmpresasService,
@@ -36,11 +48,16 @@ import { MonedaRepositoryPrisma } from './repositories/moneda.repository.prisma'
     ParametrosService,
     ConfiguracionService,
     MonedasService,
+    ImpuestosService,
+    TasasImpuestoService,
     { provide: EmpresaRepository, useClass: EmpresaRepositoryPrisma },
     { provide: SucursalRepository, useClass: SucursalRepositoryPrisma },
     { provide: ParametroRepository, useClass: ParametroRepositoryPrisma },
     { provide: ConfiguracionValorRepository, useClass: ConfiguracionValorRepositoryPrisma },
     { provide: MonedaRepository, useClass: MonedaRepositoryPrisma },
+    { provide: ImpuestoRepository, useClass: ImpuestoRepositoryPrisma },
+    { provide: TasaImpuestoRepository, useClass: TasaImpuestoRepositoryPrisma },
+    { provide: JurisdiccionRepository, useClass: JurisdiccionRepositoryPrisma },
   ],
 })
 export class ConfiguracionModule {}

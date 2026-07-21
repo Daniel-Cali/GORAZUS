@@ -53,7 +53,19 @@ export type {
   PrismaClient as ConfigurationPrismaClient,
   Prisma as ConfigurationPrisma,
 } from '../prisma/schemas/configuration/generated';
-export type { currencies } from '../prisma/schemas/configuration/generated';
+export type { currencies, countries } from '../prisma/schemas/configuration/generated';
+/**
+ * Cliente Prisma del schema `taxes` — tercer cliente independiente
+ * (`PRISMA_TAXES`), mismo criterio que `ConfigurationPrismaClient` de
+ * arriba. Primer consumidor: `modules/configuracion/backend` (Impuestos,
+ * Fase 02 — alcance mínimo: perfiles de impuesto + tasas, no el motor de
+ * cálculo/reglas completo, ver `services/impuestos.service.ts`).
+ */
+export type {
+  PrismaClient as TaxesPrismaClient,
+  Prisma as TaxesPrisma,
+} from '../prisma/schemas/taxes/generated';
+export type { taxes, tax_rates, tax_jurisdictions } from '../prisma/schemas/taxes/generated';
 // prisma.service.ts (cliente único monolítico) queda superado por el
 // enfoque de 21 clientes por schema en database.module.ts — ver el
 // comentario de cabecera de ese archivo. No se elimina el archivo
