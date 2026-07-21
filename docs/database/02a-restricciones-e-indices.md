@@ -45,6 +45,20 @@ documento **no repite "PK: id UUID" 494 veces** — declararlo una vez
 acá y en 01 es la respuesta completa a "llaves primarias" para
 cualquier tabla del sistema.
 
+> **Excepción real, verificada en vivo (auditoría Fase 1, 2026-07-21):** 3 de 501
+> tablas no tienen `id` como `PRIMARY KEY` de una sola columna —
+> `core.audit_logs`, `core.change_history`, `security.security_audit_logs`. Las 3
+> son las tablas particionadas por tiempo de mayor volumen de escritura (append-only,
+> ver `07-estrategia-particionamiento.md`); Postgres exige que la clave de
+> partición forme parte de cualquier `PRIMARY KEY`/`UNIQUE` de una tabla
+> particionada, y su clave de partición (`occurred_at`/equivalente) no es `id`. La
+> alternativa real en estas 3 tablas es una unique compuesta (`local_id` +
+> columna de partición) sin `PRIMARY KEY` declarado — `id` sigue siendo
+> `NOT NULL UNIQUE` a nivel de columna, solo no está marcado como PK de Postgres.
+> No es un defecto de diseño: es la única forma de particionar por tiempo estas 3
+> tablas de auditoría sin renunciar a `id` como UUID global. Detalle completo:
+> [11-estrategia-integridad.md §2.3](./11-estrategia-integridad.md#23-excepción-real-3-tablas-particionadas-sin-primary-key-de-una-sola-columna).
+
 ## 3. Llaves foráneas y cardinalidad
 
 ### 3.1 FK universales (idénticas en las 494 tablas)

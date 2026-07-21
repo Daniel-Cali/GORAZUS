@@ -130,6 +130,12 @@ Esto es objetivamente más severo que "necesita `FORCE ROW LEVEL SECURITY`" — 
 omite RLS pase lo que pase, `FORCE` incluido. **No corregido** (requiere tocar
 `docker-compose.yml`/`.env`/`DATABASE_URL`, fuera del alcance "solo base de datos" de este pase).
 
+> ✅ **Corregido más tarde el mismo día** (sesión de backend/infra separada, ver
+> [SECURITY.md §2.1](./SECURITY.md#-21--corregido-más-tarde-el-mismo-día-fase-05-2026-07-20--re-verificado-en-vivo-2026-07-21))
+> — re-verificado en vivo el 2026-07-21 (auditoría Fase 1): `gorazus_app` tiene hoy
+> `rolsuper=false, rolbypassrls=false`. Este párrafo queda como registro histórico de
+> cómo se encontró el problema, no como estado actual.
+
 Métricas en vivo re-verificadas (algunas ya estaban desactualizadas en `DATABASE_STRUCTURE.md`,
 corregidas ahí): 23 schemas, 501 tablas lógicas (701 físicas incluyendo particiones), 3.201
 índices, 2.414 triggers, 10 vistas, 4 vistas materializadas, 76 funciones + 4 procedimientos,

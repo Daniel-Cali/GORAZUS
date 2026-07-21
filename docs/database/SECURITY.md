@@ -85,6 +85,33 @@ propia sesión). **Recomendación concreta para cuando se aborde:**
    cláusula `OR` de la política) — necesita ajustarse para setear el contexto de
    tenant antes de tocar `core.users`/`core.user_roles`.
 
+### ✅ 2.1 — Corregido más tarde el mismo día (FASE 05, 2026-07-20) — re-verificado en vivo (2026-07-21)
+
+Los 5 pasos de arriba se aplicaron ese mismo día en una sesión de backend/infra
+(`CHANGELOG.md`, entrada "FASE 05 — RLS: `gorazus_app` ya no es superusuario, RLS
+realmente enforced"): bootstrap de Docker renombrado a `gorazus_superuser`, volumen
+de Postgres recreado desde cero, los 34 scripts de `docs/database/sql/` reaplicados
+en orden, `34_rls_hardening.sql` aplicado con éxito. Este documento quedó
+desactualizado desde entonces — corregido ahora (auditoría Fase 1 solicitada por el
+usuario, 2026-07-21), re-verificado contra la instancia real:
+
+```sql
+SELECT rolname, rolsuper, rolbypassrls FROM pg_roles WHERE rolname LIKE 'gorazus%';
+--  gorazus_superuser | true  | true   (bootstrap, uso operativo, no es DATABASE_URL de apps/api)
+--  gorazus_readonly  | false | false
+--  gorazus_migrator  | false | true   (intencional, sin cambios)
+--  gorazus_app       | false | false  ✅ ya no es superusuario ni bypassea RLS
+--  gorazus_backup    | false | true   (intencional, sin cambios)
+```
+
+`gorazus_app` (el rol real de `DATABASE_URL` de `apps/api`) tiene hoy
+`rolsuper=false, rolbypassrls=false` — RLS protege genuinamente el tráfico de la
+API. También verificado: **0 tablas con RLS habilitado pero sin `FORCE`** (ninguna
+queda expuesta por ser dueña de sus propias filas). El resto de §1-§2 (1 tabla sin
+RLS, `gorazus_migrator`/`gorazus_backup` con `BYPASSRLS` intencional) sigue igual,
+sin cambios. Ver `docs/database/AUDIT_FASE1_ENTERPRISE.md §4` para el resto de la
+verificación en vivo de esta fecha.
+
 ## 3. Cifrado — referencia, sin cambios en esta fase
 
 Ya fijado completo en `docs/database/06-estrategia-seguridad.md §3` — `pgcrypto`
