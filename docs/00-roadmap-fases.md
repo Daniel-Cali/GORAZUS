@@ -214,6 +214,27 @@ existentes en vez de ser fases nuevas):
   rediseñado. Cero SQL, cero código, cero tabla nueva, cero cambio a
   documentación previa.
 
+- **"Database Enterprise v1.0" (usuario) — auditoría orientada a
+  ferretería/distribución** (completado 2026-07-21, rama
+  `feature/database-audit`, local sin push): segunda pasada de
+  auditoría de base de datos, esta vez con dos ángulos que la Fase 1 de
+  esta sesión no cubría todavía — verificación explícita de formas
+  normales (1NF/2NF/3NF/BCNF, sin violaciones reales) y análisis
+  funcional específico para ferretería/distribuidores (medidas
+  fraccionarias, conversiones de unidad, códigos de barra múltiples,
+  series, lotes, garantías, sustitutos — todos ya soportados; 2 gaps
+  reales encontrados: sin campos de materiales peligrosos/hoja de
+  seguridad, sin columnas de primera clase para peso/dimensiones,
+  mitigado parcialmente por el sistema de atributos genérico ya
+  existente). Vistas/materialized views/triggers/funciones/
+  procedimientos/secuencias re-verificados en vivo: sin drift respecto
+  a la pasada del 2026-07-20. Alcance confirmado con el usuario antes
+  de empezar: solo documentación, sin DDL real sobre el entorno dev
+  (que tiene un contenedor de API corriendo contra la misma base de
+  datos) — las 2 mejoras identificadas quedan como recomendación para
+  una fase posterior. Ver
+  [database/AUDIT_DATABASE_ENTERPRISE_V2_FERRETERIA.md](./database/AUDIT_DATABASE_ENTERPRISE_V2_FERRETERIA.md).
+
 ## Orden sugerido para las fases pendientes (histórico — ya no quedan módulos de negocio con modelo de datos completo por diseñar)
 
 1. ~~**Impuestos**~~ — ✅ completado 2026-07-13, ver arriba.
