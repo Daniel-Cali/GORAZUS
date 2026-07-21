@@ -165,7 +165,27 @@ Ningún hallazgo bloquea el uso del sistema. Detalle completo, informe final con
 recomendaciones para una Fase 2 de aplicación de DDL:
 [AUDIT_DATABASE_ENTERPRISE_V2_FERRETERIA.md](./AUDIT_DATABASE_ENTERPRISE_V2_FERRETERIA.md).
 
-## 8. Trazabilidad
+## 8. Cuarta y quinta pasada (2026-07-21, Partes 4-5) — relaciones e integridad, normalización
+
+**Parte 4 (relaciones/claves):** resuelto el único FK `CASCADE` que
+quedaba sin identificar (`partman.part_config_sub_sub_parent_fkey`,
+infraestructura, no negocio — 100% de las FK de GORAZUS usan `NO ACTION`);
+re-confirmado con metodología independiente que 0 columnas FK de negocio
+carecen de índice; 0 relaciones 1:1 estructurales, 10+ tablas puente
+intra-schema con patrón universal completo. 99% de integridad
+referencial. Detalle:
+[RELATIONSHIP_CATALOG.md](./RELATIONSHIP_CATALOG.md).
+
+**Parte 5 (normalización):** 0 violaciones reales de 1FN/2FN/3FN/BCNF en
+una segunda verificación independiente; 0 catálogos duplicados
+(verificado explícitamente contra ~40 tablas tipo `*_status`/`*_types`/
+`*_reasons`); 100% de normalización. Ninguna tabla fusionada, dividida o
+eliminada — las 4 mejoras aditivas ya conocidas siguen especificadas y
+sin aplicar, pendientes de autorización explícita para pasar de
+documentación a DDL real. Detalle:
+[NORMALIZATION_REPORT.md](./NORMALIZATION_REPORT.md).
+
+## 9. Trazabilidad
 
 | Punto pedido en la fase                                                                 | Cerrado en                                                                                                                                                                                |
 | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
