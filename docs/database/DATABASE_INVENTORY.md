@@ -9,6 +9,11 @@
 > [AUDIT_DATABASE_ENTERPRISE_V2_FERRETERIA.md](./AUDIT_DATABASE_ENTERPRISE_V2_FERRETERIA.md),
 > esta última hace minutos) — este documento los consolida en un solo lugar,
 > en el formato de inventario puro que se pidió, sin repetir el análisis.
+> **Actualización (Fase 1, Parte 3):** el inventario completo tabla-por-tabla
+> (columnas/PK/FK/índices/restricciones/estado) vive en
+> [TABLE_CATALOG.md](./TABLE_CATALOG.md) + [logico/](./logico/) +
+> [dictionary/](./dictionary/); la verificación de calidad por tabla en
+> [DATABASE_ANALYSIS.md](./DATABASE_ANALYSIS.md).
 
 ## 1. Inventario numérico
 

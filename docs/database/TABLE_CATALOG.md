@@ -6,6 +6,10 @@
 > `docs/database/logico/<NN>-<schema>.md` y el detalle técnico completo de
 > columnas en `docs/database/dictionary/<NN>-<schema>.md`; este documento no
 > repite ninguno de los dos, los referencia. 501 tablas lógicas verificadas.
+> **Actualización 2026-07-21 (Fase 1 Parte 3, auditoría de tablas):**
+> verificación de calidad agregada (CHECK/UNIQUE/comentarios/outliers de
+> tamaño) y clasificación Mantener/Mejorar por tabla en
+> [DATABASE_ANALYSIS.md](./DATABASE_ANALYSIS.md) — no se repite aquí.
 
 ## Resumen por schema
 
