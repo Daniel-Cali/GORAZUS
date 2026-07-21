@@ -1,0 +1,9 @@
+# GORAZUS ERP — namespace base, sobreescrito por nombre real en cada
+# overlay (staging/production) vía `namespace:` en kustomization.yaml —
+# ver docs/architecture/31-infraestructura-completa.md §2.3: un namespace
+# por ENTORNO, no por tenant (el aislamiento multiempresa ya lo resuelve
+# RLS a nivel de aplicación).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gorazus

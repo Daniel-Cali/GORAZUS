@@ -1,0 +1,22 @@
+# GORAZUS ERP — normalización de line endings y diffs.
+# LF en todo el repo (coherente con .editorconfig end_of_line = lf),
+# sin depender de core.autocrlf local — evita diffs espurios entre
+# Windows (desarrollo) y Linux (CI/CD, ver .github/workflows/).
+* text=auto eol=lf
+
+# Binarios explícitos — Git nunca los normaliza ni los diffea como texto
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
+
+# Lockfile: generado, no se resuelve manualmente en merge
+pnpm-lock.yaml -diff linguist-generated=true
+
+# SQL es la fuente de verdad del schema (ver docs/database/) —
+# nunca se marca generado, se revisa línea por línea en PR
+*.sql text eol=lf linguist-generated=false

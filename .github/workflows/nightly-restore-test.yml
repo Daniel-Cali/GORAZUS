@@ -1,0 +1,40 @@
+# GORAZUS ERP — prueba de restauración automatizada.
+# Ver docs/database/08-estrategia-respaldo.md §6: "Un respaldo nunca
+# probado no es un respaldo, es una suposición." Restauración completa
+# MENSUAL a un entorno aislado + verificación (conteo de filas por
+# tabla contra checksum esperado, integridad referencial). Un fallo acá
+# es incidente de severidad alta, no una nota informativa — el job
+# marca el workflow en rojo, no solo loguea una advertencia.
+#
+# NOTA: los pasos de restauración real (pgBackRest contra el entorno
+# aislado) quedan como placeholder hasta que exista la infraestructura
+# de respaldo real (Postgres con pgBackRest configurado, aún no
+# desplegado — esto es CI/CD para algo que corre después de tener
+# producción real, no antes).
+
+name: Nightly Restore Test
+
+on:
+  schedule:
+    - cron: '0 3 1 * *' # mensual, día 1 a las 03:00 UTC — ver 08-estrategia-respaldo.md §6
+  workflow_dispatch: {} # permite disparo manual para verificar el mecanismo sin esperar al cron
+
+jobs:
+  restore-and-verify:
+    runs-on: ubuntu-latest
+    environment: restore-test # entorno aislado, nunca contra producción
+    steps:
+      - uses: actions/checkout@v4
+
+      # - name: Restaurar backup más reciente a entorno aislado (pgBackRest)
+      #   run: | # pendiente: infraestructura de respaldo real no desplegada todavía
+
+      # - name: Verificar conteo de filas por tabla contra checksum esperado
+      #   run: | # pendiente: mismo motivo
+
+      # - name: Verificar integridad referencial
+      #   run: | # pendiente: mismo motivo
+
+      # - name: Registrar resultado (incidente de severidad alta si falla)
+      #   if: failure()
+      #   run: | # pendiente: integración con Notification Center (ver 32-core-platform/06 §4)

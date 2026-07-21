@@ -1,0 +1,62 @@
+# GORAZUS ERP — escaneo de seguridad en CI (FASE 05, 2026-07-20). Antes no
+# existía ningún gate de seguridad automatizado (ver
+# docs/architecture/31-infraestructura-completa.md §7-8, que documenta el
+# pipeline de PR/deploy sin mencionar seguridad). Dos mecanismos
+# complementarios: dependencias (pnpm audit) y código propio (CodeQL SAST,
+# nativo de GitHub, sin cuenta/servicio externo adicional).
+
+name: Security Scan
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1' # semanal, lunes 06:00 UTC — captura CVEs nuevos aunque no haya cambios de código
+
+jobs:
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # No bloquea el merge todavía (`|| true`) — ver CHANGELOG.md
+      # "Pendiente conocido": 34 vulnerabilidades reales encontradas al
+      # activar esto (1 crítica, 15 altas), todas en dependencias
+      # transitivas de tooling/observabilidad, ninguna parcheada sin
+      # arriesgar romper funcionalidad ya verificada esta sesión sin
+      # tiempo de regresión dedicado. Se activa el gate real
+      # (quitar `|| true`) cuando ese punch list esté resuelto.
+      - name: pnpm audit (moderate+)
+        run: pnpm audit --audit-level=moderate || true
+
+  codeql:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    strategy:
+      matrix:
+        language: ['javascript-typescript']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-and-quality
+
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: '/language:${{ matrix.language }}'

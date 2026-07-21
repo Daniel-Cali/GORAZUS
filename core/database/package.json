@@ -1,0 +1,25 @@
+{
+  "name": "@gorazus/core-database",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GORAZUS ERP — Cliente Prisma (consumidor del SQL crudo de docs/database/sql/), transaction manager, repository base.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "db:pull": "prisma db pull --schema=./prisma/schema.prisma",
+    "db:split": "node ./scripts/split-schema-by-module.js",
+    "db:generate": "node ./scripts/generate-all.js",
+    "db:migrate": "node ./scripts/migrate.js"
+  },
+  "dependencies": {
+    "@gorazus/contracts": "workspace:*",
+    "@prisma/client": "^5.22.0",
+    "@nestjs/common": "^10.4.0",
+    "@nestjs/core": "^10.4.0",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.8.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0"
+  }
+}

@@ -1,0 +1,20 @@
+# Variables de entorno NO sensibles de `apps/api` — ver core/config/env.schema.ts
+# (mismo schema Zod fail-fast que valida `.env` en Docker Compose, sin cambio
+# de contrato — docs/architecture/31-infraestructura-completa.md §2.2:
+# "ConfigMap/Secret reemplaza .env en estos dos entornos"). Valores reales
+# (dominios, endpoints) sobreescritos por overlay.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+data:
+  NODE_ENV: production
+  API_PORT: '3000'
+  CORS_ORIGIN: https://gorazus.example.com
+  SMTP_HOST: mailhog
+  SMTP_PORT: '1025'
+  WHATSAPP_GRAPH_API_VERSION: v21.0
+  OLLAMA_BASE_URL: http://ollama:11434
+  OLLAMA_DEFAULT_MODEL: llama3.1
+  MINIO_ENDPOINT: minio
+  MINIO_PORT: '9000'

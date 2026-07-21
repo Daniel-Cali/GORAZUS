@@ -1,0 +1,591 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "./generated"
+  previewFeatures = ["multiSchema"]
+  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["payroll"]
+}
+
+model concept_types {
+  id                                    String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                              BigInt             @unique @default(autoincrement())
+  tenant_id                             String             @db.Uuid
+  company_id                            String?            @db.Uuid
+  branch_id                             String?            @db.Uuid
+  created_at                            DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime           @default(now()) @db.Timestamptz(6)
+  deleted_at                            DateTime?          @db.Timestamptz(6)
+  created_by                            String?            @db.Uuid
+  updated_by                            String?            @db.Uuid
+  deleted_by                            String?            @db.Uuid
+  version                               Int                @default(1)
+  row_version                           BigInt             @default(0)
+  is_active                             Boolean            @default(true)
+  is_deleted                            Boolean?           @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                          String?
+  metadata                              Json               @default("{}")
+  code                                  String
+  payroll_concepts                      payroll_concepts[]
+
+  @@schema("payroll")
+}
+
+model deductions {
+  id                                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                           BigInt    @unique @default(autoincrement())
+  tenant_id                          String    @db.Uuid
+  company_id                         String    @db.Uuid
+  branch_id                          String?   @db.Uuid
+  created_at                         DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                         DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at                         DateTime? @db.Timestamptz(6)
+  created_by                         String?   @db.Uuid
+  updated_by                         String?   @db.Uuid
+  deleted_by                         String?   @db.Uuid
+  version                            Int       @default(1)
+  row_version                        BigInt    @default(0)
+  is_active                          Boolean   @default(true)
+  is_deleted                         Boolean?  @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                       String?
+  metadata                           Json      @default("{}")
+  employee_id                        String    @db.Uuid
+  description                        String
+  amount                             Decimal   @db.Decimal(18, 4)
+
+  @@schema("payroll")
+}
+
+model employee_benefit_assignments {
+  id                                                   String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                             BigInt            @unique @default(autoincrement())
+  tenant_id                                            String            @db.Uuid
+  company_id                                           String?           @db.Uuid
+  branch_id                                            String?           @db.Uuid
+  created_at                                           DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at                                           DateTime          @default(now()) @db.Timestamptz(6)
+  deleted_at                                           DateTime?         @db.Timestamptz(6)
+  created_by                                           String?           @db.Uuid
+  updated_by                                           String?           @db.Uuid
+  deleted_by                                           String?           @db.Uuid
+  version                                              Int               @default(1)
+  row_version                                          BigInt            @default(0)
+  is_active                                            Boolean           @default(true)
+  is_deleted                                           Boolean?          @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                         String?
+  metadata                                             Json              @default("{}")
+  benefit_id                                           String            @db.Uuid
+  employee_id                                          String            @db.Uuid
+  employee_benefits                                    employee_benefits @relation(fields: [benefit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("payroll")
+}
+
+model employee_benefits {
+  id                                        String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt                         @unique @default(autoincrement())
+  tenant_id                                 String                         @db.Uuid
+  company_id                                String                         @db.Uuid
+  branch_id                                 String?                        @db.Uuid
+  created_at                                DateTime                       @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime                       @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime?                      @db.Timestamptz(6)
+  created_by                                String?                        @db.Uuid
+  updated_by                                String?                        @db.Uuid
+  deleted_by                                String?                        @db.Uuid
+  version                                   Int                            @default(1)
+  row_version                               BigInt                         @default(0)
+  is_active                                 Boolean                        @default(true)
+  is_deleted                                Boolean?                       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json                           @default("{}")
+  name                                      String
+  employee_benefit_assignments              employee_benefit_assignments[]
+
+  @@schema("payroll")
+}
+
+model loan_installments {
+  id                                        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt           @unique @default(autoincrement())
+  tenant_id                                 String           @db.Uuid
+  company_id                                String?          @db.Uuid
+  branch_id                                 String?          @db.Uuid
+  created_at                                DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime         @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime?        @db.Timestamptz(6)
+  created_by                                String?          @db.Uuid
+  updated_by                                String?          @db.Uuid
+  deleted_by                                String?          @db.Uuid
+  version                                   Int              @default(1)
+  row_version                               BigInt           @default(0)
+  is_active                                 Boolean          @default(true)
+  is_deleted                                Boolean?         @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json             @default("{}")
+  loan_id                                   String           @db.Uuid
+  payroll_entry_id                          String?          @db.Uuid
+  amount                                    Decimal          @db.Decimal(18, 4)
+  installment_number                        Int              @db.SmallInt
+  loans                                     loans            @relation(fields: [loan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  payroll_entries                           payroll_entries? @relation(fields: [payroll_entry_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("payroll")
+}
+
+model loans {
+  id                            String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                      BigInt              @unique @default(autoincrement())
+  tenant_id                     String              @db.Uuid
+  company_id                    String              @db.Uuid
+  branch_id                     String?             @db.Uuid
+  created_at                    DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime            @default(now()) @db.Timestamptz(6)
+  deleted_at                    DateTime?           @db.Timestamptz(6)
+  created_by                    String?             @db.Uuid
+  updated_by                    String?             @db.Uuid
+  deleted_by                    String?             @db.Uuid
+  version                       Int                 @default(1)
+  row_version                   BigInt              @default(0)
+  is_active                     Boolean             @default(true)
+  is_deleted                    Boolean?            @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                  String?
+  metadata                      Json                @default("{}")
+  employee_id                   String              @db.Uuid
+  total_amount                  Decimal             @db.Decimal(18, 4)
+  installment_count             Int                 @db.SmallInt
+  remaining_balance             Decimal             @db.Decimal(18, 4)
+  loan_installments             loan_installments[]
+
+  @@schema("payroll")
+}
+
+model overtime_records {
+  id                                       String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                 BigInt          @unique @default(autoincrement())
+  tenant_id                                String          @db.Uuid
+  company_id                               String          @db.Uuid
+  branch_id                                String?         @db.Uuid
+  created_at                               DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime        @default(now()) @db.Timestamptz(6)
+  deleted_at                               DateTime?       @db.Timestamptz(6)
+  created_by                               String?         @db.Uuid
+  updated_by                               String?         @db.Uuid
+  deleted_by                               String?         @db.Uuid
+  version                                  Int             @default(1)
+  row_version                              BigInt          @default(0)
+  is_active                                Boolean         @default(true)
+  is_deleted                               Boolean?        @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                             String?
+  metadata                                 Json            @default("{}")
+  employee_id                              String          @db.Uuid
+  period_id                                String          @db.Uuid
+  hours                                    Decimal         @db.Decimal(6, 2)
+  rate_multiplier                          Decimal         @default(1.5) @db.Decimal(4, 2)
+  payroll_periods                          payroll_periods @relation(fields: [period_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("payroll")
+}
+
+model payroll_commission_entries {
+  id                                                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                           BigInt             @unique @default(autoincrement())
+  tenant_id                                          String             @db.Uuid
+  company_id                                         String?            @db.Uuid
+  branch_id                                          String?            @db.Uuid
+  created_at                                         DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                                         DateTime           @default(now()) @db.Timestamptz(6)
+  deleted_at                                         DateTime?          @db.Timestamptz(6)
+  created_by                                         String?            @db.Uuid
+  updated_by                                         String?            @db.Uuid
+  deleted_by                                         String?            @db.Uuid
+  version                                            Int                @default(1)
+  row_version                                        BigInt             @default(0)
+  is_active                                          Boolean            @default(true)
+  is_deleted                                         Boolean?           @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                       String?
+  metadata                                           Json               @default("{}")
+  payroll_entry_id                                   String             @db.Uuid
+  source_commission_entry_id                         String             @db.Uuid
+  payroll_entries                                    payroll_entries    @relation(fields: [payroll_entry_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("payroll")
+}
+
+model payroll_concepts {
+  id                                       String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                 BigInt                      @unique @default(autoincrement())
+  tenant_id                                String                      @db.Uuid
+  company_id                               String                      @db.Uuid
+  branch_id                                String?                     @db.Uuid
+  created_at                               DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime                    @default(now()) @db.Timestamptz(6)
+  deleted_at                               DateTime?                   @db.Timestamptz(6)
+  created_by                               String?                     @db.Uuid
+  updated_by                               String?                     @db.Uuid
+  deleted_by                               String?                     @db.Uuid
+  version                                  Int                         @default(1)
+  row_version                              BigInt                      @default(0)
+  is_active                                Boolean                     @default(true)
+  is_deleted                               Boolean?                    @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                             String?
+  metadata                                 Json                        @default("{}")
+  concept_type_id                          String                      @db.Uuid
+  code                                     String
+  name                                     String
+  calculation_formula                      String?
+  concept_types                            concept_types               @relation(fields: [concept_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  payroll_entry_lines                      payroll_entry_lines[]
+  payroll_novelties                        payroll_novelties[]
+  salary_structure_concepts                salary_structure_concepts[]
+
+  @@schema("payroll")
+}
+
+model payroll_entries {
+  id                                      String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                BigInt                       @unique @default(autoincrement())
+  tenant_id                               String                       @db.Uuid
+  company_id                              String                       @db.Uuid
+  branch_id                               String?                      @db.Uuid
+  created_at                              DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime                     @default(now()) @db.Timestamptz(6)
+  deleted_at                              DateTime?                    @db.Timestamptz(6)
+  created_by                              String?                      @db.Uuid
+  updated_by                              String?                      @db.Uuid
+  deleted_by                              String?                      @db.Uuid
+  version                                 Int                          @default(1)
+  row_version                             BigInt                       @default(0)
+  is_active                               Boolean                      @default(true)
+  is_deleted                              Boolean?                     @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                            String?
+  metadata                                Json                         @default("{}")
+  run_id                                  String                       @db.Uuid
+  employee_id                             String                       @db.Uuid
+  gross_amount                            Decimal                      @default(0) @db.Decimal(18, 4)
+  net_amount                              Decimal                      @default(0) @db.Decimal(18, 4)
+  loan_installments                       loan_installments[]
+  payroll_commission_entries              payroll_commission_entries[]
+  payroll_runs                            payroll_runs                 @relation(fields: [run_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  payroll_entry_lines                     payroll_entry_lines[]
+
+  @@schema("payroll")
+}
+
+model payroll_entry_lines {
+  id                                          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                    BigInt           @unique @default(autoincrement())
+  tenant_id                                   String           @db.Uuid
+  company_id                                  String?          @db.Uuid
+  branch_id                                   String?          @db.Uuid
+  created_at                                  DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at                                  DateTime         @default(now()) @db.Timestamptz(6)
+  deleted_at                                  DateTime?        @db.Timestamptz(6)
+  created_by                                  String?          @db.Uuid
+  updated_by                                  String?          @db.Uuid
+  deleted_by                                  String?          @db.Uuid
+  version                                     Int              @default(1)
+  row_version                                 BigInt           @default(0)
+  is_active                                   Boolean          @default(true)
+  is_deleted                                  Boolean?         @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                String?
+  metadata                                    Json             @default("{}")
+  entry_id                                    String           @db.Uuid
+  concept_id                                  String           @db.Uuid
+  amount                                      Decimal          @db.Decimal(18, 4)
+  payroll_concepts                            payroll_concepts @relation(fields: [concept_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  payroll_entries                             payroll_entries  @relation(fields: [entry_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("payroll")
+}
+
+model payroll_novelties {
+  id                                        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt           @unique @default(autoincrement())
+  tenant_id                                 String           @db.Uuid
+  company_id                                String           @db.Uuid
+  branch_id                                 String?          @db.Uuid
+  created_at                                DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime         @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime?        @db.Timestamptz(6)
+  created_by                                String?          @db.Uuid
+  updated_by                                String?          @db.Uuid
+  deleted_by                                String?          @db.Uuid
+  version                                   Int              @default(1)
+  row_version                               BigInt           @default(0)
+  is_active                                 Boolean          @default(true)
+  is_deleted                                Boolean?         @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json             @default("{}")
+  employee_id                               String           @db.Uuid
+  period_id                                 String           @db.Uuid
+  concept_id                                String           @db.Uuid
+  amount                                    Decimal          @db.Decimal(18, 4)
+  payroll_concepts                          payroll_concepts @relation(fields: [concept_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  payroll_periods                           payroll_periods  @relation(fields: [period_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("payroll")
+}
+
+model payroll_periods {
+  id                                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                BigInt              @unique @default(autoincrement())
+  tenant_id                               String              @db.Uuid
+  company_id                              String              @db.Uuid
+  branch_id                               String?             @db.Uuid
+  created_at                              DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime            @default(now()) @db.Timestamptz(6)
+  deleted_at                              DateTime?           @db.Timestamptz(6)
+  created_by                              String?             @db.Uuid
+  updated_by                              String?             @db.Uuid
+  deleted_by                              String?             @db.Uuid
+  version                                 Int                 @default(1)
+  row_version                             BigInt              @default(0)
+  is_active                               Boolean             @default(true)
+  is_deleted                              Boolean?            @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                            String?
+  metadata                                Json                @default("{}")
+  starts_on                               DateTime            @db.Date
+  ends_on                                 DateTime            @db.Date
+  frequency                               String
+  overtime_records                        overtime_records[]
+  payroll_novelties                       payroll_novelties[]
+  payroll_runs                            payroll_runs[]
+
+  @@schema("payroll")
+}
+
+model payroll_run_status {
+  id                                         String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                   BigInt                       @unique @default(autoincrement())
+  tenant_id                                  String                       @db.Uuid
+  company_id                                 String?                      @db.Uuid
+  branch_id                                  String?                      @db.Uuid
+  created_at                                 DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime                     @default(now()) @db.Timestamptz(6)
+  deleted_at                                 DateTime?                    @db.Timestamptz(6)
+  created_by                                 String?                      @db.Uuid
+  updated_by                                 String?                      @db.Uuid
+  deleted_by                                 String?                      @db.Uuid
+  version                                    Int                          @default(1)
+  row_version                                BigInt                       @default(0)
+  is_active                                  Boolean                      @default(true)
+  is_deleted                                 Boolean?                     @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                               String?
+  metadata                                   Json                         @default("{}")
+  code                                       String
+  payroll_run_status_history                 payroll_run_status_history[]
+  payroll_runs                               payroll_runs[]
+
+  @@schema("payroll")
+}
+
+model payroll_run_status_history {
+  id                                                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                           BigInt             @unique @default(autoincrement())
+  tenant_id                                          String             @db.Uuid
+  company_id                                         String?            @db.Uuid
+  branch_id                                          String?            @db.Uuid
+  created_at                                         DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                                         DateTime           @default(now()) @db.Timestamptz(6)
+  deleted_at                                         DateTime?          @db.Timestamptz(6)
+  created_by                                         String?            @db.Uuid
+  updated_by                                         String?            @db.Uuid
+  deleted_by                                         String?            @db.Uuid
+  version                                            Int                @default(1)
+  row_version                                        BigInt             @default(0)
+  is_active                                          Boolean            @default(true)
+  is_deleted                                         Boolean?           @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                       String?
+  metadata                                           Json               @default("{}")
+  run_id                                             String             @db.Uuid
+  status_id                                          String             @db.Uuid
+  payroll_runs                                       payroll_runs       @relation(fields: [run_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  payroll_run_status                                 payroll_run_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("payroll")
+}
+
+model payroll_runs {
+  id                                   String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                             BigInt                       @unique @default(autoincrement())
+  tenant_id                            String                       @db.Uuid
+  company_id                           String                       @db.Uuid
+  branch_id                            String?                      @db.Uuid
+  created_at                           DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                           DateTime                     @default(now()) @db.Timestamptz(6)
+  deleted_at                           DateTime?                    @db.Timestamptz(6)
+  created_by                           String?                      @db.Uuid
+  updated_by                           String?                      @db.Uuid
+  deleted_by                           String?                      @db.Uuid
+  version                              Int                          @default(1)
+  row_version                          BigInt                       @default(0)
+  is_active                            Boolean                      @default(true)
+  is_deleted                           Boolean?                     @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                         String?
+  metadata                             Json                         @default("{}")
+  period_id                            String                       @db.Uuid
+  status_id                            String                       @db.Uuid
+  payroll_entries                      payroll_entries[]
+  payroll_run_status_history           payroll_run_status_history[]
+  payroll_periods                      payroll_periods              @relation(fields: [period_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  payroll_run_status                   payroll_run_status           @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("payroll")
+}
+
+model salary_structure_concepts {
+  id                                                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                          BigInt            @unique @default(autoincrement())
+  tenant_id                                         String            @db.Uuid
+  company_id                                        String?           @db.Uuid
+  branch_id                                         String?           @db.Uuid
+  created_at                                        DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at                                        DateTime          @default(now()) @db.Timestamptz(6)
+  deleted_at                                        DateTime?         @db.Timestamptz(6)
+  created_by                                        String?           @db.Uuid
+  updated_by                                        String?           @db.Uuid
+  deleted_by                                        String?           @db.Uuid
+  version                                           Int               @default(1)
+  row_version                                       BigInt            @default(0)
+  is_active                                         Boolean           @default(true)
+  is_deleted                                        Boolean?          @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                      String?
+  metadata                                          Json              @default("{}")
+  structure_id                                      String            @db.Uuid
+  concept_id                                        String            @db.Uuid
+  override_amount                                   Decimal?          @db.Decimal(18, 4)
+  payroll_concepts                                  payroll_concepts  @relation(fields: [concept_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  salary_structures                                 salary_structures @relation(fields: [structure_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("payroll")
+}
+
+model salary_structures {
+  id                                        String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt                      @unique @default(autoincrement())
+  tenant_id                                 String                      @db.Uuid
+  company_id                                String                      @db.Uuid
+  branch_id                                 String?                     @db.Uuid
+  created_at                                DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime                    @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime?                   @db.Timestamptz(6)
+  created_by                                String?                     @db.Uuid
+  updated_by                                String?                     @db.Uuid
+  deleted_by                                String?                     @db.Uuid
+  version                                   Int                         @default(1)
+  row_version                               BigInt                      @default(0)
+  is_active                                 Boolean                     @default(true)
+  is_deleted                                Boolean?                    @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json                        @default("{}")
+  job_position_id                           String?                     @db.Uuid
+  name                                      String
+  salary_structure_concepts                 salary_structure_concepts[]
+
+  @@schema("payroll")
+}
+
+model severance_calculations {
+  id                                             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                       BigInt    @unique @default(autoincrement())
+  tenant_id                                      String    @db.Uuid
+  company_id                                     String    @db.Uuid
+  branch_id                                      String?   @db.Uuid
+  created_at                                     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                                     DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at                                     DateTime? @db.Timestamptz(6)
+  created_by                                     String?   @db.Uuid
+  updated_by                                     String?   @db.Uuid
+  deleted_by                                     String?   @db.Uuid
+  version                                        Int       @default(1)
+  row_version                                    BigInt    @default(0)
+  is_active                                      Boolean   @default(true)
+  is_deleted                                     Boolean?  @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                   String?
+  metadata                                       Json      @default("{}")
+  employee_id                                    String    @db.Uuid
+  total_amount                                   Decimal   @db.Decimal(18, 4)
+  calculation_detail                             Json
+
+  @@schema("payroll")
+}
+
+model social_security_tables {
+  id                                             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                       BigInt    @unique @default(autoincrement())
+  tenant_id                                      String    @db.Uuid
+  company_id                                     String    @db.Uuid
+  branch_id                                      String?   @db.Uuid
+  created_at                                     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                                     DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at                                     DateTime? @db.Timestamptz(6)
+  created_by                                     String?   @db.Uuid
+  updated_by                                     String?   @db.Uuid
+  deleted_by                                     String?   @db.Uuid
+  version                                        Int       @default(1)
+  row_version                                    BigInt    @default(0)
+  is_active                                      Boolean   @default(true)
+  is_deleted                                     Boolean?  @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                   String?
+  metadata                                       Json      @default("{}")
+  scheme_name                                    String
+  employee_rate_percentage                       Decimal   @db.Decimal(6, 3)
+  employer_rate_percentage                       Decimal   @db.Decimal(6, 3)
+
+  @@schema("payroll")
+}
+
+model tax_withholding_tables {
+  id                                             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                       BigInt    @unique @default(autoincrement())
+  tenant_id                                      String    @db.Uuid
+  company_id                                     String    @db.Uuid
+  branch_id                                      String?   @db.Uuid
+  created_at                                     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                                     DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at                                     DateTime? @db.Timestamptz(6)
+  created_by                                     String?   @db.Uuid
+  updated_by                                     String?   @db.Uuid
+  deleted_by                                     String?   @db.Uuid
+  version                                        Int       @default(1)
+  row_version                                    BigInt    @default(0)
+  is_active                                      Boolean   @default(true)
+  is_deleted                                     Boolean?  @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                   String?
+  metadata                                       Json      @default("{}")
+  bracket_min                                    Decimal   @db.Decimal(18, 4)
+  bracket_max                                    Decimal?  @db.Decimal(18, 4)
+  rate_percentage                                Decimal   @db.Decimal(6, 3)
+
+  @@schema("payroll")
+}
+
+model thirteenth_month_calculations {
+  id                                                    String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                              BigInt       @unique @default(autoincrement())
+  tenant_id                                             String       @db.Uuid
+  company_id                                            String       @db.Uuid
+  branch_id                                             String?      @db.Uuid
+  created_at                                            DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at                                            DateTime     @default(now()) @db.Timestamptz(6)
+  deleted_at                                            DateTime?    @db.Timestamptz(6)
+  created_by                                            String?      @db.Uuid
+  updated_by                                            String?      @db.Uuid
+  deleted_by                                            String?      @db.Uuid
+  version                                               Int          @default(1)
+  row_version                                           BigInt       @default(0)
+  is_active                                             Boolean      @default(true)
+  is_deleted                                            Boolean?     @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                          String?
+  metadata                                              Json         @default("{}")
+  employee_id                                           String       @db.Uuid
+  fiscal_year_id                                        String       @db.Uuid
+  amount                                                Decimal      @db.Decimal(18, 4)
+
+  @@schema("payroll")
+}

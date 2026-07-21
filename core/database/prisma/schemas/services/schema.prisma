@@ -1,0 +1,504 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "./generated"
+  previewFeatures = ["multiSchema"]
+  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["services"]
+}
+
+model equipment {
+  id                                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                          BigInt              @unique @default(autoincrement())
+  tenant_id                         String              @db.Uuid
+  company_id                        String              @db.Uuid
+  branch_id                         String?             @db.Uuid
+  created_at                        DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                        DateTime            @default(now()) @db.Timestamptz(6)
+  deleted_at                        DateTime?           @db.Timestamptz(6)
+  created_by                        String?             @db.Uuid
+  updated_by                        String?             @db.Uuid
+  deleted_by                        String?             @db.Uuid
+  version                           Int                 @default(1)
+  row_version                       BigInt              @default(0)
+  is_active                         Boolean             @default(true)
+  is_deleted                        Boolean?            @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                      String?
+  metadata                          Json                @default("{}")
+  customer_id                       String              @db.Uuid
+  equipment_type_id                 String              @db.Uuid
+  serial_number                     String?
+  model                             String?
+  equipment_types                   equipment_types     @relation(fields: [equipment_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  maintenance_plans                 maintenance_plans[]
+  service_orders                    service_orders[]
+
+  @@schema("services")
+}
+
+model equipment_types {
+  id                                      String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                BigInt      @unique @default(autoincrement())
+  tenant_id                               String      @db.Uuid
+  company_id                              String?     @db.Uuid
+  branch_id                               String?     @db.Uuid
+  created_at                              DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime    @default(now()) @db.Timestamptz(6)
+  deleted_at                              DateTime?   @db.Timestamptz(6)
+  created_by                              String?     @db.Uuid
+  updated_by                              String?     @db.Uuid
+  deleted_by                              String?     @db.Uuid
+  version                                 Int         @default(1)
+  row_version                             BigInt      @default(0)
+  is_active                               Boolean     @default(true)
+  is_deleted                              Boolean?    @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                            String?
+  metadata                                Json        @default("{}")
+  name                                    String
+  equipment                               equipment[]
+
+  @@schema("services")
+}
+
+model maintenance_plans {
+  id                                        String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt                   @unique @default(autoincrement())
+  tenant_id                                 String                   @db.Uuid
+  company_id                                String                   @db.Uuid
+  branch_id                                 String?                  @db.Uuid
+  created_at                                DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime                 @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime?                @db.Timestamptz(6)
+  created_by                                String?                  @db.Uuid
+  updated_by                                String?                  @db.Uuid
+  deleted_by                                String?                  @db.Uuid
+  version                                   Int                      @default(1)
+  row_version                               BigInt                   @default(0)
+  is_active                                 Boolean                  @default(true)
+  is_deleted                                Boolean?                 @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json                     @default("{}")
+  contract_id                               String                   @db.Uuid
+  equipment_id                              String                   @db.Uuid
+  frequency_days                            Int
+  service_contracts                         service_contracts        @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  equipment                                 equipment                @relation(fields: [equipment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  scheduled_maintenances                    scheduled_maintenances[]
+
+  @@schema("services")
+}
+
+model scheduled_maintenances {
+  id                                             String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                       BigInt            @unique @default(autoincrement())
+  tenant_id                                      String            @db.Uuid
+  company_id                                     String?           @db.Uuid
+  branch_id                                      String?           @db.Uuid
+  created_at                                     DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at                                     DateTime          @default(now()) @db.Timestamptz(6)
+  deleted_at                                     DateTime?         @db.Timestamptz(6)
+  created_by                                     String?           @db.Uuid
+  updated_by                                     String?           @db.Uuid
+  deleted_by                                     String?           @db.Uuid
+  version                                        Int               @default(1)
+  row_version                                    BigInt            @default(0)
+  is_active                                      Boolean           @default(true)
+  is_deleted                                     Boolean?          @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                   String?
+  metadata                                       Json              @default("{}")
+  plan_id                                        String            @db.Uuid
+  scheduled_date                                 DateTime          @db.Date
+  service_order_id                               String?           @db.Uuid
+  maintenance_plans                              maintenance_plans @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  service_orders                                 service_orders?   @relation(fields: [service_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("services")
+}
+
+model service_contract_types {
+  id                                             String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                       BigInt              @unique @default(autoincrement())
+  tenant_id                                      String              @db.Uuid
+  company_id                                     String?             @db.Uuid
+  branch_id                                      String?             @db.Uuid
+  created_at                                     DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                                     DateTime            @default(now()) @db.Timestamptz(6)
+  deleted_at                                     DateTime?           @db.Timestamptz(6)
+  created_by                                     String?             @db.Uuid
+  updated_by                                     String?             @db.Uuid
+  deleted_by                                     String?             @db.Uuid
+  version                                        Int                 @default(1)
+  row_version                                    BigInt              @default(0)
+  is_active                                      Boolean             @default(true)
+  is_deleted                                     Boolean?            @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                   String?
+  metadata                                       Json                @default("{}")
+  name                                           String
+  service_contracts                              service_contracts[]
+
+  @@schema("services")
+}
+
+model service_contracts {
+  id                                        String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt                 @unique @default(autoincrement())
+  tenant_id                                 String                 @db.Uuid
+  company_id                                String                 @db.Uuid
+  branch_id                                 String?                @db.Uuid
+  created_at                                DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime               @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime?              @db.Timestamptz(6)
+  created_by                                String?                @db.Uuid
+  updated_by                                String?                @db.Uuid
+  deleted_by                                String?                @db.Uuid
+  version                                   Int                    @default(1)
+  row_version                               BigInt                 @default(0)
+  is_active                                 Boolean                @default(true)
+  is_deleted                                Boolean?               @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json                   @default("{}")
+  customer_id                               String                 @db.Uuid
+  contract_type_id                          String                 @db.Uuid
+  starts_on                                 DateTime               @db.Date
+  ends_on                                   DateTime?              @db.Date
+  maintenance_plans                         maintenance_plans[]
+  service_contract_types                    service_contract_types @relation(fields: [contract_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sla_definitions                           sla_definitions[]
+
+  @@schema("services")
+}
+
+model service_order_lines {
+  id                                          String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                    BigInt         @unique @default(autoincrement())
+  tenant_id                                   String         @db.Uuid
+  company_id                                  String?        @db.Uuid
+  branch_id                                   String?        @db.Uuid
+  created_at                                  DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                                  DateTime       @default(now()) @db.Timestamptz(6)
+  deleted_at                                  DateTime?      @db.Timestamptz(6)
+  created_by                                  String?        @db.Uuid
+  updated_by                                  String?        @db.Uuid
+  deleted_by                                  String?        @db.Uuid
+  version                                     Int            @default(1)
+  row_version                                 BigInt         @default(0)
+  is_active                                   Boolean        @default(true)
+  is_deleted                                  Boolean?       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                String?
+  metadata                                    Json           @default("{}")
+  service_order_id                            String         @db.Uuid
+  product_id                                  String         @db.Uuid
+  quantity                                    Decimal        @db.Decimal(18, 6)
+  unit_price                                  Decimal        @db.Decimal(18, 4)
+  service_orders                              service_orders @relation(fields: [service_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("services")
+}
+
+model service_order_reasons {
+  id                                            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                      BigInt           @unique @default(autoincrement())
+  tenant_id                                     String           @db.Uuid
+  company_id                                    String?          @db.Uuid
+  branch_id                                     String?          @db.Uuid
+  created_at                                    DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime         @default(now()) @db.Timestamptz(6)
+  deleted_at                                    DateTime?        @db.Timestamptz(6)
+  created_by                                    String?          @db.Uuid
+  updated_by                                    String?          @db.Uuid
+  deleted_by                                    String?          @db.Uuid
+  version                                       Int              @default(1)
+  row_version                                   BigInt           @default(0)
+  is_active                                     Boolean          @default(true)
+  is_deleted                                    Boolean?         @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                  String?
+  metadata                                      Json             @default("{}")
+  name                                          String
+  service_orders                                service_orders[]
+
+  @@schema("services")
+}
+
+model service_order_status {
+  id                                           String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                     BigInt                         @unique @default(autoincrement())
+  tenant_id                                    String                         @db.Uuid
+  company_id                                   String?                        @db.Uuid
+  branch_id                                    String?                        @db.Uuid
+  created_at                                   DateTime                       @default(now()) @db.Timestamptz(6)
+  updated_at                                   DateTime                       @default(now()) @db.Timestamptz(6)
+  deleted_at                                   DateTime?                      @db.Timestamptz(6)
+  created_by                                   String?                        @db.Uuid
+  updated_by                                   String?                        @db.Uuid
+  deleted_by                                   String?                        @db.Uuid
+  version                                      Int                            @default(1)
+  row_version                                  BigInt                         @default(0)
+  is_active                                    Boolean                        @default(true)
+  is_deleted                                   Boolean?                       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                 String?
+  metadata                                     Json                           @default("{}")
+  code                                         String
+  is_final                                     Boolean                        @default(false)
+  service_order_status_history                 service_order_status_history[]
+  service_orders                               service_orders[]
+
+  @@schema("services")
+}
+
+model service_order_status_history {
+  id                                                   String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                             BigInt               @unique @default(autoincrement())
+  tenant_id                                            String               @db.Uuid
+  company_id                                           String?              @db.Uuid
+  branch_id                                            String?              @db.Uuid
+  created_at                                           DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at                                           DateTime             @default(now()) @db.Timestamptz(6)
+  deleted_at                                           DateTime?            @db.Timestamptz(6)
+  created_by                                           String?              @db.Uuid
+  updated_by                                           String?              @db.Uuid
+  deleted_by                                           String?              @db.Uuid
+  version                                              Int                  @default(1)
+  row_version                                          BigInt               @default(0)
+  is_active                                            Boolean              @default(true)
+  is_deleted                                           Boolean?             @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                         String?
+  metadata                                             Json                 @default("{}")
+  service_order_id                                     String               @db.Uuid
+  status_id                                            String               @db.Uuid
+  service_orders                                       service_orders       @relation(fields: [service_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  service_order_status                                 service_order_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("services")
+}
+
+model service_orders {
+  id                                     String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                               BigInt                         @unique @default(autoincrement())
+  tenant_id                              String                         @db.Uuid
+  company_id                             String                         @db.Uuid
+  branch_id                              String                         @db.Uuid
+  created_at                             DateTime                       @default(now()) @db.Timestamptz(6)
+  updated_at                             DateTime                       @default(now()) @db.Timestamptz(6)
+  deleted_at                             DateTime?                      @db.Timestamptz(6)
+  created_by                             String?                        @db.Uuid
+  updated_by                             String?                        @db.Uuid
+  deleted_by                             String?                        @db.Uuid
+  version                                Int                            @default(1)
+  row_version                            BigInt                         @default(0)
+  is_active                              Boolean                        @default(true)
+  is_deleted                             Boolean?                       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                           String?
+  metadata                               Json                           @default("{}")
+  document_number                        String
+  customer_id                            String                         @db.Uuid
+  equipment_id                           String?                        @db.Uuid
+  service_type_id                        String                         @db.Uuid
+  reason_id                              String?                        @db.Uuid
+  warranty_id                            String?                        @db.Uuid
+  status_id                              String                         @db.Uuid
+  scheduled_maintenances                 scheduled_maintenances[]
+  service_order_lines                    service_order_lines[]
+  service_order_status_history           service_order_status_history[]
+  equipment                              equipment?                     @relation(fields: [equipment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  service_order_reasons                  service_order_reasons?         @relation(fields: [reason_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  service_types                          service_types                  @relation(fields: [service_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  service_order_status                   service_order_status           @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  service_parts_consumed                 service_parts_consumed[]
+  service_visits                         service_visits[]
+  technician_assignments                 technician_assignments[]
+
+  @@schema("services")
+}
+
+model service_parts_consumed {
+  id                                             String         @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                       BigInt         @default(autoincrement())
+  tenant_id                                      String         @db.Uuid
+  company_id                                     String?        @db.Uuid
+  branch_id                                      String?        @db.Uuid
+  created_at                                     DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                                     DateTime       @default(now()) @db.Timestamptz(6)
+  deleted_at                                     DateTime?      @db.Timestamptz(6)
+  created_by                                     String?        @db.Uuid
+  updated_by                                     String?        @db.Uuid
+  deleted_by                                     String?        @db.Uuid
+  version                                        Int            @default(1)
+  row_version                                    BigInt         @default(0)
+  is_active                                      Boolean        @default(true)
+  is_deleted                                     Boolean?       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                   String?
+  metadata                                       Json           @default("{}")
+  service_order_id                               String         @db.Uuid
+  product_id                                     String         @db.Uuid
+  quantity                                       Decimal        @db.Decimal(18, 6)
+  service_orders                                 service_orders @relation(fields: [service_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id, created_at])
+  @@unique([local_id, created_at])
+  @@schema("services")
+}
+
+model service_types {
+  id                                    String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                              BigInt           @unique @default(autoincrement())
+  tenant_id                             String           @db.Uuid
+  company_id                            String           @db.Uuid
+  branch_id                             String?          @db.Uuid
+  created_at                            DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime         @default(now()) @db.Timestamptz(6)
+  deleted_at                            DateTime?        @db.Timestamptz(6)
+  created_by                            String?          @db.Uuid
+  updated_by                            String?          @db.Uuid
+  deleted_by                            String?          @db.Uuid
+  version                               Int              @default(1)
+  row_version                           BigInt           @default(0)
+  is_active                             Boolean          @default(true)
+  is_deleted                            Boolean?         @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                          String?
+  metadata                              Json             @default("{}")
+  name                                  String
+  standard_duration_minutes             Int?
+  service_orders                        service_orders[]
+
+  @@schema("services")
+}
+
+model service_visits {
+  id                                     String         @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                               BigInt         @default(autoincrement())
+  tenant_id                              String         @db.Uuid
+  company_id                             String         @db.Uuid
+  branch_id                              String?        @db.Uuid
+  created_at                             DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                             DateTime       @default(now()) @db.Timestamptz(6)
+  deleted_at                             DateTime?      @db.Timestamptz(6)
+  created_by                             String?        @db.Uuid
+  updated_by                             String?        @db.Uuid
+  deleted_by                             String?        @db.Uuid
+  version                                Int            @default(1)
+  row_version                            BigInt         @default(0)
+  is_active                              Boolean        @default(true)
+  is_deleted                             Boolean?       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                           String?
+  metadata                               Json           @default("{}")
+  service_order_id                       String         @db.Uuid
+  technician_id                          String         @db.Uuid
+  started_at                             DateTime?      @db.Timestamptz(6)
+  finished_at                            DateTime?      @db.Timestamptz(6)
+  latitude                               Decimal?       @db.Decimal(9, 6)
+  longitude                              Decimal?       @db.Decimal(9, 6)
+  service_orders                         service_orders @relation(fields: [service_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  technicians                            technicians    @relation(fields: [technician_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id, created_at])
+  @@unique([local_id, created_at])
+  @@schema("services")
+}
+
+model service_work_reports {
+  id                                           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                     BigInt     @unique @default(autoincrement())
+  tenant_id                                    String     @db.Uuid
+  company_id                                   String?    @db.Uuid
+  branch_id                                    String?    @db.Uuid
+  created_at                                   DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                                   DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                                   DateTime?  @db.Timestamptz(6)
+  created_by                                   String?    @db.Uuid
+  updated_by                                   String?    @db.Uuid
+  deleted_by                                   String?    @db.Uuid
+  version                                      Int        @default(1)
+  row_version                                  BigInt     @default(0)
+  is_active                                    Boolean    @default(true)
+  is_deleted                                   Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                 String?
+  metadata                                     Json       @default("{}")
+  service_visit_id                             String     @db.Uuid
+  findings                                     String?
+  customer_signature_file_id                   String?    @db.Uuid
+
+  @@schema("services")
+}
+
+model sla_definitions {
+  id                                      String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                BigInt            @unique @default(autoincrement())
+  tenant_id                               String            @db.Uuid
+  company_id                              String?           @db.Uuid
+  branch_id                               String?           @db.Uuid
+  created_at                              DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime          @default(now()) @db.Timestamptz(6)
+  deleted_at                              DateTime?         @db.Timestamptz(6)
+  created_by                              String?           @db.Uuid
+  updated_by                              String?           @db.Uuid
+  deleted_by                              String?           @db.Uuid
+  version                                 Int               @default(1)
+  row_version                             BigInt            @default(0)
+  is_active                               Boolean           @default(true)
+  is_deleted                              Boolean?          @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                            String?
+  metadata                                Json              @default("{}")
+  contract_id                             String            @db.Uuid
+  response_time_hours                     Int
+  resolution_time_hours                   Int
+  service_contracts                       service_contracts @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("services")
+}
+
+model technician_assignments {
+  id                                             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                       BigInt         @unique @default(autoincrement())
+  tenant_id                                      String         @db.Uuid
+  company_id                                     String?        @db.Uuid
+  branch_id                                      String?        @db.Uuid
+  created_at                                     DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                                     DateTime       @default(now()) @db.Timestamptz(6)
+  deleted_at                                     DateTime?      @db.Timestamptz(6)
+  created_by                                     String?        @db.Uuid
+  updated_by                                     String?        @db.Uuid
+  deleted_by                                     String?        @db.Uuid
+  version                                        Int            @default(1)
+  row_version                                    BigInt         @default(0)
+  is_active                                      Boolean        @default(true)
+  is_deleted                                     Boolean?       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                   String?
+  metadata                                       Json           @default("{}")
+  technician_id                                  String         @db.Uuid
+  service_order_id                               String         @db.Uuid
+  scheduled_at                                   DateTime?      @db.Timestamptz(6)
+  service_orders                                 service_orders @relation(fields: [service_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  technicians                                    technicians    @relation(fields: [technician_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("services")
+}
+
+model technicians {
+  id                                  String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                            BigInt                   @unique @default(autoincrement())
+  tenant_id                           String                   @db.Uuid
+  company_id                          String                   @db.Uuid
+  branch_id                           String?                  @db.Uuid
+  created_at                          DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at                          DateTime                 @default(now()) @db.Timestamptz(6)
+  deleted_at                          DateTime?                @db.Timestamptz(6)
+  created_by                          String?                  @db.Uuid
+  updated_by                          String?                  @db.Uuid
+  deleted_by                          String?                  @db.Uuid
+  version                             Int                      @default(1)
+  row_version                         BigInt                   @default(0)
+  is_active                           Boolean                  @default(true)
+  is_deleted                          Boolean?                 @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                        String?
+  metadata                            Json                     @default("{}")
+  employee_id                         String?                  @db.Uuid
+  full_name                           String
+  service_visits                      service_visits[]
+  technician_assignments              technician_assignments[]
+
+  @@schema("services")
+}

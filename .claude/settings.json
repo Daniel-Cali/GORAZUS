@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "shell": "powershell",
+            "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"D:\\ClaudeCodeBackups\\scripts\\claude-conversation-backup.ps1\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

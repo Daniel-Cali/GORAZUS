@@ -1,0 +1,15 @@
+{
+  "name": "@gorazus/core-storage",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GORAZUS ERP — Storage Framework (MinIO). Ver docs/architecture/08-infraestructura-y-despliegue.md §5.",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "dependencies": {
+    "@nestjs/common": "^10.4.0",
+    "@nestjs/config": "^3.3.0",
+    "minio": "^8.0.0",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.8.0"
+  }
+}

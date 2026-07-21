@@ -1,0 +1,34 @@
+# GORAZUS ERP — reglas de alerta sobre las métricas reales ya emitidas por
+# core/observability/metrics.ts (http_requests_total, http_request_duration_ms
+# con labels method/route/status — ver core/http/interceptors/metrics.interceptor.ts).
+groups:
+  - name: gorazus-api
+    rules:
+      - alert: ApiDown
+        expr: up{job="gorazus-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'apps/api no responde al scrape de Prometheus'
+          description: 'El target gorazus-api lleva más de 1 minuto caído.'
+
+      - alert: ApiHighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m]))
+          /
+          sum(rate(http_requests_total[5m]))
+          > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Tasa de error 5xx > 5% en los últimos 5 minutos'
+
+      - alert: ApiHighLatencyP95
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_ms_bucket[5m])) by (le)) > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'P95 de latencia HTTP > 1s en los últimos 5 minutos'

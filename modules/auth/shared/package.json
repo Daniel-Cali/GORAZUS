@@ -1,0 +1,9 @@
+{
+  "name": "@gorazus/auth-shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GORAZUS ERP — contratos compartidos del módulo auth (Zod schemas + tipos). Ver docs/frontend/FOLDER_STRUCTURE.md §3. Solo se importa por ruta relativa dentro del módulo, nunca por nombre de paquete.",
+  "dependencies": {
+    "zod": "^3.24.0"
+  }
+}

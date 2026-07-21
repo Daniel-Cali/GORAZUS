@@ -1,0 +1,40 @@
+# GORAZUS ERP — overlay de producción (referencia para despliegue
+# vía Docker Compose en un solo host; staging/production reales
+# corren en Kubernetes, ver docs/architecture/31-infraestructura-completa.md §2).
+# Sin hot-reload, sin puertos de administración expuestos — solo
+# nginx queda accesible desde fuera del host.
+#
+# Uso: docker compose -f docker-compose.yml -f docker-compose.prod.yml up
+
+services:
+  api:
+    build:
+      target: production
+    environment:
+      NODE_ENV: production
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+
+  web:
+    build:
+      target: production
+    restart: unless-stopped
+
+  postgres:
+    restart: unless-stopped
+
+  redis:
+    restart: unless-stopped
+
+  rabbitmq:
+    restart: unless-stopped
+
+  minio:
+    restart: unless-stopped
+
+  ollama:
+    restart: unless-stopped
+
+  nginx:
+    restart: unless-stopped

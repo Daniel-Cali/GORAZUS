@@ -1,0 +1,26 @@
+# MinIO distribuido vía el MinIO Operator oficial — implementa
+# docs/architecture/31-infraestructura-completa.md §11: "Modo distribuido con
+# erasure coding (mínimo 4 nodos)... un archivo permanece recuperable aunque
+# un nodo completo se pierda". Requiere el operador ya instalado
+# (prerequisito, ver README).
+apiVersion: minio.min.io/v2
+kind: Tenant
+metadata:
+  name: gorazus-minio
+spec:
+  pools:
+    - servers: 4 # mínimo para erasure coding real, ver nota de cabecera
+      volumesPerServer: 1
+      volumeClaimTemplate:
+        spec:
+          accessModes: ['ReadWriteOnce']
+          resources:
+            requests:
+              storage: 20Gi
+      resources:
+        requests: { cpu: 250m, memory: 512Mi }
+        limits: { cpu: '1', memory: 1Gi }
+  credsSecret:
+    name: minio-creds # Secret con accesskey/secretkey — plantilla, ver api-secret.yaml del mismo criterio
+  mountPath: /export
+  requestAutoCert: false # TLS terminado en el Ingress (cert-manager), no en MinIO directo — mismo criterio que nginx en Docker Compose

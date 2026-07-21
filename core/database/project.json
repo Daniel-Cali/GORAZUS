@@ -1,0 +1,37 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "core-database",
+  "sourceRoot": "core/database/src",
+  "projectType": "library",
+  "tags": ["type:core"],
+  "targets": {
+    "build-tsc": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/core/database"],
+      "options": {
+        "command": "tsc -p core/database/tsconfig.json"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/core/database"],
+      "options": {
+        "commands": [
+          "nx run core-database:build-tsc",
+          "node core/database/scripts/copy-generated-to-dist.js"
+        ],
+        "parallel": false
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/core/database"],
+      "options": {
+        "jestConfig": "core/database/jest.config.ts"
+      }
+    }
+  }
+}

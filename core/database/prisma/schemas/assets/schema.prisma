@@ -1,0 +1,280 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "./generated"
+  previewFeatures = ["multiSchema"]
+  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["assets"]
+}
+
+model asset_categories {
+  id                                       String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                 BigInt                @unique @default(autoincrement())
+  tenant_id                                String                @db.Uuid
+  company_id                               String                @db.Uuid
+  branch_id                                String?               @db.Uuid
+  created_at                               DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime              @default(now()) @db.Timestamptz(6)
+  deleted_at                               DateTime?             @db.Timestamptz(6)
+  created_by                               String?               @db.Uuid
+  updated_by                               String?               @db.Uuid
+  deleted_by                               String?               @db.Uuid
+  version                                  Int                   @default(1)
+  row_version                              BigInt                @default(0)
+  is_active                                Boolean               @default(true)
+  is_deleted                               Boolean?              @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                             String?
+  metadata                                 Json                  @default("{}")
+  name                                     String
+  default_depreciation_method_id           String?               @db.Uuid
+  default_useful_life_months               Int?
+  depreciation_methods                     depreciation_methods? @relation(fields: [default_depreciation_method_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fixed_assets                             fixed_assets[]
+
+  @@schema("assets")
+}
+
+model asset_custodian_history {
+  id                                                     String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                               BigInt       @unique @default(autoincrement())
+  tenant_id                                              String       @db.Uuid
+  company_id                                             String?      @db.Uuid
+  branch_id                                              String?      @db.Uuid
+  created_at                                             DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at                                             DateTime     @default(now()) @db.Timestamptz(6)
+  deleted_at                                             DateTime?    @db.Timestamptz(6)
+  created_by                                             String?      @db.Uuid
+  updated_by                                             String?      @db.Uuid
+  deleted_by                                             String?      @db.Uuid
+  version                                                Int          @default(1)
+  row_version                                            BigInt       @default(0)
+  is_active                                              Boolean      @default(true)
+  is_deleted                                             Boolean?     @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                           String?
+  metadata                                               Json         @default("{}")
+  asset_id                                               String       @db.Uuid
+  custodian_user_id                                      String       @db.Uuid
+  fixed_assets                                           fixed_assets @relation(fields: [asset_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("assets")
+}
+
+model asset_depreciation_entries {
+  id                                                 String         @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                           BigInt         @default(autoincrement())
+  tenant_id                                          String         @db.Uuid
+  company_id                                         String?        @db.Uuid
+  branch_id                                          String?        @db.Uuid
+  created_at                                         DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                                         DateTime       @default(now()) @db.Timestamptz(6)
+  deleted_at                                         DateTime?      @db.Timestamptz(6)
+  created_by                                         String?        @db.Uuid
+  updated_by                                         String?        @db.Uuid
+  deleted_by                                         String?        @db.Uuid
+  version                                            Int            @default(1)
+  row_version                                        BigInt         @default(0)
+  is_active                                          Boolean        @default(true)
+  is_deleted                                         Boolean?       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                       String?
+  metadata                                           Json           @default("{}")
+  asset_id                                           String         @db.Uuid
+  fiscal_period_id                                   String         @db.Uuid
+  amount                                             Decimal        @db.Decimal(18, 4)
+  fixed_assets                                       fixed_assets   @relation(fields: [asset_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id, created_at])
+  @@unique([local_id, created_at])
+  @@schema("assets")
+}
+
+model asset_disposals {
+  id                                      String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                BigInt       @unique @default(autoincrement())
+  tenant_id                               String       @db.Uuid
+  company_id                              String?      @db.Uuid
+  branch_id                               String?      @db.Uuid
+  created_at                              DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime     @default(now()) @db.Timestamptz(6)
+  deleted_at                              DateTime?    @db.Timestamptz(6)
+  created_by                              String?      @db.Uuid
+  updated_by                              String?      @db.Uuid
+  deleted_by                              String?      @db.Uuid
+  version                                 Int          @default(1)
+  row_version                             BigInt       @default(0)
+  is_active                               Boolean      @default(true)
+  is_deleted                              Boolean?     @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                            String?
+  metadata                                Json         @default("{}")
+  asset_id                                String       @db.Uuid
+  disposal_type                           String
+  residual_value                          Decimal      @default(0) @db.Decimal(18, 4)
+  fixed_assets                            fixed_assets @relation(fields: [asset_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("assets")
+}
+
+model asset_maintenance_types {
+  id                                              String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                        BigInt               @unique @default(autoincrement())
+  tenant_id                                       String               @db.Uuid
+  company_id                                      String?              @db.Uuid
+  branch_id                                       String?              @db.Uuid
+  created_at                                      DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at                                      DateTime             @default(now()) @db.Timestamptz(6)
+  deleted_at                                      DateTime?            @db.Timestamptz(6)
+  created_by                                      String?              @db.Uuid
+  updated_by                                      String?              @db.Uuid
+  deleted_by                                      String?              @db.Uuid
+  version                                         Int                  @default(1)
+  row_version                                     BigInt               @default(0)
+  is_active                                       Boolean              @default(true)
+  is_deleted                                      Boolean?             @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                    String?
+  metadata                                        Json                 @default("{}")
+  code                                            String
+  asset_maintenances                              asset_maintenances[]
+
+  @@schema("assets")
+}
+
+model asset_maintenances {
+  id                                         String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                   BigInt                  @unique @default(autoincrement())
+  tenant_id                                  String                  @db.Uuid
+  company_id                                 String?                 @db.Uuid
+  branch_id                                  String?                 @db.Uuid
+  created_at                                 DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime                @default(now()) @db.Timestamptz(6)
+  deleted_at                                 DateTime?               @db.Timestamptz(6)
+  created_by                                 String?                 @db.Uuid
+  updated_by                                 String?                 @db.Uuid
+  deleted_by                                 String?                 @db.Uuid
+  version                                    Int                     @default(1)
+  row_version                                BigInt                  @default(0)
+  is_active                                  Boolean                 @default(true)
+  is_deleted                                 Boolean?                @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                               String?
+  metadata                                   Json                    @default("{}")
+  asset_id                                   String                  @db.Uuid
+  maintenance_type_id                        String                  @db.Uuid
+  cost                                       Decimal?                @db.Decimal(18, 4)
+  fixed_assets                               fixed_assets            @relation(fields: [asset_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  asset_maintenance_types                    asset_maintenance_types @relation(fields: [maintenance_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("assets")
+}
+
+model asset_revaluations {
+  id                                                  String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                            BigInt       @unique @default(autoincrement())
+  tenant_id                                           String       @db.Uuid
+  company_id                                          String?      @db.Uuid
+  branch_id                                           String?      @db.Uuid
+  created_at                                          DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at                                          DateTime     @default(now()) @db.Timestamptz(6)
+  deleted_at                                          DateTime?    @db.Timestamptz(6)
+  created_by                                          String?      @db.Uuid
+  updated_by                                          String?      @db.Uuid
+  deleted_by                                          String?      @db.Uuid
+  version                                             Int          @default(1)
+  row_version                                         BigInt       @default(0)
+  is_active                                           Boolean      @default(true)
+  is_deleted                                          Boolean?     @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                        String?
+  metadata                                            Json         @default("{}")
+  asset_id                                            String       @db.Uuid
+  new_value                                           Decimal      @db.Decimal(18, 4)
+  approved_by_user_id                                 String       @db.Uuid
+  fixed_assets                                        fixed_assets @relation(fields: [asset_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("assets")
+}
+
+model asset_transfers {
+  id                                                String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                          BigInt       @unique @default(autoincrement())
+  tenant_id                                         String       @db.Uuid
+  company_id                                        String?      @db.Uuid
+  branch_id                                         String?      @db.Uuid
+  created_at                                        DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at                                        DateTime     @default(now()) @db.Timestamptz(6)
+  deleted_at                                        DateTime?    @db.Timestamptz(6)
+  created_by                                        String?      @db.Uuid
+  updated_by                                        String?      @db.Uuid
+  deleted_by                                        String?      @db.Uuid
+  version                                           Int          @default(1)
+  row_version                                       BigInt       @default(0)
+  is_active                                         Boolean      @default(true)
+  is_deleted                                        Boolean?     @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                      String?
+  metadata                                          Json         @default("{}")
+  asset_id                                          String       @db.Uuid
+  from_branch_id                                    String?      @db.Uuid
+  to_branch_id                                      String?      @db.Uuid
+  fixed_assets                                      fixed_assets @relation(fields: [asset_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("assets")
+}
+
+model depreciation_methods {
+  id                                           String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                     BigInt             @unique @default(autoincrement())
+  tenant_id                                    String             @db.Uuid
+  company_id                                   String?            @db.Uuid
+  branch_id                                    String?            @db.Uuid
+  created_at                                   DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                                   DateTime           @default(now()) @db.Timestamptz(6)
+  deleted_at                                   DateTime?          @db.Timestamptz(6)
+  created_by                                   String?            @db.Uuid
+  updated_by                                   String?            @db.Uuid
+  deleted_by                                   String?            @db.Uuid
+  version                                      Int                @default(1)
+  row_version                                  BigInt             @default(0)
+  is_active                                    Boolean            @default(true)
+  is_deleted                                   Boolean?           @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                 String?
+  metadata                                     Json               @default("{}")
+  code                                         String
+  asset_categories                             asset_categories[]
+
+  @@schema("assets")
+}
+
+model fixed_assets {
+  id                                                  String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                            BigInt                       @unique @default(autoincrement())
+  tenant_id                                           String                       @db.Uuid
+  company_id                                          String                       @db.Uuid
+  branch_id                                           String?                      @db.Uuid
+  created_at                                          DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                                          DateTime                     @default(now()) @db.Timestamptz(6)
+  deleted_at                                          DateTime?                    @db.Timestamptz(6)
+  created_by                                          String?                      @db.Uuid
+  updated_by                                          String?                      @db.Uuid
+  deleted_by                                          String?                      @db.Uuid
+  version                                             Int                          @default(1)
+  row_version                                         BigInt                       @default(0)
+  is_active                                           Boolean                      @default(true)
+  is_deleted                                          Boolean?                     @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                        String?
+  metadata                                            Json                         @default("{}")
+  name                                                String
+  category_id                                         String                       @db.Uuid
+  source_purchase_invoice_line_id                     String?                      @db.Uuid
+  acquisition_cost                                    Decimal                      @db.Decimal(18, 4)
+  acquisition_date                                    DateTime                     @db.Date
+  current_custodian_user_id                           String?                      @db.Uuid
+  asset_custodian_history                             asset_custodian_history[]
+  asset_depreciation_entries                          asset_depreciation_entries[]
+  asset_disposals                                     asset_disposals[]
+  asset_maintenances                                  asset_maintenances[]
+  asset_revaluations                                  asset_revaluations[]
+  asset_transfers                                     asset_transfers[]
+  asset_categories                                    asset_categories             @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("assets")
+}

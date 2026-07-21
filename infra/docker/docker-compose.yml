@@ -1,0 +1,239 @@
+# GORAZUS ERP — topología base (todos los entornos vía Docker Compose).
+# Ver docs/architecture/08-infraestructura-y-despliegue.md §1.
+# Servicios propios (api/web) construidos desde sus Dockerfile;
+# infraestructura de terceros vía imágenes oficiales.
+# Variantes: docker-compose.dev.yml (hot-reload + puertos de admin),
+# docker-compose.prod.yml (sin hot-reload, sin puertos de admin).
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on:
+      api:
+        condition: service_started
+      web:
+        condition: service_completed_successfully # web es un init container: copia su build y termina, ver apps/web/Dockerfile
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ../nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../nginx/certs:/etc/nginx/certs:ro # generado con infra/nginx/generate-dev-cert.sh, gitignored — ver infra/kubernetes/ para TLS real (cert-manager)
+      - web_dist:/usr/share/nginx/html:ro
+    healthcheck:
+      test:
+        ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost/nginx-health']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging: *default-logging
+    networks:
+      - gorazus
+
+  api:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    env_file:
+      - ../../.env
+    # Bug real encontrado en FASE 05 (2026-07-20): `.env` fija DATABASE_URL/
+    # REDIS_URL/RABBITMQ_URL/MINIO_ENDPOINT en "localhost", pensado para
+    # `ts-node` corriendo en el host — dentro de este contenedor, "localhost"
+    # es el propio contenedor, no los otros servicios del compose (nunca
+    # había conectado: docker-api-1 llevaba toda la sesión "Exited (1)").
+    # `environment:` tiene precedencia sobre `env_file:` — sobreescribe solo
+    # lo que cambia entre host y red interna de Docker, mismas credenciales.
+    environment:
+      DATABASE_URL: postgresql://gorazus_app:${POSTGRES_APP_PASSWORD:-gorazus_dev_local}@postgres:5432/${POSTGRES_DB:-gorazus}?schema=core
+      REDIS_URL: redis://redis:6379
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-gorazus_app}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+      MINIO_ENDPOINT: minio
+      OLLAMA_BASE_URL: http://ollama:11434
+      SMTP_HOST: mailhog
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    logging: *default-logging
+    networks:
+      - gorazus
+
+  web:
+    build:
+      context: ../..
+      dockerfile: apps/web/Dockerfile
+    volumes:
+      - web_dist:/shared
+    logging: *default-logging
+    networks:
+      - gorazus
+
+  # Worker de Background Jobs (docs/architecture/32-core-platform/08 §6):
+  # procesos separados del backend HTTP, escalables de forma
+  # independiente. El composition root exacto (¿apps/api-worker propio,
+  # o un flag de arranque sobre apps/api/src/main.ts?) queda
+  # explícitamente abierto como decisión de implementación en
+  # docs/architecture/32-core-platform/12-arbol-de-carpetas.md §3 —
+  # todavía no existe el framework de Background Jobs (core/jobs/), así
+  # que este servicio reusa la MISMA imagen que `api` (sin Dockerfile
+  # propio) con un `command` placeholder, en vez de inventar esa
+  # decisión acá. Se activa (descomenta) cuando core/jobs/job-worker.ts
+  # exista.
+  # worker:
+  #   build:
+  #     context: ../..
+  #     dockerfile: apps/api/Dockerfile
+  #   env_file:
+  #     - ../../.env
+  #   command: ["node", "main.js", "--mode=worker"] # placeholder — flag real pendiente de core/jobs
+  #   depends_on:
+  #     rabbitmq:
+  #       condition: service_healthy
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   networks:
+  #     - gorazus
+
+  postgres:
+    build:
+      context: ./postgres
+    image: gorazus-postgres17-partman:local
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-gorazus_superuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?falta POSTGRES_PASSWORD en .env}
+      POSTGRES_DB: ${POSTGRES_DB:-gorazus}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ../postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${POSTGRES_USER:-gorazus_superuser} -d ${POSTGRES_DB:-gorazus}',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging: *default-logging
+    networks:
+      - gorazus
+
+  # Respaldo lógico automático — FASE 05 (2026-07-20), ver
+  # infra/postgres/backup/backup.sh para el porqué de pg_dump programado en
+  # vez de pgBackRest acá (Fase 1 real, no fingida). `gorazus_backup` ya
+  # tiene BYPASSRLS + pg_read_all_data (docs/database/sql/30_backup_restore.sql)
+  # — el mismo rol pensado para esto desde antes de esta fase.
+  backup:
+    image: gorazus-postgres17-partman:local # ya trae pg_dump/pg_restore de la misma versión que el servidor
+    entrypoint: ['/bin/sh', '-c']
+    command: ['/scripts/backup.sh; while true; do sleep 86400; /scripts/backup.sh; done'] # respaldo inmediato al arrancar + diario
+    environment:
+      PGHOST: postgres
+      PGUSER: gorazus_backup
+      PGPASSWORD: ${POSTGRES_BACKUP_PASSWORD:?falta POSTGRES_BACKUP_PASSWORD en .env}
+      PGDATABASE: ${POSTGRES_DB:-gorazus}
+      BACKUP_RETENTION_DAYS: 7
+    volumes:
+      - ../postgres/backup/backup.sh:/scripts/backup.sh:ro
+      - ../postgres/backup/restore.sh:/scripts/restore.sh:ro
+      - postgres_backups:/backups
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging: *default-logging
+    networks:
+      - gorazus
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server /usr/local/etc/redis/redis.conf
+    volumes:
+      - redis_data:/data
+      - ../redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging: *default-logging
+    networks:
+      - gorazus
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-gorazus_app}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?falta RABBITMQ_PASSWORD en .env}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: *default-logging
+    networks:
+      - gorazus
+
+  minio:
+    image: minio/minio:latest
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-gorazus_app}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?falta MINIO_ROOT_PASSWORD en .env}
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging: *default-logging
+    networks:
+      - gorazus
+
+  # Ollama (FASE 04 — infraestructura de IA, `core/ollama`). Sin `depends_on`
+  # desde `api`: ningún módulo de negocio lo consume todavía (sin asistentes
+  # específicos, decisión de alcance confirmada) — bloquear el arranque de la
+  # API por un servicio que nadie llama sería acoplamiento innecesario. El
+  # volumen persiste los modelos descargados (`ollama pull <modelo>`, decisión
+  # operativa, ningún modelo se descarga automáticamente acá).
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ['CMD-SHELL', 'curl -f http://localhost:11434 || exit 1']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging: *default-logging
+    networks:
+      - gorazus
+
+networks:
+  gorazus:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  postgres_backups:
+  redis_data:
+  rabbitmq_data:
+  minio_data:
+  ollama_data:
+  web_dist: # build estático de apps/web, poblado por el init container `web` (ver arriba), servido por `nginx`

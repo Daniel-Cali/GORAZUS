@@ -1,0 +1,982 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "./generated"
+  previewFeatures = ["multiSchema"]
+  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["products"]
+}
+
+model bill_of_materials {
+  id                                        String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt              @unique @default(autoincrement())
+  tenant_id                                 String              @db.Uuid
+  company_id                                String?             @db.Uuid
+  branch_id                                 String?             @db.Uuid
+  created_at                                DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime            @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime?           @db.Timestamptz(6)
+  created_by                                String?             @db.Uuid
+  updated_by                                String?             @db.Uuid
+  deleted_by                                String?             @db.Uuid
+  version                                   Int                 @default(1)
+  row_version                               BigInt              @default(0)
+  is_active                                 Boolean             @default(true)
+  is_deleted                                Boolean?            @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json                @default("{}")
+  product_id                                String              @db.Uuid
+  name                                      String
+  output_quantity                           Decimal             @default(1) @db.Decimal(18, 6)
+  products                                  products            @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  bom_components                            bom_components[]
+
+  @@schema("products")
+}
+
+model bom_components {
+  id                                     String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                               BigInt            @unique @default(autoincrement())
+  tenant_id                              String            @db.Uuid
+  company_id                             String?           @db.Uuid
+  branch_id                              String?           @db.Uuid
+  created_at                             DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at                             DateTime          @default(now()) @db.Timestamptz(6)
+  deleted_at                             DateTime?         @db.Timestamptz(6)
+  created_by                             String?           @db.Uuid
+  updated_by                             String?           @db.Uuid
+  deleted_by                             String?           @db.Uuid
+  version                                Int               @default(1)
+  row_version                            BigInt            @default(0)
+  is_active                              Boolean           @default(true)
+  is_deleted                             Boolean?          @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                           String?
+  metadata                               Json              @default("{}")
+  bom_id                                 String            @db.Uuid
+  component_product_id                   String            @db.Uuid
+  quantity_required                      Decimal           @db.Decimal(18, 6)
+  bill_of_materials                      bill_of_materials @relation(fields: [bom_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  products                               products          @relation(fields: [component_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model brand_translations {
+  id                                         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                   BigInt     @unique @default(autoincrement())
+  tenant_id                                  String     @db.Uuid
+  company_id                                 String?    @db.Uuid
+  branch_id                                  String?    @db.Uuid
+  created_at                                 DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                                 DateTime?  @db.Timestamptz(6)
+  created_by                                 String?    @db.Uuid
+  updated_by                                 String?    @db.Uuid
+  deleted_by                                 String?    @db.Uuid
+  version                                    Int        @default(1)
+  row_version                                BigInt     @default(0)
+  is_active                                  Boolean    @default(true)
+  is_deleted                                 Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                               String?
+  metadata                                   Json       @default("{}")
+  brand_id                                   String     @db.Uuid
+  language_code                              String
+  description                                String?
+  brands                                     brands     @relation(fields: [brand_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model brands {
+  id                             String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                       BigInt               @unique @default(autoincrement())
+  tenant_id                      String               @db.Uuid
+  company_id                     String               @db.Uuid
+  branch_id                      String?              @db.Uuid
+  created_at                     DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at                     DateTime             @default(now()) @db.Timestamptz(6)
+  deleted_at                     DateTime?            @db.Timestamptz(6)
+  created_by                     String?              @db.Uuid
+  updated_by                     String?              @db.Uuid
+  deleted_by                     String?              @db.Uuid
+  version                        Int                  @default(1)
+  row_version                    BigInt               @default(0)
+  is_active                      Boolean              @default(true)
+  is_deleted                     Boolean?             @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                   String?
+  metadata                       Json                 @default("{}")
+  name                           String
+  brand_translations             brand_translations[]
+  product_models                 product_models[]
+  products                       products[]
+
+  @@schema("products")
+}
+
+model product_attribute_translations {
+  id                                                     String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                               BigInt             @unique @default(autoincrement())
+  tenant_id                                              String             @db.Uuid
+  company_id                                             String?            @db.Uuid
+  branch_id                                              String?            @db.Uuid
+  created_at                                             DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                                             DateTime           @default(now()) @db.Timestamptz(6)
+  deleted_at                                             DateTime?          @db.Timestamptz(6)
+  created_by                                             String?            @db.Uuid
+  updated_by                                             String?            @db.Uuid
+  deleted_by                                             String?            @db.Uuid
+  version                                                Int                @default(1)
+  row_version                                            BigInt             @default(0)
+  is_active                                              Boolean            @default(true)
+  is_deleted                                             Boolean?           @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                           String?
+  metadata                                               Json               @default("{}")
+  attribute_id                                           String             @db.Uuid
+  language_code                                          String
+  name                                                   String
+  product_attributes                                     product_attributes @relation(fields: [attribute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model product_attribute_value_translations {
+  id                                                           String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                                     BigInt                   @unique @default(autoincrement())
+  tenant_id                                                    String                   @db.Uuid
+  company_id                                                   String?                  @db.Uuid
+  branch_id                                                    String?                  @db.Uuid
+  created_at                                                   DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at                                                   DateTime                 @default(now()) @db.Timestamptz(6)
+  deleted_at                                                   DateTime?                @db.Timestamptz(6)
+  created_by                                                   String?                  @db.Uuid
+  updated_by                                                   String?                  @db.Uuid
+  deleted_by                                                   String?                  @db.Uuid
+  version                                                      Int                      @default(1)
+  row_version                                                  BigInt                   @default(0)
+  is_active                                                    Boolean                  @default(true)
+  is_deleted                                                   Boolean?                 @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                                 String?
+  metadata                                                     Json                     @default("{}")
+  attribute_value_id                                           String                   @db.Uuid
+  language_code                                                String
+  name                                                         String
+  product_attribute_values                                     product_attribute_values @relation(fields: [attribute_value_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model product_attribute_values {
+  id                                               String                                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                         BigInt                                 @unique @default(autoincrement())
+  tenant_id                                        String                                 @db.Uuid
+  company_id                                       String                                 @db.Uuid
+  branch_id                                        String?                                @db.Uuid
+  created_at                                       DateTime                               @default(now()) @db.Timestamptz(6)
+  updated_at                                       DateTime                               @default(now()) @db.Timestamptz(6)
+  deleted_at                                       DateTime?                              @db.Timestamptz(6)
+  created_by                                       String?                                @db.Uuid
+  updated_by                                       String?                                @db.Uuid
+  deleted_by                                       String?                                @db.Uuid
+  version                                          Int                                    @default(1)
+  row_version                                      BigInt                                 @default(0)
+  is_active                                        Boolean                                @default(true)
+  is_deleted                                       Boolean?                               @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                     String?
+  metadata                                         Json                                   @default("{}")
+  attribute_id                                     String                                 @db.Uuid
+  code                                             String
+  product_attribute_value_translations             product_attribute_value_translations[]
+  product_attributes                               product_attributes                     @relation(fields: [attribute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  product_variant_attribute_values                 product_variant_attribute_values[]
+
+  @@schema("products")
+}
+
+model product_attributes {
+  id                                         String                           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                   BigInt                           @unique @default(autoincrement())
+  tenant_id                                  String                           @db.Uuid
+  company_id                                 String                           @db.Uuid
+  branch_id                                  String?                          @db.Uuid
+  created_at                                 DateTime                         @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime                         @default(now()) @db.Timestamptz(6)
+  deleted_at                                 DateTime?                        @db.Timestamptz(6)
+  created_by                                 String?                          @db.Uuid
+  updated_by                                 String?                          @db.Uuid
+  deleted_by                                 String?                          @db.Uuid
+  version                                    Int                              @default(1)
+  row_version                                BigInt                           @default(0)
+  is_active                                  Boolean                          @default(true)
+  is_deleted                                 Boolean?                         @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                               String?
+  metadata                                   Json                             @default("{}")
+  code                                       String
+  product_attribute_translations             product_attribute_translations[]
+  product_attribute_values                   product_attribute_values[]
+
+  @@schema("products")
+}
+
+model product_barcodes {
+  id                                       String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                 BigInt     @unique @default(autoincrement())
+  tenant_id                                String     @db.Uuid
+  company_id                               String?    @db.Uuid
+  branch_id                                String?    @db.Uuid
+  created_at                               DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                               DateTime?  @db.Timestamptz(6)
+  created_by                               String?    @db.Uuid
+  updated_by                               String?    @db.Uuid
+  deleted_by                               String?    @db.Uuid
+  version                                  Int        @default(1)
+  row_version                              BigInt     @default(0)
+  is_active                                Boolean    @default(true)
+  is_deleted                               Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                             String?
+  metadata                                 Json       @default("{}")
+  product_id                               String     @db.Uuid
+  barcode                                  String
+  barcode_type                             String     @default("gtin")
+  products                                 products   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model product_categories {
+  id                                         String                          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                   BigInt                          @unique @default(autoincrement())
+  tenant_id                                  String                          @db.Uuid
+  company_id                                 String                          @db.Uuid
+  branch_id                                  String?                         @db.Uuid
+  created_at                                 DateTime                        @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime                        @default(now()) @db.Timestamptz(6)
+  deleted_at                                 DateTime?                       @db.Timestamptz(6)
+  created_by                                 String?                         @db.Uuid
+  updated_by                                 String?                         @db.Uuid
+  deleted_by                                 String?                         @db.Uuid
+  version                                    Int                             @default(1)
+  row_version                                BigInt                          @default(0)
+  is_active                                  Boolean                         @default(true)
+  is_deleted                                 Boolean?                        @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                               String?
+  metadata                                   Json                            @default("{}")
+  code                                       String
+  parent_category_id                         String?                         @db.Uuid
+  product_categories                         product_categories?             @relation("product_categoriesToproduct_categories", fields: [parent_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_product_categories                   product_categories[]            @relation("product_categoriesToproduct_categories")
+  product_category_translations              product_category_translations[]
+  products                                   products[]
+
+  @@schema("products")
+}
+
+model product_category_translations {
+  id                                                    String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                              BigInt             @unique @default(autoincrement())
+  tenant_id                                             String             @db.Uuid
+  company_id                                            String?            @db.Uuid
+  branch_id                                             String?            @db.Uuid
+  created_at                                            DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                                            DateTime           @default(now()) @db.Timestamptz(6)
+  deleted_at                                            DateTime?          @db.Timestamptz(6)
+  created_by                                            String?            @db.Uuid
+  updated_by                                            String?            @db.Uuid
+  deleted_by                                            String?            @db.Uuid
+  version                                               Int                @default(1)
+  row_version                                           BigInt             @default(0)
+  is_active                                             Boolean            @default(true)
+  is_deleted                                            Boolean?           @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                          String?
+  metadata                                              Json               @default("{}")
+  category_id                                           String             @db.Uuid
+  language_code                                         String
+  name                                                  String
+  product_categories                                    product_categories @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model product_collections {
+  id                                          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                    BigInt     @unique @default(autoincrement())
+  tenant_id                                   String     @db.Uuid
+  company_id                                  String     @db.Uuid
+  branch_id                                   String?    @db.Uuid
+  created_at                                  DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                                  DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                                  DateTime?  @db.Timestamptz(6)
+  created_by                                  String?    @db.Uuid
+  updated_by                                  String?    @db.Uuid
+  deleted_by                                  String?    @db.Uuid
+  version                                     Int        @default(1)
+  row_version                                 BigInt     @default(0)
+  is_active                                   Boolean    @default(true)
+  is_deleted                                  Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                String?
+  metadata                                    Json       @default("{}")
+  name                                        String
+  season                                      String?
+  products                                    products[]
+
+  @@schema("products")
+}
+
+model product_combo_components {
+  id                                               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                         BigInt         @unique @default(autoincrement())
+  tenant_id                                        String         @db.Uuid
+  company_id                                       String?        @db.Uuid
+  branch_id                                        String?        @db.Uuid
+  created_at                                       DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                                       DateTime       @default(now()) @db.Timestamptz(6)
+  deleted_at                                       DateTime?      @db.Timestamptz(6)
+  created_by                                       String?        @db.Uuid
+  updated_by                                       String?        @db.Uuid
+  deleted_by                                       String?        @db.Uuid
+  version                                          Int            @default(1)
+  row_version                                      BigInt         @default(0)
+  is_active                                        Boolean        @default(true)
+  is_deleted                                       Boolean?       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                     String?
+  metadata                                         Json           @default("{}")
+  combo_id                                         String         @db.Uuid
+  component_product_id                             String         @db.Uuid
+  quantity                                         Decimal        @db.Decimal(18, 6)
+  product_combos                                   product_combos @relation(fields: [combo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  products                                         products       @relation(fields: [component_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model product_combos {
+  id                                     String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                               BigInt                     @unique @default(autoincrement())
+  tenant_id                              String                     @db.Uuid
+  company_id                             String?                    @db.Uuid
+  branch_id                              String?                    @db.Uuid
+  created_at                             DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at                             DateTime                   @default(now()) @db.Timestamptz(6)
+  deleted_at                             DateTime?                  @db.Timestamptz(6)
+  created_by                             String?                    @db.Uuid
+  updated_by                             String?                    @db.Uuid
+  deleted_by                             String?                    @db.Uuid
+  version                                Int                        @default(1)
+  row_version                            BigInt                     @default(0)
+  is_active                              Boolean                    @default(true)
+  is_deleted                             Boolean?                   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                           String?
+  metadata                               Json                       @default("{}")
+  product_id                             String                     @db.Uuid
+  discount_percentage                    Decimal                    @default(0) @db.Decimal(5, 2)
+  product_combo_components               product_combo_components[]
+  products                               products                   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model product_families {
+  id                                       String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                 BigInt     @unique @default(autoincrement())
+  tenant_id                                String     @db.Uuid
+  company_id                               String     @db.Uuid
+  branch_id                                String?    @db.Uuid
+  created_at                               DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                               DateTime?  @db.Timestamptz(6)
+  created_by                               String?    @db.Uuid
+  updated_by                               String?    @db.Uuid
+  deleted_by                               String?    @db.Uuid
+  version                                  Int        @default(1)
+  row_version                              BigInt     @default(0)
+  is_active                                Boolean    @default(true)
+  is_deleted                               Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                             String?
+  metadata                                 Json       @default("{}")
+  name                                     String
+  products                                 products[]
+
+  @@schema("products")
+}
+
+model product_images {
+  id                                     String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                               BigInt     @unique @default(autoincrement())
+  tenant_id                              String     @db.Uuid
+  company_id                             String?    @db.Uuid
+  branch_id                              String?    @db.Uuid
+  created_at                             DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                             DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                             DateTime?  @db.Timestamptz(6)
+  created_by                             String?    @db.Uuid
+  updated_by                             String?    @db.Uuid
+  deleted_by                             String?    @db.Uuid
+  version                                Int        @default(1)
+  row_version                            BigInt     @default(0)
+  is_active                              Boolean    @default(true)
+  is_deleted                             Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                           String?
+  metadata                               Json       @default("{}")
+  product_id                             String     @db.Uuid
+  file_id                                String     @db.Uuid
+  display_order                          Int        @default(0) @db.SmallInt
+  products                               products   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model product_kit_components {
+  id                                             String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                       BigInt       @unique @default(autoincrement())
+  tenant_id                                      String       @db.Uuid
+  company_id                                     String?      @db.Uuid
+  branch_id                                      String?      @db.Uuid
+  created_at                                     DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at                                     DateTime     @default(now()) @db.Timestamptz(6)
+  deleted_at                                     DateTime?    @db.Timestamptz(6)
+  created_by                                     String?      @db.Uuid
+  updated_by                                     String?      @db.Uuid
+  deleted_by                                     String?      @db.Uuid
+  version                                        Int          @default(1)
+  row_version                                    BigInt       @default(0)
+  is_active                                      Boolean      @default(true)
+  is_deleted                                     Boolean?     @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                   String?
+  metadata                                       Json         @default("{}")
+  kit_id                                         String       @db.Uuid
+  component_product_id                           String       @db.Uuid
+  quantity                                       Decimal      @db.Decimal(18, 6)
+  products                                       products     @relation(fields: [component_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  product_kits                                   product_kits @relation(fields: [kit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model product_kits {
+  id                                   String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                             BigInt                   @unique @default(autoincrement())
+  tenant_id                            String                   @db.Uuid
+  company_id                           String?                  @db.Uuid
+  branch_id                            String?                  @db.Uuid
+  created_at                           DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at                           DateTime                 @default(now()) @db.Timestamptz(6)
+  deleted_at                           DateTime?                @db.Timestamptz(6)
+  created_by                           String?                  @db.Uuid
+  updated_by                           String?                  @db.Uuid
+  deleted_by                           String?                  @db.Uuid
+  version                              Int                      @default(1)
+  row_version                          BigInt                   @default(0)
+  is_active                            Boolean                  @default(true)
+  is_deleted                           Boolean?                 @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                         String?
+  metadata                             Json                     @default("{}")
+  product_id                           String                   @db.Uuid
+  pricing_policy                       String                   @default("sum_components")
+  product_kit_components               product_kit_components[]
+  products                             products                 @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model product_lines {
+  id                                    String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                              BigInt     @unique @default(autoincrement())
+  tenant_id                             String     @db.Uuid
+  company_id                            String     @db.Uuid
+  branch_id                             String?    @db.Uuid
+  created_at                            DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                            DateTime?  @db.Timestamptz(6)
+  created_by                            String?    @db.Uuid
+  updated_by                            String?    @db.Uuid
+  deleted_by                            String?    @db.Uuid
+  version                               Int        @default(1)
+  row_version                           BigInt     @default(0)
+  is_active                             Boolean    @default(true)
+  is_deleted                            Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                          String?
+  metadata                              Json       @default("{}")
+  name                                  String
+  products                              products[]
+
+  @@schema("products")
+}
+
+model product_models {
+  id                                     String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                               BigInt     @unique @default(autoincrement())
+  tenant_id                              String     @db.Uuid
+  company_id                             String     @db.Uuid
+  branch_id                              String?    @db.Uuid
+  created_at                             DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                             DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                             DateTime?  @db.Timestamptz(6)
+  created_by                             String?    @db.Uuid
+  updated_by                             String?    @db.Uuid
+  deleted_by                             String?    @db.Uuid
+  version                                Int        @default(1)
+  row_version                            BigInt     @default(0)
+  is_active                              Boolean    @default(true)
+  is_deleted                             Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                           String?
+  metadata                               Json       @default("{}")
+  brand_id                               String     @db.Uuid
+  name                                   String
+  brands                                 brands     @relation(fields: [brand_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  products                               products[]
+
+  @@schema("products")
+}
+
+model product_presentations {
+  id                                            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                      BigInt           @unique @default(autoincrement())
+  tenant_id                                     String           @db.Uuid
+  company_id                                    String?          @db.Uuid
+  branch_id                                     String?          @db.Uuid
+  created_at                                    DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime         @default(now()) @db.Timestamptz(6)
+  deleted_at                                    DateTime?        @db.Timestamptz(6)
+  created_by                                    String?          @db.Uuid
+  updated_by                                    String?          @db.Uuid
+  deleted_by                                    String?          @db.Uuid
+  version                                       Int              @default(1)
+  row_version                                   BigInt           @default(0)
+  is_active                                     Boolean          @default(true)
+  is_deleted                                    Boolean?         @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                  String?
+  metadata                                      Json             @default("{}")
+  product_id                                    String           @db.Uuid
+  unit_id                                       String           @db.Uuid
+  name                                          String
+  quantity_in_base_unit                         Decimal          @db.Decimal(18, 6)
+  products                                      products         @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  units_of_measure                              units_of_measure @relation(fields: [unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model product_price_history {
+  id                                            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                      BigInt     @unique @default(autoincrement())
+  tenant_id                                     String     @db.Uuid
+  company_id                                    String?    @db.Uuid
+  branch_id                                     String?    @db.Uuid
+  created_at                                    DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                                    DateTime?  @db.Timestamptz(6)
+  created_by                                    String?    @db.Uuid
+  updated_by                                    String?    @db.Uuid
+  deleted_by                                    String?    @db.Uuid
+  version                                       Int        @default(1)
+  row_version                                   BigInt     @default(0)
+  is_active                                     Boolean    @default(true)
+  is_deleted                                    Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                  String?
+  metadata                                      Json       @default("{}")
+  product_id                                    String     @db.Uuid
+  price_type                                    String
+  previous_value                                Decimal?   @db.Decimal(18, 4)
+  new_value                                     Decimal    @db.Decimal(18, 4)
+  products                                      products   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model product_related_products {
+  id                                                             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                                       BigInt     @unique @default(autoincrement())
+  tenant_id                                                      String     @db.Uuid
+  company_id                                                     String?    @db.Uuid
+  branch_id                                                      String?    @db.Uuid
+  created_at                                                     DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                                                     DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                                                     DateTime?  @db.Timestamptz(6)
+  created_by                                                     String?    @db.Uuid
+  updated_by                                                     String?    @db.Uuid
+  deleted_by                                                     String?    @db.Uuid
+  version                                                        Int        @default(1)
+  row_version                                                    BigInt     @default(0)
+  is_active                                                      Boolean    @default(true)
+  is_deleted                                                     Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                                   String?
+  metadata                                                       Json       @default("{}")
+  product_id                                                     String     @db.Uuid
+  related_product_id                                             String     @db.Uuid
+  relation_type                                                  String     @default("cross_sell")
+  products_product_related_products_product_idToproducts         products   @relation("product_related_products_product_idToproducts", fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  products_product_related_products_related_product_idToproducts products   @relation("product_related_products_related_product_idToproducts", fields: [related_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model product_reviews {
+  id                                      String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                BigInt     @unique @default(autoincrement())
+  tenant_id                               String     @db.Uuid
+  company_id                              String?    @db.Uuid
+  branch_id                               String?    @db.Uuid
+  created_at                              DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                              DateTime?  @db.Timestamptz(6)
+  created_by                              String?    @db.Uuid
+  updated_by                              String?    @db.Uuid
+  deleted_by                              String?    @db.Uuid
+  version                                 Int        @default(1)
+  row_version                             BigInt     @default(0)
+  is_active                               Boolean    @default(true)
+  is_deleted                              Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                            String?
+  metadata                                Json       @default("{}")
+  product_id                              String     @db.Uuid
+  customer_id                             String?    @db.Uuid
+  rating                                  Int        @db.SmallInt
+  comment                                 String?
+  products                                products   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model product_suppliers {
+  id                                        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt     @unique @default(autoincrement())
+  tenant_id                                 String     @db.Uuid
+  company_id                                String?    @db.Uuid
+  branch_id                                 String?    @db.Uuid
+  created_at                                DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime?  @db.Timestamptz(6)
+  created_by                                String?    @db.Uuid
+  updated_by                                String?    @db.Uuid
+  deleted_by                                String?    @db.Uuid
+  version                                   Int        @default(1)
+  row_version                               BigInt     @default(0)
+  is_active                                 Boolean    @default(true)
+  is_deleted                                Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json       @default("{}")
+  product_id                                String     @db.Uuid
+  supplier_id                               String     @db.Uuid
+  supplier_sku                              String?
+  lead_time_days                            Int?
+  is_preferred                              Boolean    @default(false)
+  last_purchase_cost                        Decimal?   @db.Decimal(18, 4)
+  products                                  products   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model product_tax_profiles {
+  id                                           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                     BigInt     @unique @default(autoincrement())
+  tenant_id                                    String     @db.Uuid
+  company_id                                   String?    @db.Uuid
+  branch_id                                    String?    @db.Uuid
+  created_at                                   DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                                   DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                                   DateTime?  @db.Timestamptz(6)
+  created_by                                   String?    @db.Uuid
+  updated_by                                   String?    @db.Uuid
+  deleted_by                                   String?    @db.Uuid
+  version                                      Int        @default(1)
+  row_version                                  BigInt     @default(0)
+  is_active                                    Boolean    @default(true)
+  is_deleted                                   Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                 String?
+  metadata                                     Json       @default("{}")
+  product_id                                   String     @db.Uuid
+  tax_id                                       String     @db.Uuid
+  products                                     products   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model product_translations {
+  id                                           String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                     BigInt     @unique @default(autoincrement())
+  tenant_id                                    String     @db.Uuid
+  company_id                                   String?    @db.Uuid
+  branch_id                                    String?    @db.Uuid
+  created_at                                   DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                                   DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                                   DateTime?  @db.Timestamptz(6)
+  created_by                                   String?    @db.Uuid
+  updated_by                                   String?    @db.Uuid
+  deleted_by                                   String?    @db.Uuid
+  version                                      Int        @default(1)
+  row_version                                  BigInt     @default(0)
+  is_active                                    Boolean    @default(true)
+  is_deleted                                   Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                 String?
+  metadata                                     Json       @default("{}")
+  product_id                                   String     @db.Uuid
+  language_code                                String
+  name                                         String
+  description                                  String?
+  products                                     products   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model product_variant_attribute_values {
+  id                                                       String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                                 BigInt                   @unique @default(autoincrement())
+  tenant_id                                                String                   @db.Uuid
+  company_id                                               String?                  @db.Uuid
+  branch_id                                                String?                  @db.Uuid
+  created_at                                               DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at                                               DateTime                 @default(now()) @db.Timestamptz(6)
+  deleted_at                                               DateTime?                @db.Timestamptz(6)
+  created_by                                               String?                  @db.Uuid
+  updated_by                                               String?                  @db.Uuid
+  deleted_by                                               String?                  @db.Uuid
+  version                                                  Int                      @default(1)
+  row_version                                              BigInt                   @default(0)
+  is_active                                                Boolean                  @default(true)
+  is_deleted                                               Boolean?                 @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                             String?
+  metadata                                                 Json                     @default("{}")
+  variant_product_id                                       String                   @db.Uuid
+  attribute_value_id                                       String                   @db.Uuid
+  product_attribute_values                                 product_attribute_values @relation(fields: [attribute_value_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  products                                                 products                 @relation(fields: [variant_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model product_videos {
+  id                                     String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                               BigInt     @unique @default(autoincrement())
+  tenant_id                              String     @db.Uuid
+  company_id                             String?    @db.Uuid
+  branch_id                              String?    @db.Uuid
+  created_at                             DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                             DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                             DateTime?  @db.Timestamptz(6)
+  created_by                             String?    @db.Uuid
+  updated_by                             String?    @db.Uuid
+  deleted_by                             String?    @db.Uuid
+  version                                Int        @default(1)
+  row_version                            BigInt     @default(0)
+  is_active                              Boolean    @default(true)
+  is_deleted                             Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                           String?
+  metadata                               Json       @default("{}")
+  product_id                             String     @db.Uuid
+  file_id                                String     @db.Uuid
+  products                               products   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model products {
+  id                                                                             String                             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                                                       BigInt                             @unique @default(autoincrement())
+  tenant_id                                                                      String                             @db.Uuid
+  company_id                                                                     String                             @db.Uuid
+  branch_id                                                                      String?                            @db.Uuid
+  created_at                                                                     DateTime                           @default(now()) @db.Timestamptz(6)
+  updated_at                                                                     DateTime                           @default(now()) @db.Timestamptz(6)
+  deleted_at                                                                     DateTime?                          @db.Timestamptz(6)
+  created_by                                                                     String?                            @db.Uuid
+  updated_by                                                                     String?                            @db.Uuid
+  deleted_by                                                                     String?                            @db.Uuid
+  version                                                                        Int                                @default(1)
+  row_version                                                                    BigInt                             @default(0)
+  is_active                                                                      Boolean                            @default(true)
+  is_deleted                                                                     Boolean?                           @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                                                   String?
+  metadata                                                                       Json                               @default("{}")
+  sku                                                                            String
+  product_type                                                                   String
+  category_id                                                                    String?                            @db.Uuid
+  brand_id                                                                       String?                            @db.Uuid
+  model_id                                                                       String?                            @db.Uuid
+  line_id                                                                        String?                            @db.Uuid
+  family_id                                                                      String?                            @db.Uuid
+  collection_id                                                                  String?                            @db.Uuid
+  base_unit_id                                                                   String                             @db.Uuid
+  parent_product_id                                                              String?                            @db.Uuid
+  costing_method                                                                 String                             @default("average")
+  tracks_serial                                                                  Boolean                            @default(false)
+  tracks_lot                                                                     Boolean                            @default(false)
+  standard_cost                                                                  Decimal?                           @db.Decimal(18, 4)
+  list_price                                                                     Decimal?                           @db.Decimal(18, 4)
+  bill_of_materials                                                              bill_of_materials[]
+  bom_components                                                                 bom_components[]
+  product_barcodes                                                               product_barcodes[]
+  product_combo_components                                                       product_combo_components[]
+  product_combos                                                                 product_combos[]
+  product_images                                                                 product_images[]
+  product_kit_components                                                         product_kit_components[]
+  product_kits                                                                   product_kits[]
+  product_presentations                                                          product_presentations[]
+  product_price_history                                                          product_price_history[]
+  product_related_products_product_related_products_product_idToproducts         product_related_products[]         @relation("product_related_products_product_idToproducts")
+  product_related_products_product_related_products_related_product_idToproducts product_related_products[]         @relation("product_related_products_related_product_idToproducts")
+  product_reviews                                                                product_reviews[]
+  product_suppliers                                                              product_suppliers[]
+  product_tax_profiles                                                           product_tax_profiles[]
+  product_translations                                                           product_translations[]
+  product_variant_attribute_values                                               product_variant_attribute_values[]
+  product_videos                                                                 product_videos[]
+  units_of_measure                                                               units_of_measure                   @relation(fields: [base_unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  brands                                                                         brands?                            @relation(fields: [brand_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  product_categories                                                             product_categories?                @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  product_collections                                                            product_collections?               @relation(fields: [collection_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  product_families                                                               product_families?                  @relation(fields: [family_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  product_lines                                                                  product_lines?                     @relation(fields: [line_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  product_models                                                                 product_models?                    @relation(fields: [model_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  products                                                                       products?                          @relation("productsToproducts", fields: [parent_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_products                                                                 products[]                         @relation("productsToproducts")
+  recipe_ingredients                                                             recipe_ingredients[]
+  recipes                                                                        recipes[]
+  unit_conversions                                                               unit_conversions[]
+
+  @@index([metadata(ops: JsonbPathOps)], map: "idx_products_products_metadata", type: Gin)
+  @@schema("products")
+}
+
+model recipe_ingredients {
+  id                                         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                   BigInt     @unique @default(autoincrement())
+  tenant_id                                  String     @db.Uuid
+  company_id                                 String?    @db.Uuid
+  branch_id                                  String?    @db.Uuid
+  created_at                                 DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                                 DateTime?  @db.Timestamptz(6)
+  created_by                                 String?    @db.Uuid
+  updated_by                                 String?    @db.Uuid
+  deleted_by                                 String?    @db.Uuid
+  version                                    Int        @default(1)
+  row_version                                BigInt     @default(0)
+  is_active                                  Boolean    @default(true)
+  is_deleted                                 Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                               String?
+  metadata                                   Json       @default("{}")
+  recipe_id                                  String     @db.Uuid
+  ingredient_product_id                      String     @db.Uuid
+  quantity                                   Decimal    @db.Decimal(18, 6)
+  products                                   products   @relation(fields: [ingredient_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  recipes                                    recipes    @relation(fields: [recipe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model recipes {
+  id                              String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                        BigInt               @unique @default(autoincrement())
+  tenant_id                       String               @db.Uuid
+  company_id                      String?              @db.Uuid
+  branch_id                       String?              @db.Uuid
+  created_at                      DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at                      DateTime             @default(now()) @db.Timestamptz(6)
+  deleted_at                      DateTime?            @db.Timestamptz(6)
+  created_by                      String?              @db.Uuid
+  updated_by                      String?              @db.Uuid
+  deleted_by                      String?              @db.Uuid
+  version                         Int                  @default(1)
+  row_version                     BigInt               @default(0)
+  is_active                       Boolean              @default(true)
+  is_deleted                      Boolean?             @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                    String?
+  metadata                        Json                 @default("{}")
+  product_id                      String               @db.Uuid
+  yield_quantity                  Decimal              @db.Decimal(18, 6)
+  yield_unit_id                   String?              @db.Uuid
+  recipe_ingredients              recipe_ingredients[]
+  products                        products             @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  units_of_measure                units_of_measure?    @relation(fields: [yield_unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model unit_conversions {
+  id                                                               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                                         BigInt           @unique @default(autoincrement())
+  tenant_id                                                        String           @db.Uuid
+  company_id                                                       String?          @db.Uuid
+  branch_id                                                        String?          @db.Uuid
+  created_at                                                       DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at                                                       DateTime         @default(now()) @db.Timestamptz(6)
+  deleted_at                                                       DateTime?        @db.Timestamptz(6)
+  created_by                                                       String?          @db.Uuid
+  updated_by                                                       String?          @db.Uuid
+  deleted_by                                                       String?          @db.Uuid
+  version                                                          Int              @default(1)
+  row_version                                                      BigInt           @default(0)
+  is_active                                                        Boolean          @default(true)
+  is_deleted                                                       Boolean?         @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                                     String?
+  metadata                                                         Json             @default("{}")
+  product_id                                                       String           @db.Uuid
+  from_unit_id                                                     String           @db.Uuid
+  to_unit_id                                                       String           @db.Uuid
+  conversion_factor                                                Decimal          @db.Decimal(18, 6)
+  units_of_measure_unit_conversions_from_unit_idTounits_of_measure units_of_measure @relation("unit_conversions_from_unit_idTounits_of_measure", fields: [from_unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  products                                                         products         @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  units_of_measure_unit_conversions_to_unit_idTounits_of_measure   units_of_measure @relation("unit_conversions_to_unit_idTounits_of_measure", fields: [to_unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model unit_of_measure_translations {
+  id                                                   String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                             BigInt           @unique @default(autoincrement())
+  tenant_id                                            String           @db.Uuid
+  company_id                                           String?          @db.Uuid
+  branch_id                                            String?          @db.Uuid
+  created_at                                           DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at                                           DateTime         @default(now()) @db.Timestamptz(6)
+  deleted_at                                           DateTime?        @db.Timestamptz(6)
+  created_by                                           String?          @db.Uuid
+  updated_by                                           String?          @db.Uuid
+  deleted_by                                           String?          @db.Uuid
+  version                                              Int              @default(1)
+  row_version                                          BigInt           @default(0)
+  is_active                                            Boolean          @default(true)
+  is_deleted                                           Boolean?         @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                         String?
+  metadata                                             Json             @default("{}")
+  unit_id                                              String           @db.Uuid
+  language_code                                        String
+  name                                                 String
+  abbreviation                                         String
+  units_of_measure                                     units_of_measure @relation(fields: [unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+model units_of_measure {
+  id                                                               String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                                         BigInt                         @unique @default(autoincrement())
+  tenant_id                                                        String                         @db.Uuid
+  company_id                                                       String                         @db.Uuid
+  branch_id                                                        String?                        @db.Uuid
+  created_at                                                       DateTime                       @default(now()) @db.Timestamptz(6)
+  updated_at                                                       DateTime                       @default(now()) @db.Timestamptz(6)
+  deleted_at                                                       DateTime?                      @db.Timestamptz(6)
+  created_by                                                       String?                        @db.Uuid
+  updated_by                                                       String?                        @db.Uuid
+  deleted_by                                                       String?                        @db.Uuid
+  version                                                          Int                            @default(1)
+  row_version                                                      BigInt                         @default(0)
+  is_active                                                        Boolean                        @default(true)
+  is_deleted                                                       Boolean?                       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                                     String?
+  metadata                                                         Json                           @default("{}")
+  code                                                             String
+  product_presentations                                            product_presentations[]
+  products                                                         products[]
+  recipes                                                          recipes[]
+  unit_conversions_unit_conversions_from_unit_idTounits_of_measure unit_conversions[]             @relation("unit_conversions_from_unit_idTounits_of_measure")
+  unit_conversions_unit_conversions_to_unit_idTounits_of_measure   unit_conversions[]             @relation("unit_conversions_to_unit_idTounits_of_measure")
+  unit_of_measure_translations                                     unit_of_measure_translations[]
+
+  @@schema("products")
+}

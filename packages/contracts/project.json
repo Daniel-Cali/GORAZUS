@@ -1,0 +1,21 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "contracts",
+  "sourceRoot": "packages/contracts",
+  "projectType": "library",
+  "tags": ["type:contracts"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/contracts",
+        "main": "packages/contracts/index.ts",
+        "tsConfig": "packages/contracts/tsconfig.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

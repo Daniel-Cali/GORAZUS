@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Tokens de tema — ver docs/frontend/UI_GUIDELINES.md §3: "el tema
+ * claro/oscuro se aplica una sola vez, a nivel de tokens — los
+ * componentes de primitives/ nunca hardcodean un color". `.dark` la
+ * activa el ThemeProvider agregando la clase al elemento raíz.
+ */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;
+    --radius: 0.5rem;
+
+    /* Paleta de charts (ui-kit/components/charts/) — validada con el skill
+       de dataviz (references/palette.md): orden categórico fijo, nunca
+       ciclado, ya verificado contra los pisos de daltonismo/contraste. */
+    --chart-surface: #fcfcfb;
+    --chart-ink-primary: #0b0b0b;
+    --chart-ink-secondary: #52514e;
+    --chart-ink-muted: #898781;
+    --chart-gridline: #e1e0d9;
+    --chart-baseline: #c3c2b7;
+    --chart-series-1: #2a78d6;
+    --chart-series-2: #008300;
+    --chart-series-3: #e87ba4;
+    --chart-series-4: #eda100;
+    --chart-series-5: #1baf7a;
+    --chart-series-6: #eb6834;
+    --chart-series-7: #4a3aa7;
+    --chart-series-8: #e34948;
+    --chart-status-good: #0ca30c;
+    --chart-status-warning: #fab219;
+    --chart-status-serious: #ec835a;
+    --chart-status-critical: #d03b3b;
+  }
+
+  .dark {
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 217 91% 60%;
+
+    --chart-surface: #1a1a19;
+    --chart-ink-primary: #ffffff;
+    --chart-ink-secondary: #c3c2b7;
+    --chart-ink-muted: #898781;
+    --chart-gridline: #2c2c2a;
+    --chart-baseline: #383835;
+    --chart-series-1: #3987e5;
+    --chart-series-2: #008300;
+    --chart-series-3: #d55181;
+    --chart-series-4: #c98500;
+    --chart-series-5: #199e70;
+    --chart-series-6: #d95926;
+    --chart-series-7: #9085e9;
+    --chart-series-8: #e66767;
+    --chart-status-good: #0ca30c;
+    --chart-status-warning: #fab219;
+    --chart-status-serious: #ec835a;
+    --chart-status-critical: #d03b3b;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

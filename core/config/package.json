@@ -1,0 +1,15 @@
+{
+  "name": "@gorazus/core-config",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GORAZUS ERP — Configuration Manager + Environment Manager. Ver docs/architecture/12-backend-enterprise.md §7.",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "dependencies": {
+    "@nestjs/common": "^10.4.0",
+    "@nestjs/config": "^3.3.0",
+    "zod": "^3.24.0",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.8.0"
+  }
+}

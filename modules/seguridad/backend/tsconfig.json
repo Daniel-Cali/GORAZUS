@@ -1,0 +1,11 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "../../..",
+    "outDir": "../../../dist/modules/seguridad/backend",
+    "declarationDir": "../../../dist/modules/seguridad/backend/types",
+    "types": ["node"]
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["**/*.spec.ts", "**/*.e2e-spec.ts"]
+}

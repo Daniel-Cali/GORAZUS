@@ -1,0 +1,8 @@
+packages:
+  - 'apps/*'
+  - 'core/*'
+  - 'modules/*/backend'
+  - 'modules/*/frontend'
+  - 'modules/*/shared'
+  - 'packages/*'
+  - 'ui-kit'

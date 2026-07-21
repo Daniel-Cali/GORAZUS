@@ -1,0 +1,66 @@
+# GORAZUS ERP — stack de monitoreo local (Prometheus + Grafana + Loki +
+# Promtail). Overlay OPCIONAL (no se suma al `docker-compose.dev.yml` base
+# para no pesar el ciclo de desarrollo diario que no lo necesita) — ver
+# docs/architecture/31-infraestructura-completa.md §9.
+#
+# Uso: docker compose -f docker-compose.yml -f docker-compose.dev.yml -f docker-compose.monitoring.yml up -d
+#
+# En Kubernetes, este mismo stack corre vía kube-prometheus-stack + el chart
+# oficial de Loki en su propio namespace `observability` — ver
+# infra/kubernetes/README.md, no este archivo.
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    volumes:
+      - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../prometheus/alert-rules.yml:/etc/prometheus/alert-rules.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - '9090:9090' # UI de Prometheus, acceso directo para debug local
+    networks:
+      - gorazus
+
+  grafana:
+    image: grafana/grafana:11.3.1
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-gorazus_dev}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+    volumes:
+      - ../grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - '3001:3000' # 3000 ya lo usa apps/api en desarrollo
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - gorazus
+
+  loki:
+    image: grafana/loki:3.2.1
+    command: -config.file=/etc/loki/loki-config.yml
+    volumes:
+      - ../loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki_data:/loki
+    ports:
+      - '3100:3100'
+    networks:
+      - gorazus
+
+  promtail:
+    image: grafana/promtail:3.2.1
+    command: -config.file=/etc/promtail/promtail-config.yml
+    volumes:
+      - ../promtail/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
+    networks:
+      - gorazus
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  loki_data:

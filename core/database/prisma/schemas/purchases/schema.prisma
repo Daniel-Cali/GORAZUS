@@ -1,0 +1,742 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "./generated"
+  previewFeatures = ["multiSchema"]
+  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["purchases"]
+}
+
+model goods_receipt_note_lines {
+  id                                               String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                         BigInt              @unique @default(autoincrement())
+  tenant_id                                        String              @db.Uuid
+  company_id                                       String?             @db.Uuid
+  branch_id                                        String?             @db.Uuid
+  created_at                                       DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                                       DateTime            @default(now()) @db.Timestamptz(6)
+  deleted_at                                       DateTime?           @db.Timestamptz(6)
+  created_by                                       String?             @db.Uuid
+  updated_by                                       String?             @db.Uuid
+  deleted_by                                       String?             @db.Uuid
+  version                                          Int                 @default(1)
+  row_version                                      BigInt              @default(0)
+  is_active                                        Boolean             @default(true)
+  is_deleted                                       Boolean?            @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                     String?
+  metadata                                         Json                @default("{}")
+  receipt_note_id                                  String              @db.Uuid
+  product_id                                       String              @db.Uuid
+  quantity                                         Decimal             @db.Decimal(18, 6)
+  goods_receipt_notes                              goods_receipt_notes @relation(fields: [receipt_note_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("purchases")
+}
+
+model goods_receipt_notes {
+  id                                          String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                    BigInt                      @unique @default(autoincrement())
+  tenant_id                                   String                      @db.Uuid
+  company_id                                  String                      @db.Uuid
+  branch_id                                   String?                     @db.Uuid
+  created_at                                  DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                                  DateTime                    @default(now()) @db.Timestamptz(6)
+  deleted_at                                  DateTime?                   @db.Timestamptz(6)
+  created_by                                  String?                     @db.Uuid
+  updated_by                                  String?                     @db.Uuid
+  deleted_by                                  String?                     @db.Uuid
+  version                                     Int                         @default(1)
+  row_version                                 BigInt                      @default(0)
+  is_active                                   Boolean                     @default(true)
+  is_deleted                                  Boolean?                    @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                String?
+  metadata                                    Json                        @default("{}")
+  purchase_order_id                           String                      @db.Uuid
+  inventory_receipt_id                        String?                     @db.Uuid
+  goods_receipt_note_lines                    goods_receipt_note_lines[]
+  purchase_orders                             purchase_orders             @relation(fields: [purchase_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  purchase_invoice_matching                   purchase_invoice_matching[]
+
+  @@schema("purchases")
+}
+
+model import_expenses {
+  id                                      String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                BigInt     @unique @default(autoincrement())
+  tenant_id                               String     @db.Uuid
+  company_id                              String?    @db.Uuid
+  branch_id                               String?    @db.Uuid
+  created_at                              DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                              DateTime?  @db.Timestamptz(6)
+  created_by                              String?    @db.Uuid
+  updated_by                              String?    @db.Uuid
+  deleted_by                              String?    @db.Uuid
+  version                                 Int        @default(1)
+  row_version                             BigInt     @default(0)
+  is_active                               Boolean    @default(true)
+  is_deleted                              Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                            String?
+  metadata                                Json       @default("{}")
+  import_id                               String     @db.Uuid
+  expense_type                            String
+  amount                                  Decimal    @db.Decimal(18, 4)
+  imports                                 imports    @relation(fields: [import_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("purchases")
+}
+
+model import_status {
+  id                                    String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                              BigInt                  @unique @default(autoincrement())
+  tenant_id                             String                  @db.Uuid
+  company_id                            String?                 @db.Uuid
+  branch_id                             String?                 @db.Uuid
+  created_at                            DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime                @default(now()) @db.Timestamptz(6)
+  deleted_at                            DateTime?               @db.Timestamptz(6)
+  created_by                            String?                 @db.Uuid
+  updated_by                            String?                 @db.Uuid
+  deleted_by                            String?                 @db.Uuid
+  version                               Int                     @default(1)
+  row_version                           BigInt                  @default(0)
+  is_active                             Boolean                 @default(true)
+  is_deleted                            Boolean?                @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                          String?
+  metadata                              Json                    @default("{}")
+  code                                  String
+  import_status_history                 import_status_history[]
+  imports                               imports[]
+
+  @@schema("purchases")
+}
+
+model import_status_history {
+  id                                            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                      BigInt        @unique @default(autoincrement())
+  tenant_id                                     String        @db.Uuid
+  company_id                                    String?       @db.Uuid
+  branch_id                                     String?       @db.Uuid
+  created_at                                    DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime      @default(now()) @db.Timestamptz(6)
+  deleted_at                                    DateTime?     @db.Timestamptz(6)
+  created_by                                    String?       @db.Uuid
+  updated_by                                    String?       @db.Uuid
+  deleted_by                                    String?       @db.Uuid
+  version                                       Int           @default(1)
+  row_version                                   BigInt        @default(0)
+  is_active                                     Boolean       @default(true)
+  is_deleted                                    Boolean?      @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                  String?
+  metadata                                      Json          @default("{}")
+  import_id                                     String        @db.Uuid
+  status_id                                     String        @db.Uuid
+  imports                                       imports       @relation(fields: [import_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  import_status                                 import_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("purchases")
+}
+
+model imports {
+  id                              String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                        BigInt                  @unique @default(autoincrement())
+  tenant_id                       String                  @db.Uuid
+  company_id                      String                  @db.Uuid
+  branch_id                       String?                 @db.Uuid
+  created_at                      DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at                      DateTime                @default(now()) @db.Timestamptz(6)
+  deleted_at                      DateTime?               @db.Timestamptz(6)
+  created_by                      String?                 @db.Uuid
+  updated_by                      String?                 @db.Uuid
+  deleted_by                      String?                 @db.Uuid
+  version                         Int                     @default(1)
+  row_version                     BigInt                  @default(0)
+  is_active                       Boolean                 @default(true)
+  is_deleted                      Boolean?                @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                    String?
+  metadata                        Json                    @default("{}")
+  purchase_order_id               String                  @db.Uuid
+  status_id                       String                  @db.Uuid
+  import_expenses                 import_expenses[]
+  import_status_history           import_status_history[]
+  purchase_orders                 purchase_orders         @relation(fields: [purchase_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  import_status                   import_status           @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("purchases")
+}
+
+model purchase_credit_note_lines {
+  id                                                 String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                           BigInt                @unique @default(autoincrement())
+  tenant_id                                          String                @db.Uuid
+  company_id                                         String?               @db.Uuid
+  branch_id                                          String?               @db.Uuid
+  created_at                                         DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at                                         DateTime              @default(now()) @db.Timestamptz(6)
+  deleted_at                                         DateTime?             @db.Timestamptz(6)
+  created_by                                         String?               @db.Uuid
+  updated_by                                         String?               @db.Uuid
+  deleted_by                                         String?               @db.Uuid
+  version                                            Int                   @default(1)
+  row_version                                        BigInt                @default(0)
+  is_active                                          Boolean               @default(true)
+  is_deleted                                         Boolean?              @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                       String?
+  metadata                                           Json                  @default("{}")
+  credit_note_id                                     String                @db.Uuid
+  product_id                                         String                @db.Uuid
+  quantity                                           Decimal               @db.Decimal(18, 6)
+  purchase_credit_notes                              purchase_credit_notes @relation(fields: [credit_note_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("purchases")
+}
+
+model purchase_credit_notes {
+  id                                            String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                      BigInt                       @unique @default(autoincrement())
+  tenant_id                                     String                       @db.Uuid
+  company_id                                    String                       @db.Uuid
+  branch_id                                     String?                      @db.Uuid
+  created_at                                    DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime                     @default(now()) @db.Timestamptz(6)
+  deleted_at                                    DateTime?                    @db.Timestamptz(6)
+  created_by                                    String?                      @db.Uuid
+  updated_by                                    String?                      @db.Uuid
+  deleted_by                                    String?                      @db.Uuid
+  version                                       Int                          @default(1)
+  row_version                                   BigInt                       @default(0)
+  is_active                                     Boolean                      @default(true)
+  is_deleted                                    Boolean?                     @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                  String?
+  metadata                                      Json                         @default("{}")
+  purchase_invoice_id                           String                       @db.Uuid
+  total_amount                                  Decimal                      @db.Decimal(18, 4)
+  purchase_credit_note_lines                    purchase_credit_note_lines[]
+
+  @@schema("purchases")
+}
+
+model purchase_expenses {
+  id                                        String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt           @unique @default(autoincrement())
+  tenant_id                                 String           @db.Uuid
+  company_id                                String           @db.Uuid
+  branch_id                                 String?          @db.Uuid
+  created_at                                DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime         @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime?        @db.Timestamptz(6)
+  created_by                                String?          @db.Uuid
+  updated_by                                String?          @db.Uuid
+  deleted_by                                String?          @db.Uuid
+  version                                   Int              @default(1)
+  row_version                               BigInt           @default(0)
+  is_active                                 Boolean          @default(true)
+  is_deleted                                Boolean?         @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json             @default("{}")
+  purchase_order_id                         String?          @db.Uuid
+  description                               String
+  amount                                    Decimal          @db.Decimal(18, 4)
+  purchase_orders                           purchase_orders? @relation(fields: [purchase_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("purchases")
+}
+
+model purchase_invoice_lines {
+  id                                             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                       BigInt         @unique @default(autoincrement())
+  tenant_id                                      String         @db.Uuid
+  company_id                                     String?        @db.Uuid
+  branch_id                                      String?        @db.Uuid
+  created_at                                     DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                                     DateTime       @default(now()) @db.Timestamptz(6)
+  deleted_at                                     DateTime?      @db.Timestamptz(6)
+  created_by                                     String?        @db.Uuid
+  updated_by                                     String?        @db.Uuid
+  deleted_by                                     String?        @db.Uuid
+  version                                        Int            @default(1)
+  row_version                                    BigInt         @default(0)
+  is_active                                      Boolean        @default(true)
+  is_deleted                                     Boolean?       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                   String?
+  metadata                                       Json           @default("{}")
+  purchase_invoice_id                            String         @db.Uuid
+  product_id                                     String         @db.Uuid
+  tax_id                                         String?        @db.Uuid
+  quantity                                       Decimal        @db.Decimal(18, 6)
+  unit_cost                                      Decimal        @db.Decimal(18, 4)
+  is_capitalizable                               Boolean        @default(false)
+
+  @@schema("purchases")
+}
+
+model purchase_invoice_matching {
+  id                                                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                          BigInt              @unique @default(autoincrement())
+  tenant_id                                         String              @db.Uuid
+  company_id                                        String?             @db.Uuid
+  branch_id                                         String?             @db.Uuid
+  created_at                                        DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                                        DateTime            @default(now()) @db.Timestamptz(6)
+  deleted_at                                        DateTime?           @db.Timestamptz(6)
+  created_by                                        String?             @db.Uuid
+  updated_by                                        String?             @db.Uuid
+  deleted_by                                        String?             @db.Uuid
+  version                                           Int                 @default(1)
+  row_version                                       BigInt              @default(0)
+  is_active                                         Boolean             @default(true)
+  is_deleted                                        Boolean?            @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                      String?
+  metadata                                          Json                @default("{}")
+  purchase_order_id                                 String              @db.Uuid
+  receipt_note_id                                   String              @db.Uuid
+  purchase_invoice_id                               String              @db.Uuid
+  discrepancy_amount                                Decimal             @default(0) @db.Decimal(18, 4)
+  is_within_tolerance                               Boolean             @default(true)
+  purchase_orders                                   purchase_orders     @relation(fields: [purchase_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  goods_receipt_notes                               goods_receipt_notes @relation(fields: [receipt_note_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("purchases")
+}
+
+model purchase_invoice_status {
+  id                                              String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                        BigInt                            @unique @default(autoincrement())
+  tenant_id                                       String                            @db.Uuid
+  company_id                                      String?                           @db.Uuid
+  branch_id                                       String?                           @db.Uuid
+  created_at                                      DateTime                          @default(now()) @db.Timestamptz(6)
+  updated_at                                      DateTime                          @default(now()) @db.Timestamptz(6)
+  deleted_at                                      DateTime?                         @db.Timestamptz(6)
+  created_by                                      String?                           @db.Uuid
+  updated_by                                      String?                           @db.Uuid
+  deleted_by                                      String?                           @db.Uuid
+  version                                         Int                               @default(1)
+  row_version                                     BigInt                            @default(0)
+  is_active                                       Boolean                           @default(true)
+  is_deleted                                      Boolean?                          @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                    String?
+  metadata                                        Json                              @default("{}")
+  code                                            String
+  is_final                                        Boolean                           @default(false)
+  purchase_invoice_status_history                 purchase_invoice_status_history[]
+  purchase_invoices                               purchase_invoices[]
+
+  @@schema("purchases")
+}
+
+model purchase_invoice_status_history {
+  id                                                      String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                                BigInt                  @unique @default(autoincrement())
+  tenant_id                                               String                  @db.Uuid
+  company_id                                              String?                 @db.Uuid
+  branch_id                                               String?                 @db.Uuid
+  created_at                                              DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at                                              DateTime                @default(now()) @db.Timestamptz(6)
+  deleted_at                                              DateTime?               @db.Timestamptz(6)
+  created_by                                              String?                 @db.Uuid
+  updated_by                                              String?                 @db.Uuid
+  deleted_by                                              String?                 @db.Uuid
+  version                                                 Int                     @default(1)
+  row_version                                             BigInt                  @default(0)
+  is_active                                               Boolean                 @default(true)
+  is_deleted                                              Boolean?                @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                            String?
+  metadata                                                Json                    @default("{}")
+  purchase_invoice_id                                     String                  @db.Uuid
+  status_id                                               String                  @db.Uuid
+  purchase_invoice_status                                 purchase_invoice_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("purchases")
+}
+
+model purchase_invoices {
+  id                                        String                  @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt                  @default(autoincrement())
+  tenant_id                                 String                  @db.Uuid
+  company_id                                String                  @db.Uuid
+  branch_id                                 String?                 @db.Uuid
+  created_at                                DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime                @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime?               @db.Timestamptz(6)
+  created_by                                String?                 @db.Uuid
+  updated_by                                String?                 @db.Uuid
+  deleted_by                                String?                 @db.Uuid
+  version                                   Int                     @default(1)
+  row_version                               BigInt                  @default(0)
+  is_active                                 Boolean                 @default(true)
+  is_deleted                                Boolean?                @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json                    @default("{}")
+  supplier_document_number                  String
+  supplier_id                               String                  @db.Uuid
+  purchase_order_id                         String?                 @db.Uuid
+  status_id                                 String                  @db.Uuid
+  currency_code                             String                  @db.Char(3)
+  subtotal_amount                           Decimal                 @default(0) @db.Decimal(18, 4)
+  tax_amount                                Decimal                 @default(0) @db.Decimal(18, 4)
+  total_amount                              Decimal                 @default(0) @db.Decimal(18, 4)
+  received_at                               DateTime                @default(now()) @db.Timestamptz(6)
+  purchase_orders                           purchase_orders?        @relation(fields: [purchase_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  purchase_invoice_status                   purchase_invoice_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id, received_at])
+  @@unique([local_id, received_at])
+  @@schema("purchases")
+}
+
+model purchase_order_lines {
+  id                                           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                     BigInt          @unique @default(autoincrement())
+  tenant_id                                    String          @db.Uuid
+  company_id                                   String?         @db.Uuid
+  branch_id                                    String?         @db.Uuid
+  created_at                                   DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at                                   DateTime        @default(now()) @db.Timestamptz(6)
+  deleted_at                                   DateTime?       @db.Timestamptz(6)
+  created_by                                   String?         @db.Uuid
+  updated_by                                   String?         @db.Uuid
+  deleted_by                                   String?         @db.Uuid
+  version                                      Int             @default(1)
+  row_version                                  BigInt          @default(0)
+  is_active                                    Boolean         @default(true)
+  is_deleted                                   Boolean?        @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                 String?
+  metadata                                     Json            @default("{}")
+  purchase_order_id                            String          @db.Uuid
+  product_id                                   String          @db.Uuid
+  quantity                                     Decimal         @db.Decimal(18, 6)
+  unit_price                                   Decimal         @db.Decimal(18, 4)
+  purchase_orders                              purchase_orders @relation(fields: [purchase_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("purchases")
+}
+
+model purchase_order_status {
+  id                                            String                          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                      BigInt                          @unique @default(autoincrement())
+  tenant_id                                     String                          @db.Uuid
+  company_id                                    String?                         @db.Uuid
+  branch_id                                     String?                         @db.Uuid
+  created_at                                    DateTime                        @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime                        @default(now()) @db.Timestamptz(6)
+  deleted_at                                    DateTime?                       @db.Timestamptz(6)
+  created_by                                    String?                         @db.Uuid
+  updated_by                                    String?                         @db.Uuid
+  deleted_by                                    String?                         @db.Uuid
+  version                                       Int                             @default(1)
+  row_version                                   BigInt                          @default(0)
+  is_active                                     Boolean                         @default(true)
+  is_deleted                                    Boolean?                        @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                  String?
+  metadata                                      Json                            @default("{}")
+  code                                          String
+  is_final                                      Boolean                         @default(false)
+  purchase_order_status_history                 purchase_order_status_history[]
+  purchase_orders                               purchase_orders[]
+
+  @@schema("purchases")
+}
+
+model purchase_order_status_history {
+  id                                                    String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                              BigInt                @unique @default(autoincrement())
+  tenant_id                                             String                @db.Uuid
+  company_id                                            String?               @db.Uuid
+  branch_id                                             String?               @db.Uuid
+  created_at                                            DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at                                            DateTime              @default(now()) @db.Timestamptz(6)
+  deleted_at                                            DateTime?             @db.Timestamptz(6)
+  created_by                                            String?               @db.Uuid
+  updated_by                                            String?               @db.Uuid
+  deleted_by                                            String?               @db.Uuid
+  version                                               Int                   @default(1)
+  row_version                                           BigInt                @default(0)
+  is_active                                             Boolean               @default(true)
+  is_deleted                                            Boolean?              @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                          String?
+  metadata                                              Json                  @default("{}")
+  purchase_order_id                                     String                @db.Uuid
+  status_id                                             String                @db.Uuid
+  purchase_orders                                       purchase_orders       @relation(fields: [purchase_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  purchase_order_status                                 purchase_order_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("purchases")
+}
+
+model purchase_orders {
+  id                                      String                          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                BigInt                          @unique @default(autoincrement())
+  tenant_id                               String                          @db.Uuid
+  company_id                              String                          @db.Uuid
+  branch_id                               String                          @db.Uuid
+  created_at                              DateTime                        @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime                        @default(now()) @db.Timestamptz(6)
+  deleted_at                              DateTime?                       @db.Timestamptz(6)
+  created_by                              String?                         @db.Uuid
+  updated_by                              String?                         @db.Uuid
+  deleted_by                              String?                         @db.Uuid
+  version                                 Int                             @default(1)
+  row_version                             BigInt                          @default(0)
+  is_active                               Boolean                         @default(true)
+  is_deleted                              Boolean?                        @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                            String?
+  metadata                                Json                            @default("{}")
+  document_number                         String
+  supplier_id                             String                          @db.Uuid
+  requisition_id                          String?                         @db.Uuid
+  status_id                               String                          @db.Uuid
+  currency_code                           String                          @db.Char(3)
+  total_amount                            Decimal                         @default(0) @db.Decimal(18, 4)
+  goods_receipt_notes                     goods_receipt_notes[]
+  imports                                 imports[]
+  purchase_expenses                       purchase_expenses[]
+  purchase_invoice_matching               purchase_invoice_matching[]
+  purchase_invoices                       purchase_invoices[]
+  purchase_order_lines                    purchase_order_lines[]
+  purchase_order_status_history           purchase_order_status_history[]
+  purchase_requisitions                   purchase_requisitions?          @relation(fields: [requisition_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  purchase_order_status                   purchase_order_status           @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("purchases")
+}
+
+model purchase_quote_lines {
+  id                                           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                     BigInt          @unique @default(autoincrement())
+  tenant_id                                    String          @db.Uuid
+  company_id                                   String?         @db.Uuid
+  branch_id                                    String?         @db.Uuid
+  created_at                                   DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at                                   DateTime        @default(now()) @db.Timestamptz(6)
+  deleted_at                                   DateTime?       @db.Timestamptz(6)
+  created_by                                   String?         @db.Uuid
+  updated_by                                   String?         @db.Uuid
+  deleted_by                                   String?         @db.Uuid
+  version                                      Int             @default(1)
+  row_version                                  BigInt          @default(0)
+  is_active                                    Boolean         @default(true)
+  is_deleted                                   Boolean?        @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                 String?
+  metadata                                     Json            @default("{}")
+  quote_id                                     String          @db.Uuid
+  product_id                                   String          @db.Uuid
+  unit_price                                   Decimal         @db.Decimal(18, 4)
+  purchase_quotes                              purchase_quotes @relation(fields: [quote_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("purchases")
+}
+
+model purchase_quotes {
+  id                                      String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                BigInt                 @unique @default(autoincrement())
+  tenant_id                               String                 @db.Uuid
+  company_id                              String                 @db.Uuid
+  branch_id                               String?                @db.Uuid
+  created_at                              DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime               @default(now()) @db.Timestamptz(6)
+  deleted_at                              DateTime?              @db.Timestamptz(6)
+  created_by                              String?                @db.Uuid
+  updated_by                              String?                @db.Uuid
+  deleted_by                              String?                @db.Uuid
+  version                                 Int                    @default(1)
+  row_version                             BigInt                 @default(0)
+  is_active                               Boolean                @default(true)
+  is_deleted                              Boolean?               @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                            String?
+  metadata                                Json                   @default("{}")
+  supplier_id                             String                 @db.Uuid
+  requisition_id                          String?                @db.Uuid
+  purchase_quote_lines                    purchase_quote_lines[]
+  purchase_requisitions                   purchase_requisitions? @relation(fields: [requisition_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("purchases")
+}
+
+model purchase_requisition_lines {
+  id                                                 String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                           BigInt                @unique @default(autoincrement())
+  tenant_id                                          String                @db.Uuid
+  company_id                                         String?               @db.Uuid
+  branch_id                                          String?               @db.Uuid
+  created_at                                         DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at                                         DateTime              @default(now()) @db.Timestamptz(6)
+  deleted_at                                         DateTime?             @db.Timestamptz(6)
+  created_by                                         String?               @db.Uuid
+  updated_by                                         String?               @db.Uuid
+  deleted_by                                         String?               @db.Uuid
+  version                                            Int                   @default(1)
+  row_version                                        BigInt                @default(0)
+  is_active                                          Boolean               @default(true)
+  is_deleted                                         Boolean?              @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                       String?
+  metadata                                           Json                  @default("{}")
+  requisition_id                                     String                @db.Uuid
+  product_id                                         String                @db.Uuid
+  quantity                                           Decimal               @db.Decimal(18, 6)
+  purchase_requisitions                              purchase_requisitions @relation(fields: [requisition_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("purchases")
+}
+
+model purchase_requisition_status {
+  id                                                  String                                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                            BigInt                                @unique @default(autoincrement())
+  tenant_id                                           String                                @db.Uuid
+  company_id                                          String?                               @db.Uuid
+  branch_id                                           String?                               @db.Uuid
+  created_at                                          DateTime                              @default(now()) @db.Timestamptz(6)
+  updated_at                                          DateTime                              @default(now()) @db.Timestamptz(6)
+  deleted_at                                          DateTime?                             @db.Timestamptz(6)
+  created_by                                          String?                               @db.Uuid
+  updated_by                                          String?                               @db.Uuid
+  deleted_by                                          String?                               @db.Uuid
+  version                                             Int                                   @default(1)
+  row_version                                         BigInt                                @default(0)
+  is_active                                           Boolean                               @default(true)
+  is_deleted                                          Boolean?                              @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                        String?
+  metadata                                            Json                                  @default("{}")
+  code                                                String
+  is_final                                            Boolean                               @default(false)
+  purchase_requisition_status_history                 purchase_requisition_status_history[]
+  purchase_requisitions                               purchase_requisitions[]
+
+  @@schema("purchases")
+}
+
+model purchase_requisition_status_history {
+  id                                                          String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                                    BigInt                      @unique @default(autoincrement())
+  tenant_id                                                   String                      @db.Uuid
+  company_id                                                  String?                     @db.Uuid
+  branch_id                                                   String?                     @db.Uuid
+  created_at                                                  DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                                                  DateTime                    @default(now()) @db.Timestamptz(6)
+  deleted_at                                                  DateTime?                   @db.Timestamptz(6)
+  created_by                                                  String?                     @db.Uuid
+  updated_by                                                  String?                     @db.Uuid
+  deleted_by                                                  String?                     @db.Uuid
+  version                                                     Int                         @default(1)
+  row_version                                                 BigInt                      @default(0)
+  is_active                                                   Boolean                     @default(true)
+  is_deleted                                                  Boolean?                    @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                                String?
+  metadata                                                    Json                        @default("{}")
+  requisition_id                                              String                      @db.Uuid
+  status_id                                                   String                      @db.Uuid
+  purchase_requisitions                                       purchase_requisitions       @relation(fields: [requisition_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  purchase_requisition_status                                 purchase_requisition_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("purchases")
+}
+
+model purchase_requisitions {
+  id                                                      String                                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                                BigInt                                @unique @default(autoincrement())
+  tenant_id                                               String                                @db.Uuid
+  company_id                                              String                                @db.Uuid
+  branch_id                                               String?                               @db.Uuid
+  created_at                                              DateTime                              @default(now()) @db.Timestamptz(6)
+  updated_at                                              DateTime                              @default(now()) @db.Timestamptz(6)
+  deleted_at                                              DateTime?                             @db.Timestamptz(6)
+  created_by                                              String?                               @db.Uuid
+  updated_by                                              String?                               @db.Uuid
+  deleted_by                                              String?                               @db.Uuid
+  version                                                 Int                                   @default(1)
+  row_version                                             BigInt                                @default(0)
+  is_active                                               Boolean                               @default(true)
+  is_deleted                                              Boolean?                              @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                            String?
+  metadata                                                Json                                  @default("{}")
+  document_number                                         String
+  requested_by_user_id                                    String                                @db.Uuid
+  status_id                                               String                                @db.Uuid
+  purchase_orders                                         purchase_orders[]
+  purchase_quotes                                         purchase_quotes[]
+  purchase_requisition_lines                              purchase_requisition_lines[]
+  purchase_requisition_status_history                     purchase_requisition_status_history[]
+  purchase_requisition_status                             purchase_requisition_status           @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("purchases")
+}
+
+model purchase_return_lines {
+  id                                            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                      BigInt           @unique @default(autoincrement())
+  tenant_id                                     String           @db.Uuid
+  company_id                                    String?          @db.Uuid
+  branch_id                                     String?          @db.Uuid
+  created_at                                    DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime         @default(now()) @db.Timestamptz(6)
+  deleted_at                                    DateTime?        @db.Timestamptz(6)
+  created_by                                    String?          @db.Uuid
+  updated_by                                    String?          @db.Uuid
+  deleted_by                                    String?          @db.Uuid
+  version                                       Int              @default(1)
+  row_version                                   BigInt           @default(0)
+  is_active                                     Boolean          @default(true)
+  is_deleted                                    Boolean?         @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                  String?
+  metadata                                      Json             @default("{}")
+  return_id                                     String           @db.Uuid
+  product_id                                    String           @db.Uuid
+  quantity                                      Decimal          @db.Decimal(18, 6)
+  purchase_returns                              purchase_returns @relation(fields: [return_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("purchases")
+}
+
+model purchase_returns {
+  id                                       String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                 BigInt                  @unique @default(autoincrement())
+  tenant_id                                String                  @db.Uuid
+  company_id                               String                  @db.Uuid
+  branch_id                                String?                 @db.Uuid
+  created_at                               DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime                @default(now()) @db.Timestamptz(6)
+  deleted_at                               DateTime?               @db.Timestamptz(6)
+  created_by                               String?                 @db.Uuid
+  updated_by                               String?                 @db.Uuid
+  deleted_by                               String?                 @db.Uuid
+  version                                  Int                     @default(1)
+  row_version                              BigInt                  @default(0)
+  is_active                                Boolean                 @default(true)
+  is_deleted                               Boolean?                @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                             String?
+  metadata                                 Json                    @default("{}")
+  purchase_invoice_id                      String                  @db.Uuid
+  reason                                   String?
+  purchase_return_lines                    purchase_return_lines[]
+
+  @@schema("purchases")
+}
+
+model purchase_withholdings {
+  id                                            String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                      BigInt             @unique @default(autoincrement())
+  tenant_id                                     String             @db.Uuid
+  company_id                                    String?            @db.Uuid
+  branch_id                                     String?            @db.Uuid
+  created_at                                    DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime           @default(now()) @db.Timestamptz(6)
+  deleted_at                                    DateTime?          @db.Timestamptz(6)
+  created_by                                    String?            @db.Uuid
+  updated_by                                    String?            @db.Uuid
+  deleted_by                                    String?            @db.Uuid
+  version                                       Int                @default(1)
+  row_version                                   BigInt             @default(0)
+  is_active                                     Boolean            @default(true)
+  is_deleted                                    Boolean?           @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                  String?
+  metadata                                      Json               @default("{}")
+  purchase_invoice_id                           String             @db.Uuid
+  withholding_rule_id                           String?            @db.Uuid
+  amount                                        Decimal            @db.Decimal(18, 4)
+
+  @@schema("purchases")
+}

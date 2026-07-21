@@ -1,0 +1,62 @@
+# Dependencias
+node_modules/
+
+# Build
+dist/
+build/
+tmp/
+out-tsc/
+
+# Nx
+.nx/cache
+.nx/workspace-data
+
+# Entornos y secretos — nunca se commitean (ver docs/architecture/08 §6)
+.env
+infra/nginx/certs/
+.env.*
+!.env.example
+
+# Prisma (el cliente generado no se commitea, se regenera del schema)
+apps/api/prisma/generated/
+core/database/generated/
+# 21 clientes, uno por schema — ver core/database/src/database.module.ts
+core/database/prisma/schemas/*/generated/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage/
+
+# Herramientas portables de terceros (DBeaver, Graphviz, SchemaSpy — ~260MB,
+# binarios descargados, no código propio) — ver tools/database/README.md
+# para cómo reinstalarlas, nunca se commitean.
+tools/database/dbeaver/
+tools/database/graphviz/
+tools/database/schemaspy/
+
+# ERDs generados por SchemaSpy (~2.3GB, regenerable desde la base real vía
+# docs/database/DATABASE_VISUALIZATION.md §4) — "no se versionan como fuente
+# editable" (ya documentado en ese archivo, §7), nunca se commitean.
+docs/database/erd/
+
+# Vite
+apps/web/dist/
+apps/web/.vite/
+
+# Playwright — binarios de navegador SIEMPRE bajo el proyecto (nunca C:\, ver
+# docs/architecture, regla permanente "prohibido usar disco C:"). Instalar con:
+# PLAYWRIGHT_BROWSERS_PATH="$PWD/.playwright-browsers" npx playwright install chromium
+.playwright-browsers/
+apps/web-e2e/playwright-report/
+apps/web-e2e/test-results/

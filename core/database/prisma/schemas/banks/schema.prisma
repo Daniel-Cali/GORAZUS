@@ -1,0 +1,405 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "./generated"
+  previewFeatures = ["multiSchema"]
+  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["banks"]
+}
+
+model bank_accounts {
+  id                                    String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                              BigInt                 @unique @default(autoincrement())
+  tenant_id                             String                 @db.Uuid
+  company_id                            String                 @db.Uuid
+  branch_id                             String?                @db.Uuid
+  created_at                            DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime               @default(now()) @db.Timestamptz(6)
+  deleted_at                            DateTime?              @db.Timestamptz(6)
+  created_by                            String?                @db.Uuid
+  updated_by                            String?                @db.Uuid
+  deleted_by                            String?                @db.Uuid
+  version                               Int                    @default(1)
+  row_version                           BigInt                 @default(0)
+  is_active                             Boolean                @default(true)
+  is_deleted                            Boolean?               @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                          String?
+  metadata                              Json                   @default("{}")
+  bank_id                               String                 @db.Uuid
+  account_number_encrypted              String
+  currency_code                         String                 @db.Char(3)
+  account_type                          String
+  bank_cards                            bank_cards[]
+  bank_deposits                         bank_deposits[]
+  bank_payment_batches                  bank_payment_batches[]
+  bank_pos_terminals                    bank_pos_terminals[]
+  bank_reconciliations                  bank_reconciliations[]
+  bank_statements                       bank_statements[]
+  bank_transfers                        bank_transfers[]
+  checkbooks                            checkbooks[]
+  checks_received                       checks_received[]
+
+  @@schema("banks")
+}
+
+model bank_cards {
+  id                                 String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                           BigInt        @unique @default(autoincrement())
+  tenant_id                          String        @db.Uuid
+  company_id                         String        @db.Uuid
+  branch_id                          String?       @db.Uuid
+  created_at                         DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at                         DateTime      @default(now()) @db.Timestamptz(6)
+  deleted_at                         DateTime?     @db.Timestamptz(6)
+  created_by                         String?       @db.Uuid
+  updated_by                         String?       @db.Uuid
+  deleted_by                         String?       @db.Uuid
+  version                            Int           @default(1)
+  row_version                        BigInt        @default(0)
+  is_active                          Boolean       @default(true)
+  is_deleted                         Boolean?      @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                       String?
+  metadata                           Json          @default("{}")
+  bank_account_id                    String        @db.Uuid
+  card_type                          String
+  last_four_digits                   String?       @db.Char(4)
+  bank_accounts                      bank_accounts @relation(fields: [bank_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("banks")
+}
+
+model bank_deposits {
+  id                                    String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                              BigInt          @unique @default(autoincrement())
+  tenant_id                             String          @db.Uuid
+  company_id                            String          @db.Uuid
+  branch_id                             String?         @db.Uuid
+  created_at                            DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime        @default(now()) @db.Timestamptz(6)
+  deleted_at                            DateTime?       @db.Timestamptz(6)
+  created_by                            String?         @db.Uuid
+  updated_by                            String?         @db.Uuid
+  deleted_by                            String?         @db.Uuid
+  version                               Int             @default(1)
+  row_version                           BigInt          @default(0)
+  is_active                             Boolean         @default(true)
+  is_deleted                            Boolean?        @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                          String?
+  metadata                              Json            @default("{}")
+  bank_account_id                       String          @db.Uuid
+  cash_register_id                      String?         @db.Uuid
+  amount                                Decimal         @db.Decimal(18, 4)
+  bank_accounts                         bank_accounts   @relation(fields: [bank_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("banks")
+}
+
+model bank_payment_batch_lines {
+  id                                               String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                         BigInt               @unique @default(autoincrement())
+  tenant_id                                        String               @db.Uuid
+  company_id                                       String?              @db.Uuid
+  branch_id                                        String?              @db.Uuid
+  created_at                                       DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at                                       DateTime             @default(now()) @db.Timestamptz(6)
+  deleted_at                                       DateTime?            @db.Timestamptz(6)
+  created_by                                       String?              @db.Uuid
+  updated_by                                       String?              @db.Uuid
+  deleted_by                                       String?              @db.Uuid
+  version                                          Int                  @default(1)
+  row_version                                      BigInt               @default(0)
+  is_active                                        Boolean              @default(true)
+  is_deleted                                       Boolean?             @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                     String?
+  metadata                                         Json                 @default("{}")
+  batch_id                                         String               @db.Uuid
+  beneficiary_name                                 String
+  amount                                           Decimal              @db.Decimal(18, 4)
+  source_module                                    String?
+  source_entity_id                                 String?              @db.Uuid
+  bank_payment_batches                             bank_payment_batches @relation(fields: [batch_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("banks")
+}
+
+model bank_payment_batches {
+  id                                           String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                     BigInt                     @unique @default(autoincrement())
+  tenant_id                                    String                     @db.Uuid
+  company_id                                   String                     @db.Uuid
+  branch_id                                    String?                    @db.Uuid
+  created_at                                   DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at                                   DateTime                   @default(now()) @db.Timestamptz(6)
+  deleted_at                                   DateTime?                  @db.Timestamptz(6)
+  created_by                                   String?                    @db.Uuid
+  updated_by                                   String?                    @db.Uuid
+  deleted_by                                   String?                    @db.Uuid
+  version                                      Int                        @default(1)
+  row_version                                  BigInt                     @default(0)
+  is_active                                    Boolean                    @default(true)
+  is_deleted                                   Boolean?                   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                 String?
+  metadata                                     Json                       @default("{}")
+  bank_account_id                              String                     @db.Uuid
+  batch_purpose                                String
+  file_id                                      String?                    @db.Uuid
+  status                                       String                     @default("draft")
+  bank_payment_batch_lines                     bank_payment_batch_lines[]
+  bank_accounts                                bank_accounts              @relation(fields: [bank_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("banks")
+}
+
+model bank_pos_terminals {
+  id                                         String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                   BigInt        @unique @default(autoincrement())
+  tenant_id                                  String        @db.Uuid
+  company_id                                 String        @db.Uuid
+  branch_id                                  String        @db.Uuid
+  created_at                                 DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime      @default(now()) @db.Timestamptz(6)
+  deleted_at                                 DateTime?     @db.Timestamptz(6)
+  created_by                                 String?       @db.Uuid
+  updated_by                                 String?       @db.Uuid
+  deleted_by                                 String?       @db.Uuid
+  version                                    Int           @default(1)
+  row_version                                BigInt        @default(0)
+  is_active                                  Boolean       @default(true)
+  is_deleted                                 Boolean?      @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                               String?
+  metadata                                   Json          @default("{}")
+  bank_account_id                            String        @db.Uuid
+  terminal_code                              String
+  bank_accounts                              bank_accounts @relation(fields: [bank_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("banks")
+}
+
+model bank_reconciliation_lines {
+  id                                                String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                          BigInt                @unique @default(autoincrement())
+  tenant_id                                         String                @db.Uuid
+  company_id                                        String?               @db.Uuid
+  branch_id                                         String?               @db.Uuid
+  created_at                                        DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at                                        DateTime              @default(now()) @db.Timestamptz(6)
+  deleted_at                                        DateTime?             @db.Timestamptz(6)
+  created_by                                        String?               @db.Uuid
+  updated_by                                        String?               @db.Uuid
+  deleted_by                                        String?               @db.Uuid
+  version                                           Int                   @default(1)
+  row_version                                       BigInt                @default(0)
+  is_active                                         Boolean               @default(true)
+  is_deleted                                        Boolean?              @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                      String?
+  metadata                                          Json                  @default("{}")
+  reconciliation_id                                 String                @db.Uuid
+  statement_line_id                                 String?               @db.Uuid
+  matched_transfer_id                               String?               @db.Uuid
+  bank_transfers                                    bank_transfers?       @relation(fields: [matched_transfer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  bank_reconciliations                              bank_reconciliations  @relation(fields: [reconciliation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  bank_statement_lines                              bank_statement_lines? @relation(fields: [statement_line_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("banks")
+}
+
+model bank_reconciliations {
+  id                                           String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                     BigInt                      @unique @default(autoincrement())
+  tenant_id                                    String                      @db.Uuid
+  company_id                                   String                      @db.Uuid
+  branch_id                                    String?                     @db.Uuid
+  created_at                                   DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                                   DateTime                    @default(now()) @db.Timestamptz(6)
+  deleted_at                                   DateTime?                   @db.Timestamptz(6)
+  created_by                                   String?                     @db.Uuid
+  updated_by                                   String?                     @db.Uuid
+  deleted_by                                   String?                     @db.Uuid
+  version                                      Int                         @default(1)
+  row_version                                  BigInt                      @default(0)
+  is_active                                    Boolean                     @default(true)
+  is_deleted                                   Boolean?                    @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                 String?
+  metadata                                     Json                        @default("{}")
+  bank_account_id                              String                      @db.Uuid
+  statement_id                                 String                      @db.Uuid
+  status                                       String                      @default("in_progress")
+  bank_reconciliation_lines                    bank_reconciliation_lines[]
+  bank_accounts                                bank_accounts               @relation(fields: [bank_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  bank_statements                              bank_statements             @relation(fields: [statement_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("banks")
+}
+
+model bank_statement_lines {
+  id                                           String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                     BigInt                      @unique @default(autoincrement())
+  tenant_id                                    String                      @db.Uuid
+  company_id                                   String?                     @db.Uuid
+  branch_id                                    String?                     @db.Uuid
+  created_at                                   DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                                   DateTime                    @default(now()) @db.Timestamptz(6)
+  deleted_at                                   DateTime?                   @db.Timestamptz(6)
+  created_by                                   String?                     @db.Uuid
+  updated_by                                   String?                     @db.Uuid
+  deleted_by                                   String?                     @db.Uuid
+  version                                      Int                         @default(1)
+  row_version                                  BigInt                      @default(0)
+  is_active                                    Boolean                     @default(true)
+  is_deleted                                   Boolean?                    @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                 String?
+  metadata                                     Json                        @default("{}")
+  statement_id                                 String                      @db.Uuid
+  description                                  String
+  amount                                       Decimal                     @db.Decimal(18, 4)
+  transaction_date                             DateTime                    @db.Date
+  bank_reconciliation_lines                    bank_reconciliation_lines[]
+  bank_statements                              bank_statements             @relation(fields: [statement_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("banks")
+}
+
+model bank_statements {
+  id                                      String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                BigInt                 @unique @default(autoincrement())
+  tenant_id                               String                 @db.Uuid
+  company_id                              String                 @db.Uuid
+  branch_id                               String?                @db.Uuid
+  created_at                              DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime               @default(now()) @db.Timestamptz(6)
+  deleted_at                              DateTime?              @db.Timestamptz(6)
+  created_by                              String?                @db.Uuid
+  updated_by                              String?                @db.Uuid
+  deleted_by                              String?                @db.Uuid
+  version                                 Int                    @default(1)
+  row_version                             BigInt                 @default(0)
+  is_active                               Boolean                @default(true)
+  is_deleted                              Boolean?               @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                            String?
+  metadata                                Json                   @default("{}")
+  bank_account_id                         String                 @db.Uuid
+  period_start                            DateTime               @db.Date
+  period_end                              DateTime               @db.Date
+  source_file_id                          String?                @db.Uuid
+  bank_reconciliations                    bank_reconciliations[]
+  bank_statement_lines                    bank_statement_lines[]
+  bank_accounts                           bank_accounts          @relation(fields: [bank_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("banks")
+}
+
+model bank_transfers {
+  id                                     String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                               BigInt                      @unique @default(autoincrement())
+  tenant_id                              String                      @db.Uuid
+  company_id                             String                      @db.Uuid
+  branch_id                              String?                     @db.Uuid
+  created_at                             DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                             DateTime                    @default(now()) @db.Timestamptz(6)
+  deleted_at                             DateTime?                   @db.Timestamptz(6)
+  created_by                             String?                     @db.Uuid
+  updated_by                             String?                     @db.Uuid
+  deleted_by                             String?                     @db.Uuid
+  version                                Int                         @default(1)
+  row_version                            BigInt                      @default(0)
+  is_active                              Boolean                     @default(true)
+  is_deleted                             Boolean?                    @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                           String?
+  metadata                               Json                        @default("{}")
+  bank_account_id                        String                      @db.Uuid
+  direction                              String
+  amount                                 Decimal                     @db.Decimal(18, 4)
+  source_module                          String?
+  source_entity_id                       String?                     @db.Uuid
+  bank_reconciliation_lines              bank_reconciliation_lines[]
+  bank_accounts                          bank_accounts               @relation(fields: [bank_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("banks")
+}
+
+model checkbooks {
+  id                                 String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                           BigInt          @unique @default(autoincrement())
+  tenant_id                          String          @db.Uuid
+  company_id                         String?         @db.Uuid
+  branch_id                          String?         @db.Uuid
+  created_at                         DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at                         DateTime        @default(now()) @db.Timestamptz(6)
+  deleted_at                         DateTime?       @db.Timestamptz(6)
+  created_by                         String?         @db.Uuid
+  updated_by                         String?         @db.Uuid
+  deleted_by                         String?         @db.Uuid
+  version                            Int             @default(1)
+  row_version                        BigInt          @default(0)
+  is_active                          Boolean         @default(true)
+  is_deleted                         Boolean?        @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                       String?
+  metadata                           Json            @default("{}")
+  bank_account_id                    String          @db.Uuid
+  starting_number                    Int
+  ending_number                      Int
+  next_number                        Int
+  bank_accounts                      bank_accounts   @relation(fields: [bank_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  checks_issued                      checks_issued[]
+
+  @@schema("banks")
+}
+
+model checks_issued {
+  id                                    String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                              BigInt     @unique @default(autoincrement())
+  tenant_id                             String     @db.Uuid
+  company_id                            String     @db.Uuid
+  branch_id                             String?    @db.Uuid
+  created_at                            DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                            DateTime?  @db.Timestamptz(6)
+  created_by                            String?    @db.Uuid
+  updated_by                            String?    @db.Uuid
+  deleted_by                            String?    @db.Uuid
+  version                               Int        @default(1)
+  row_version                           BigInt     @default(0)
+  is_active                             Boolean    @default(true)
+  is_deleted                            Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                          String?
+  metadata                              Json       @default("{}")
+  checkbook_id                          String     @db.Uuid
+  check_number                          Int
+  supplier_id                           String?    @db.Uuid
+  amount                                Decimal    @db.Decimal(18, 4)
+  status                                String     @default("issued")
+  checkbooks                            checkbooks @relation(fields: [checkbook_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("banks")
+}
+
+model checks_received {
+  id                                      String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                BigInt         @unique @default(autoincrement())
+  tenant_id                               String         @db.Uuid
+  company_id                              String         @db.Uuid
+  branch_id                               String?        @db.Uuid
+  created_at                              DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime       @default(now()) @db.Timestamptz(6)
+  deleted_at                              DateTime?      @db.Timestamptz(6)
+  created_by                              String?        @db.Uuid
+  updated_by                              String?        @db.Uuid
+  deleted_by                              String?        @db.Uuid
+  version                                 Int            @default(1)
+  row_version                             BigInt         @default(0)
+  is_active                               Boolean        @default(true)
+  is_deleted                              Boolean?       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                            String?
+  metadata                                Json           @default("{}")
+  bank_account_id                         String?        @db.Uuid
+  customer_id                             String?        @db.Uuid
+  amount                                  Decimal        @db.Decimal(18, 4)
+  status                                  String         @default("in_portfolio")
+  bank_accounts                           bank_accounts? @relation(fields: [bank_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("banks")
+}

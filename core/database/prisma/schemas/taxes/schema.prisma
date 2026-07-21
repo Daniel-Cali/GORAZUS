@@ -1,0 +1,361 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "./generated"
+  previewFeatures = ["multiSchema"]
+  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["taxes"]
+}
+
+model tax_declaration_lines {
+  id                                            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                      BigInt           @unique @default(autoincrement())
+  tenant_id                                     String           @db.Uuid
+  company_id                                    String?          @db.Uuid
+  branch_id                                     String?          @db.Uuid
+  created_at                                    DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime         @default(now()) @db.Timestamptz(6)
+  deleted_at                                    DateTime?        @db.Timestamptz(6)
+  created_by                                    String?          @db.Uuid
+  updated_by                                    String?          @db.Uuid
+  deleted_by                                    String?          @db.Uuid
+  version                                       Int              @default(1)
+  row_version                                   BigInt           @default(0)
+  is_active                                     Boolean          @default(true)
+  is_deleted                                    Boolean?         @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                  String?
+  metadata                                      Json             @default("{}")
+  declaration_id                                String           @db.Uuid
+  tax_id                                        String           @db.Uuid
+  amount                                        Decimal          @db.Decimal(18, 4)
+  tax_declarations                              tax_declarations @relation(fields: [declaration_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  taxes                                         taxes            @relation(fields: [tax_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("taxes")
+}
+
+model tax_declarations {
+  id                                       String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                 BigInt                  @unique @default(autoincrement())
+  tenant_id                                String                  @db.Uuid
+  company_id                               String                  @db.Uuid
+  branch_id                                String?                 @db.Uuid
+  created_at                               DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime                @default(now()) @db.Timestamptz(6)
+  deleted_at                               DateTime?               @db.Timestamptz(6)
+  created_by                               String?                 @db.Uuid
+  updated_by                               String?                 @db.Uuid
+  deleted_by                               String?                 @db.Uuid
+  version                                  Int                     @default(1)
+  row_version                              BigInt                  @default(0)
+  is_active                                Boolean                 @default(true)
+  is_deleted                               Boolean?                @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                             String?
+  metadata                                 Json                    @default("{}")
+  fiscal_period_id                         String                  @db.Uuid
+  filed_at                                 DateTime?               @db.Timestamptz(6)
+  total_amount                             Decimal                 @db.Decimal(18, 4)
+  tax_declaration_lines                    tax_declaration_lines[]
+
+  @@schema("taxes")
+}
+
+model tax_exemption_certificates {
+  id                                                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                           BigInt         @unique @default(autoincrement())
+  tenant_id                                          String         @db.Uuid
+  company_id                                         String?        @db.Uuid
+  branch_id                                          String?        @db.Uuid
+  created_at                                         DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                                         DateTime       @default(now()) @db.Timestamptz(6)
+  deleted_at                                         DateTime?      @db.Timestamptz(6)
+  created_by                                         String?        @db.Uuid
+  updated_by                                         String?        @db.Uuid
+  deleted_by                                         String?        @db.Uuid
+  version                                            Int            @default(1)
+  row_version                                        BigInt         @default(0)
+  is_active                                          Boolean        @default(true)
+  is_deleted                                         Boolean?       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                       String?
+  metadata                                           Json           @default("{}")
+  exemption_id                                       String         @db.Uuid
+  document_id                                        String         @db.Uuid
+  tax_exemptions                                     tax_exemptions @relation(fields: [exemption_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("taxes")
+}
+
+model tax_exemptions {
+  id                                     String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                               BigInt                       @unique @default(autoincrement())
+  tenant_id                              String                       @db.Uuid
+  company_id                             String?                      @db.Uuid
+  branch_id                              String?                      @db.Uuid
+  created_at                             DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                             DateTime                     @default(now()) @db.Timestamptz(6)
+  deleted_at                             DateTime?                    @db.Timestamptz(6)
+  created_by                             String?                      @db.Uuid
+  updated_by                             String?                      @db.Uuid
+  deleted_by                             String?                      @db.Uuid
+  version                                Int                          @default(1)
+  row_version                            BigInt                       @default(0)
+  is_active                              Boolean                      @default(true)
+  is_deleted                             Boolean?                     @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                           String?
+  metadata                               Json                         @default("{}")
+  tax_id                                 String                       @db.Uuid
+  customer_id                            String?                      @db.Uuid
+  expires_at                             DateTime?                    @db.Date
+  tax_exemption_certificates             tax_exemption_certificates[]
+  taxes                                  taxes                        @relation(fields: [tax_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("taxes")
+}
+
+model tax_jurisdictions {
+  id                                        String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt              @unique @default(autoincrement())
+  tenant_id                                 String              @db.Uuid
+  company_id                                String?             @db.Uuid
+  branch_id                                 String?             @db.Uuid
+  created_at                                DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime            @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime?           @db.Timestamptz(6)
+  created_by                                String?             @db.Uuid
+  updated_by                                String?             @db.Uuid
+  deleted_by                                String?             @db.Uuid
+  version                                   Int                 @default(1)
+  row_version                               BigInt              @default(0)
+  is_active                                 Boolean             @default(true)
+  is_deleted                                Boolean?            @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json                @default("{}")
+  country_id                                String              @db.Uuid
+  name                                      String
+  tax_perceptions                           tax_perceptions[]
+  taxes                                     taxes[]
+  withholding_rules                         withholding_rules[]
+
+  @@schema("taxes")
+}
+
+model tax_perception_rules {
+  id                                           String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                     BigInt          @unique @default(autoincrement())
+  tenant_id                                    String          @db.Uuid
+  company_id                                   String?         @db.Uuid
+  branch_id                                    String?         @db.Uuid
+  created_at                                   DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at                                   DateTime        @default(now()) @db.Timestamptz(6)
+  deleted_at                                   DateTime?       @db.Timestamptz(6)
+  created_by                                   String?         @db.Uuid
+  updated_by                                   String?         @db.Uuid
+  deleted_by                                   String?         @db.Uuid
+  version                                      Int             @default(1)
+  row_version                                  BigInt          @default(0)
+  is_active                                    Boolean         @default(true)
+  is_deleted                                   Boolean?        @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                 String?
+  metadata                                     Json            @default("{}")
+  perception_id                                String          @db.Uuid
+  rate_percentage                              Decimal         @db.Decimal(6, 3)
+  tax_perceptions                              tax_perceptions @relation(fields: [perception_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("taxes")
+}
+
+model tax_perceptions {
+  id                                      String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                BigInt                 @unique @default(autoincrement())
+  tenant_id                               String                 @db.Uuid
+  company_id                              String?                @db.Uuid
+  branch_id                               String?                @db.Uuid
+  created_at                              DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime               @default(now()) @db.Timestamptz(6)
+  deleted_at                              DateTime?              @db.Timestamptz(6)
+  created_by                              String?                @db.Uuid
+  updated_by                              String?                @db.Uuid
+  deleted_by                              String?                @db.Uuid
+  version                                 Int                    @default(1)
+  row_version                             BigInt                 @default(0)
+  is_active                               Boolean                @default(true)
+  is_deleted                              Boolean?               @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                            String?
+  metadata                                Json                   @default("{}")
+  jurisdiction_id                         String                 @db.Uuid
+  name                                    String
+  tax_perception_rules                    tax_perception_rules[]
+  tax_jurisdictions                       tax_jurisdictions      @relation(fields: [jurisdiction_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("taxes")
+}
+
+model tax_rates {
+  id                                String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                          BigInt     @unique @default(autoincrement())
+  tenant_id                         String     @db.Uuid
+  company_id                        String?    @db.Uuid
+  branch_id                         String?    @db.Uuid
+  created_at                        DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                        DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                        DateTime?  @db.Timestamptz(6)
+  created_by                        String?    @db.Uuid
+  updated_by                        String?    @db.Uuid
+  deleted_by                        String?    @db.Uuid
+  version                           Int        @default(1)
+  row_version                       BigInt     @default(0)
+  is_active                         Boolean    @default(true)
+  is_deleted                        Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                      String?
+  metadata                          Json       @default("{}")
+  tax_id                            String     @db.Uuid
+  rate_percentage                   Decimal    @db.Decimal(6, 3)
+  effective_from                    DateTime   @db.Date
+  effective_to                      DateTime?  @db.Date
+  taxes                             taxes      @relation(fields: [tax_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("taxes")
+}
+
+model tax_rules {
+  id                                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                          BigInt              @unique @default(autoincrement())
+  tenant_id                         String              @db.Uuid
+  company_id                        String?             @db.Uuid
+  branch_id                         String?             @db.Uuid
+  created_at                        DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                        DateTime            @default(now()) @db.Timestamptz(6)
+  deleted_at                        DateTime?           @db.Timestamptz(6)
+  created_by                        String?             @db.Uuid
+  updated_by                        String?             @db.Uuid
+  deleted_by                        String?             @db.Uuid
+  version                           Int                 @default(1)
+  row_version                       BigInt              @default(0)
+  is_active                         Boolean             @default(true)
+  is_deleted                        Boolean?            @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                      String?
+  metadata                          Json                @default("{}")
+  tax_id                            String              @db.Uuid
+  product_category_id               String?             @db.Uuid
+  fiscal_regime_id                  String?             @db.Uuid
+  taxes                             taxes               @relation(fields: [tax_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("taxes")
+}
+
+model tax_translations {
+  id                                       String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                 BigInt     @unique @default(autoincrement())
+  tenant_id                                String     @db.Uuid
+  company_id                               String?    @db.Uuid
+  branch_id                                String?    @db.Uuid
+  created_at                               DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                               DateTime?  @db.Timestamptz(6)
+  created_by                               String?    @db.Uuid
+  updated_by                               String?    @db.Uuid
+  deleted_by                               String?    @db.Uuid
+  version                                  Int        @default(1)
+  row_version                              BigInt     @default(0)
+  is_active                                Boolean    @default(true)
+  is_deleted                               Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                             String?
+  metadata                                 Json       @default("{}")
+  tax_id                                   String     @db.Uuid
+  language_code                            String
+  name                                     String
+  taxes                                    taxes      @relation(fields: [tax_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("taxes")
+}
+
+model taxes {
+  id                            String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                      BigInt                   @unique @default(autoincrement())
+  tenant_id                     String                   @db.Uuid
+  company_id                    String?                  @db.Uuid
+  branch_id                     String?                  @db.Uuid
+  created_at                    DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime                 @default(now()) @db.Timestamptz(6)
+  deleted_at                    DateTime?                @db.Timestamptz(6)
+  created_by                    String?                  @db.Uuid
+  updated_by                    String?                  @db.Uuid
+  deleted_by                    String?                  @db.Uuid
+  version                       Int                      @default(1)
+  row_version                   BigInt                   @default(0)
+  is_active                     Boolean                  @default(true)
+  is_deleted                    Boolean?                 @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                  String?
+  metadata                      Json                     @default("{}")
+  code                          String
+  jurisdiction_id               String                   @db.Uuid
+  tax_kind                      String
+  tax_declaration_lines         tax_declaration_lines[]
+  tax_exemptions                tax_exemptions[]
+  tax_rates                     tax_rates[]
+  tax_rules                     tax_rules[]
+  tax_translations              tax_translations[]
+  tax_jurisdictions             tax_jurisdictions        @relation(fields: [jurisdiction_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("taxes")
+}
+
+model withholding_certificates {
+  id                                               String            @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                         BigInt            @default(autoincrement())
+  tenant_id                                        String            @db.Uuid
+  company_id                                       String?           @db.Uuid
+  branch_id                                        String?           @db.Uuid
+  created_at                                       DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at                                       DateTime          @default(now()) @db.Timestamptz(6)
+  deleted_at                                       DateTime?         @db.Timestamptz(6)
+  created_by                                       String?           @db.Uuid
+  updated_by                                       String?           @db.Uuid
+  deleted_by                                       String?           @db.Uuid
+  version                                          Int               @default(1)
+  row_version                                      BigInt            @default(0)
+  is_active                                        Boolean           @default(true)
+  is_deleted                                       Boolean?          @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                     String?
+  metadata                                         Json              @default("{}")
+  withholding_rule_id                              String            @db.Uuid
+  source_module                                    String
+  source_entity_id                                 String            @db.Uuid
+  amount                                           Decimal           @db.Decimal(18, 4)
+  withholding_rules                                withholding_rules @relation(fields: [withholding_rule_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id, created_at])
+  @@unique([local_id, created_at])
+  @@schema("taxes")
+}
+
+model withholding_rules {
+  id                                        String                          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt                          @unique @default(autoincrement())
+  tenant_id                                 String                          @db.Uuid
+  company_id                                String?                         @db.Uuid
+  branch_id                                 String?                         @db.Uuid
+  created_at                                DateTime                        @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime                        @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime?                       @db.Timestamptz(6)
+  created_by                                String?                         @db.Uuid
+  updated_by                                String?                         @db.Uuid
+  deleted_by                                String?                         @db.Uuid
+  version                                   Int                             @default(1)
+  row_version                               BigInt                          @default(0)
+  is_active                                 Boolean                         @default(true)
+  is_deleted                                Boolean?                        @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json                            @default("{}")
+  jurisdiction_id                           String                          @db.Uuid
+  name                                      String
+  rate_percentage                           Decimal                         @db.Decimal(6, 3)
+  withholding_certificates                  withholding_certificates[]
+  tax_jurisdictions                         tax_jurisdictions               @relation(fields: [jurisdiction_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("taxes")
+}

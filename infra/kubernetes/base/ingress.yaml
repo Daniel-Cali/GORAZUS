@@ -1,0 +1,33 @@
+# GORAZUS ERP — Ingress externo, único punto de entrada (mismo criterio que
+# `infra/nginx/nginx.conf` en Docker Compose: un dominio para front+back,
+# evita CORS en producción — ver docs/architecture/08-infraestructura-y-
+# despliegue.md §2). TLS vía cert-manager (`cert-manager.io/cluster-issuer`,
+# prerequisito de cluster — ver infra/kubernetes/README.md) — FASE 05: antes
+# no había ningún mecanismo de HTTPS documentado ni implementado, ni en
+# Docker Compose ni acá.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gorazus
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-production # sobreescrito por overlay (staging usa letsencrypt-staging, ver README)
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+    nginx.ingress.kubernetes.io/proxy-body-size: 10m
+    nginx.ingress.kubernetes.io/proxy-read-timeout: '60'
+spec:
+  tls:
+    - hosts:
+        - gorazus.example.com # sobreescrito por overlay
+      secretName: gorazus-tls
+  rules:
+    - host: gorazus.example.com # sobreescrito por overlay
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port:
+                  name: http

@@ -1,0 +1,70 @@
+{
+  "name": "gorazus-erp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GORAZUS ERP — monolito modular (Clean Architecture + DDD), preparado para extracción a microservicios.",
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "build": "nx run-many -t build",
+    "lint": "nx run-many -t lint",
+    "test": "nx run-many -t test",
+    "test:affected": "nx affected -t test",
+    "lint:affected": "nx affected -t lint",
+    "build:affected": "nx affected -t build",
+    "graph": "nx graph",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "docker:up": "docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml up -d",
+    "docker:down": "docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml down",
+    "docker:logs": "docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml logs -f",
+    "db:pull": "pnpm --filter @gorazus/core-database run db:pull",
+    "db:generate": "pnpm --filter @gorazus/core-database run db:generate",
+    "db:migrate": "pnpm --filter @gorazus/core-database run db:migrate",
+    "prepare": "husky || true"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{md,json,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "dependencies": {
+    "argon2": "^0.44.0",
+    "tslib": "^2.8.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.7.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.6.0",
+    "@commitlint/config-conventional": "^19.6.0",
+    "@eslint/js": "^9.17.0",
+    "@nx/eslint": "^20.3.0",
+    "@nx/eslint-plugin": "^20.3.0",
+    "@nx/jest": "^20.3.0",
+    "@nx/js": "^20.3.0",
+    "@nx/vite": "^20.3.0",
+    "@playwright/test": "^1.49.0",
+    "@types/jest": "^29.5.0",
+    "@types/node": "^20.19.43",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^10.0.0",
+    "eslint-plugin-react": "^7.37.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "globals": "^15.14.0",
+    "husky": "^9.1.0",
+    "jest": "^29.7.0",
+    "lint-staged": "^15.3.0",
+    "nx": "^20.3.0",
+    "prettier": "^3.4.0",
+    "ts-jest": "^29.2.0",
+    "typescript-eslint": "^8.19.0"
+  }
+}

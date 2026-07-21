@@ -1,0 +1,19 @@
+{
+  "name": "@gorazus/core-messaging",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GORAZUS ERP — Event Bus / Message Broker (RabbitMQ). Ver docs/architecture/08-infraestructura-y-despliegue.md §4.",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "dependencies": {
+    "@gorazus/core-logging": "workspace:*",
+    "@nestjs/common": "^10.4.0",
+    "@nestjs/config": "^3.3.0",
+    "amqplib": "^0.10.0",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.8.0"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.0"
+  }
+}

@@ -1,0 +1,109 @@
+# GORAZUS ERP — overlay de desarrollo local.
+# Ver docs/architecture/08-infraestructura-y-despliegue.md §1:
+# "docker-compose.dev.yml agrega hot-reload de api/web y expone
+# puertos de administración (pgAdmin, RabbitMQ management UI, MinIO
+# console) que no existen en docker-compose.prod.yml."
+#
+# Uso: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  # En dev, `web` es el servidor Vite de larga duración (--watch más
+  # abajo), no el init container de un solo uso que es en base/prod
+  # (ver apps/web/Dockerfile) — nunca llega a "completed successfully",
+  # así que el `depends_on` de `nginx` en docker-compose.yml (que
+  # espera justamente esa condición) se sobreescribe acá para no
+  # colgarse esperando algo que no va a pasar. En dev tampoco hace
+  # falta el volumen `web_dist` (Vite sirve directo en :5173, sin pasar
+  # por nginx — ver docs/architecture/08 §2).
+  nginx:
+    depends_on:
+      api:
+        condition: service_started
+      web:
+        condition: service_started
+
+  api:
+    build:
+      target: development
+    volumes:
+      - ../../apps/api:/app/apps/api
+      - ../../core:/app/core
+      - ../../modules:/app/modules
+      - ../../packages:/app/packages
+      - /app/node_modules
+    environment:
+      NODE_ENV: development
+    ports:
+      - '3000:3000' # acceso directo sin pasar por nginx, útil para debug/Postman
+      - '9464:9464' # métricas Prometheus (core/observability/metrics.ts) — acceso directo para debug local, ver docker-compose.monitoring.yml
+    command: pnpm nx serve api --watch
+
+  web:
+    build:
+      target: development
+    volumes:
+      - ../../apps/web:/app/apps/web
+      - ../../ui-kit:/app/ui-kit
+      - ../../packages:/app/packages
+      - /app/node_modules
+    environment:
+      NODE_ENV: development
+    ports:
+      - '5173:5173' # Vite dev server
+    command: pnpm nx serve web --watch
+
+  postgres:
+    ports:
+      - '5432:5432' # acceso directo para clientes SQL locales (pgAdmin, DBeaver, etc.)
+
+  redis:
+    ports:
+      - '6379:6379'
+
+  rabbitmq:
+    ports:
+      - '5672:5672' # AMQP
+      - '15672:15672' # management UI
+
+  minio:
+    ports:
+      - '9000:9000' # API S3
+      - '9001:9001' # console web
+
+  ollama:
+    ports:
+      - '11434:11434' # acceso directo para `ollama pull <modelo>`/debug local, ver core/ollama
+
+  # --- Servicios de administración/desarrollo, solo en este overlay ---
+  # (prometidos en el comentario de cabecera de este archivo, ausentes
+  # hasta ahora: pgAdmin y RabbitMQ management UI ya vienen incluidos
+  # en la imagen rabbitmq:3.13-management-alpine del compose base,
+  # expuestos arriba en el puerto 15672 — solo faltaba pgAdmin)
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    environment:
+      PGADMIN_DEFAULT_EMAIL: dev@gorazus.local
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-gorazus_dev}
+      PGADMIN_CONFIG_SERVER_MODE: 'False' # single-user, sin login real en dev
+    ports:
+      - '5050:80'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - gorazus
+
+  # Captura correo saliente sin enviarlo de verdad — ver infra/mailhog/README.md.
+  # Sin volumen: los mensajes son descartables entre reinicios (dato de prueba, no estado real).
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports:
+      - '1025:1025' # SMTP — apps/api apunta acá en dev (ver .env.example, SMTP_HOST)
+      - '8025:8025' # UI web de inspección
+    networks:
+      - gorazus
+
+volumes:
+  pgadmin_data:

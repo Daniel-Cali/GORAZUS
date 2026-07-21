@@ -1,0 +1,21 @@
+{
+  "name": "@gorazus/auth-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GORAZUS ERP — feature auth (login, contexto de sesión). Ver docs/frontend/FOLDER_STRUCTURE.md §2. Solo se importa por ruta relativa desde modules/auth/index.ts, nunca por nombre de paquete.",
+  "dependencies": {
+    "@gorazus/ui-kit": "workspace:*",
+    "@gorazus/contracts": "workspace:*",
+    "@hookform/resolvers": "^3.9.0",
+    "@tanstack/react-query": "^5.62.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.0",
+    "react-router-dom": "^7.1.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0"
+  }
+}

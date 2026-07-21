@@ -1,0 +1,42 @@
+# GORAZUS ERP — validación de Pull Request.
+# Ver docs/architecture/31-infraestructura-completa.md §7-8.
+# Las 4 etapas del pipeline (affected → build+lint → test → deploy),
+# acotadas a `nx affected` contra `main`. Gate de merge: falla cualquier
+# test/lint de lo afectado, o el lint de fronteras de Nx (import
+# prohibido entre módulos, ver 01-estructura-monorepo.md §5).
+
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: pr-validation-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  affected:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # nx affected necesita el historial completo para diff contra main
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Lint de fronteras de Nx (@nx/enforce-module-boundaries) corre
+      # como parte de `lint` sobre cada proyecto afectado — no es un
+      # paso separado, es una regla más del lint estándar.
+      - run: pnpm nx affected -t lint --base=origin/main
+
+      - run: pnpm nx affected -t build --base=origin/main
+
+      - run: pnpm nx affected -t test --base=origin/main

@@ -1,0 +1,57 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: staging
+
+resources:
+  - ../../base
+
+images:
+  - name: gorazus/api
+    newTag: staging
+  - name: gorazus/web
+    newTag: staging
+
+replicas:
+  - name: api
+    count: 2
+  - name: web
+    count: 1
+
+patches:
+  - target:
+      kind: Ingress
+      name: gorazus
+    patch: |-
+      - op: replace
+        path: /metadata/annotations/cert-manager.io~1cluster-issuer
+        value: letsencrypt-staging
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: staging.gorazus.example.com
+      - op: replace
+        path: /spec/rules/0/host
+        value: staging.gorazus.example.com
+  - target:
+      kind: ConfigMap
+      name: api-config
+    patch: |-
+      - op: replace
+        path: /data/CORS_ORIGIN
+        value: https://staging.gorazus.example.com
+  - target:
+      kind: Deployment
+      name: api
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests: { cpu: 250m, memory: 512Mi }
+          limits: { cpu: "1", memory: 1Gi }
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: api
+    patch: |-
+      - op: replace
+        path: /spec/maxReplicas
+        value: 3

@@ -1,0 +1,55 @@
+# GORAZUS ERP — CODEOWNERS
+# Ver docs/architecture/07-convenciones-y-estandares.md §3: cada
+# carpeta de modules/<x>/ tiene un dueño declarado acá. Un PR que toca
+# un módulo requiere aprobación de su dueño, aunque cualquiera pueda
+# contribuir. Reglas posteriores en el archivo ganan sobre las
+# anteriores (comportamiento estándar de CODEOWNERS) — por eso el
+# fallback va primero y las reglas específicas de módulo después.
+#
+# NOTA: los equipos @gorazus/* son placeholders — todavía no existe
+# una GitHub org/equipos reales para este proyecto. La estructura "un
+# dueño por módulo" es la decisión ya fijada; sustituir cada
+# @gorazus/<equipo> por el usuario o team real en cuanto se cree la
+# organización de GitHub.
+
+# Fallback — cualquier archivo no cubierto por una regla más específica
+* @gorazus/arquitectura
+
+# Plataforma / infraestructura transversal (no es un módulo de negocio)
+/core/                    @gorazus/plataforma
+/packages/                @gorazus/plataforma
+/ui-kit/                  @gorazus/plataforma
+/infra/                   @gorazus/plataforma
+/.github/                 @gorazus/plataforma
+/apps/                    @gorazus/plataforma
+/docs/architecture/       @gorazus/arquitectura
+/docs/database/           @gorazus/plataforma
+
+# Módulos de negocio (modules/<x>/) — un dueño por módulo
+/modules/activos-fijos/       @gorazus/activos-fijos
+/modules/administracion/      @gorazus/administracion
+/modules/auth/                @gorazus/auth
+/modules/bancos/              @gorazus/bancos
+/modules/bi/                  @gorazus/bi
+/modules/caja/                @gorazus/caja
+/modules/clientes/            @gorazus/clientes
+/modules/compras/             @gorazus/compras
+/modules/configuracion/       @gorazus/configuracion
+/modules/contabilidad/        @gorazus/contabilidad
+/modules/crm/                 @gorazus/crm
+/modules/dashboard/           @gorazus/dashboard
+/modules/documentos/          @gorazus/documentos
+/modules/impuestos/           @gorazus/impuestos
+/modules/inventario/          @gorazus/inventario
+/modules/nomina/               @gorazus/nomina
+/modules/pos/                 @gorazus/pos
+/modules/produccion/          @gorazus/produccion
+/modules/productos/           @gorazus/productos
+/modules/proveedores/         @gorazus/proveedores
+/modules/proyectos/           @gorazus/proyectos
+/modules/recursos-humanos/    @gorazus/recursos-humanos
+/modules/reportes/            @gorazus/reportes
+/modules/seguridad/           @gorazus/seguridad
+/modules/servicios/           @gorazus/servicios
+/modules/tesoreria/           @gorazus/tesoreria
+/modules/ventas/              @gorazus/ventas

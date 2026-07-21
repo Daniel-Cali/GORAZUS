@@ -1,0 +1,305 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "./generated"
+  previewFeatures = ["multiSchema"]
+  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["reports"]
+}
+
+model dashboard_widgets {
+  id                                        String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt             @unique @default(autoincrement())
+  tenant_id                                 String             @db.Uuid
+  company_id                                String?            @db.Uuid
+  branch_id                                 String?            @db.Uuid
+  created_at                                DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime           @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime?          @db.Timestamptz(6)
+  created_by                                String?            @db.Uuid
+  updated_by                                String?            @db.Uuid
+  deleted_by                                String?            @db.Uuid
+  version                                   Int                @default(1)
+  row_version                               BigInt             @default(0)
+  is_active                                 Boolean            @default(true)
+  is_deleted                                Boolean?           @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json               @default("{}")
+  dashboard_id                              String             @db.Uuid
+  report_definition_id                      String             @db.Uuid
+  position_order                            Int                @default(0) @db.SmallInt
+  chart_type                                String             @default("table")
+  dashboards                                dashboards         @relation(fields: [dashboard_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  report_definitions                        report_definitions @relation(fields: [report_definition_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("reports")
+}
+
+model dashboards {
+  id                                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                              BigInt              @unique @default(autoincrement())
+  tenant_id                             String              @db.Uuid
+  company_id                            String?             @db.Uuid
+  branch_id                             String?             @db.Uuid
+  created_at                            DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime            @default(now()) @db.Timestamptz(6)
+  deleted_at                            DateTime?           @db.Timestamptz(6)
+  created_by                            String?             @db.Uuid
+  updated_by                            String?             @db.Uuid
+  deleted_by                            String?             @db.Uuid
+  version                               Int                 @default(1)
+  row_version                           BigInt              @default(0)
+  is_active                             Boolean             @default(true)
+  is_deleted                            Boolean?            @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                          String?
+  metadata                              Json                @default("{}")
+  owner_user_id                         String              @db.Uuid
+  name                                  String
+  dashboard_widgets                     dashboard_widgets[]
+
+  @@schema("reports")
+}
+
+model report_definitions {
+  id                                         String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                   BigInt              @unique @default(autoincrement())
+  tenant_id                                  String              @db.Uuid
+  company_id                                 String?             @db.Uuid
+  branch_id                                  String?             @db.Uuid
+  created_at                                 DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime            @default(now()) @db.Timestamptz(6)
+  deleted_at                                 DateTime?           @db.Timestamptz(6)
+  created_by                                 String?             @db.Uuid
+  updated_by                                 String?             @db.Uuid
+  deleted_by                                 String?             @db.Uuid
+  version                                    Int                 @default(1)
+  row_version                                BigInt              @default(0)
+  is_active                                  Boolean             @default(true)
+  is_deleted                                 Boolean?            @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                               String?
+  metadata                                   Json                @default("{}")
+  name                                       String
+  source_module                              String
+  base_query_name                            String
+  is_ad_hoc                                  Boolean             @default(false)
+  ad_hoc_config                              Json?
+  dashboard_widgets                          dashboard_widgets[]
+  report_executions                          report_executions[]
+  report_favorites                           report_favorites[]
+  report_parameters                          report_parameters[]
+  report_schedules                           report_schedules[]
+  report_templates                           report_templates[]
+
+  @@schema("reports")
+}
+
+model report_executions {
+  id                                                 String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                           BigInt             @unique @default(autoincrement())
+  tenant_id                                          String             @db.Uuid
+  company_id                                         String?            @db.Uuid
+  branch_id                                          String?            @db.Uuid
+  created_at                                         DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                                         DateTime           @default(now()) @db.Timestamptz(6)
+  deleted_at                                         DateTime?          @db.Timestamptz(6)
+  created_by                                         String?            @db.Uuid
+  updated_by                                         String?            @db.Uuid
+  deleted_by                                         String?            @db.Uuid
+  version                                            Int                @default(1)
+  row_version                                        BigInt             @default(0)
+  is_active                                          Boolean            @default(true)
+  is_deleted                                         Boolean?           @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                       String?
+  metadata                                           Json               @default("{}")
+  report_definition_id                               String             @db.Uuid
+  executed_by_user_id                                String             @db.Uuid
+  parameters_used                                    Json               @default("{}")
+  report_definitions                                 report_definitions @relation(fields: [report_definition_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  report_exports                                     report_exports[]
+
+  @@schema("reports")
+}
+
+model report_exports {
+  id                                     String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                               BigInt            @unique @default(autoincrement())
+  tenant_id                              String            @db.Uuid
+  company_id                             String?           @db.Uuid
+  branch_id                              String?           @db.Uuid
+  created_at                             DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at                             DateTime          @default(now()) @db.Timestamptz(6)
+  deleted_at                             DateTime?         @db.Timestamptz(6)
+  created_by                             String?           @db.Uuid
+  updated_by                             String?           @db.Uuid
+  deleted_by                             String?           @db.Uuid
+  version                                Int               @default(1)
+  row_version                            BigInt            @default(0)
+  is_active                              Boolean           @default(true)
+  is_deleted                             Boolean?          @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                           String?
+  metadata                               Json              @default("{}")
+  execution_id                           String            @db.Uuid
+  file_id                                String            @db.Uuid
+  export_format                          String
+  report_executions                      report_executions @relation(fields: [execution_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("reports")
+}
+
+model report_favorites {
+  id                                       String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                 BigInt             @unique @default(autoincrement())
+  tenant_id                                String             @db.Uuid
+  company_id                               String?            @db.Uuid
+  branch_id                                String?            @db.Uuid
+  created_at                               DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime           @default(now()) @db.Timestamptz(6)
+  deleted_at                               DateTime?          @db.Timestamptz(6)
+  created_by                               String?            @db.Uuid
+  updated_by                               String?            @db.Uuid
+  deleted_by                               String?            @db.Uuid
+  version                                  Int                @default(1)
+  row_version                              BigInt             @default(0)
+  is_active                                Boolean            @default(true)
+  is_deleted                               Boolean?           @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                             String?
+  metadata                                 Json               @default("{}")
+  report_definition_id                     String             @db.Uuid
+  user_id                                  String             @db.Uuid
+  report_definitions                       report_definitions @relation(fields: [report_definition_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("reports")
+}
+
+model report_parameters {
+  id                                        String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt             @unique @default(autoincrement())
+  tenant_id                                 String             @db.Uuid
+  company_id                                String?            @db.Uuid
+  branch_id                                 String?            @db.Uuid
+  created_at                                DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime           @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime?          @db.Timestamptz(6)
+  created_by                                String?            @db.Uuid
+  updated_by                                String?            @db.Uuid
+  deleted_by                                String?            @db.Uuid
+  version                                   Int                @default(1)
+  row_version                               BigInt             @default(0)
+  is_active                                 Boolean            @default(true)
+  is_deleted                                Boolean?           @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json               @default("{}")
+  report_definition_id                      String             @db.Uuid
+  parameter_key                             String
+  data_type                                 String
+  report_definitions                        report_definitions @relation(fields: [report_definition_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("reports")
+}
+
+model report_schedule_recipients {
+  id                                                 String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                           BigInt           @unique @default(autoincrement())
+  tenant_id                                          String           @db.Uuid
+  company_id                                         String?          @db.Uuid
+  branch_id                                          String?          @db.Uuid
+  created_at                                         DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at                                         DateTime         @default(now()) @db.Timestamptz(6)
+  deleted_at                                         DateTime?        @db.Timestamptz(6)
+  created_by                                         String?          @db.Uuid
+  updated_by                                         String?          @db.Uuid
+  deleted_by                                         String?          @db.Uuid
+  version                                            Int              @default(1)
+  row_version                                        BigInt           @default(0)
+  is_active                                          Boolean          @default(true)
+  is_deleted                                         Boolean?         @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                       String?
+  metadata                                           Json             @default("{}")
+  schedule_id                                        String           @db.Uuid
+  user_id                                            String           @db.Uuid
+  report_schedules                                   report_schedules @relation(fields: [schedule_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("reports")
+}
+
+model report_schedules {
+  id                                       String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                 BigInt                       @unique @default(autoincrement())
+  tenant_id                                String                       @db.Uuid
+  company_id                               String                       @db.Uuid
+  branch_id                                String?                      @db.Uuid
+  created_at                               DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime                     @default(now()) @db.Timestamptz(6)
+  deleted_at                               DateTime?                    @db.Timestamptz(6)
+  created_by                               String?                      @db.Uuid
+  updated_by                               String?                      @db.Uuid
+  deleted_by                               String?                      @db.Uuid
+  version                                  Int                          @default(1)
+  row_version                              BigInt                       @default(0)
+  is_active                                Boolean                      @default(true)
+  is_deleted                               Boolean?                     @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                             String?
+  metadata                                 Json                         @default("{}")
+  report_definition_id                     String                       @db.Uuid
+  cron_expression                          String
+  report_schedule_recipients               report_schedule_recipients[]
+  report_definitions                       report_definitions           @relation(fields: [report_definition_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("reports")
+}
+
+model report_template_translations {
+  id                                                   String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                             BigInt           @unique @default(autoincrement())
+  tenant_id                                            String           @db.Uuid
+  company_id                                           String?          @db.Uuid
+  branch_id                                            String?          @db.Uuid
+  created_at                                           DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at                                           DateTime         @default(now()) @db.Timestamptz(6)
+  deleted_at                                           DateTime?        @db.Timestamptz(6)
+  created_by                                           String?          @db.Uuid
+  updated_by                                           String?          @db.Uuid
+  deleted_by                                           String?          @db.Uuid
+  version                                              Int              @default(1)
+  row_version                                          BigInt           @default(0)
+  is_active                                            Boolean          @default(true)
+  is_deleted                                           Boolean?         @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                         String?
+  metadata                                             Json             @default("{}")
+  template_id                                          String           @db.Uuid
+  language_code                                        String
+  layout_html                                          String
+  report_templates                                     report_templates @relation(fields: [template_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("reports")
+}
+
+model report_templates {
+  id                                       String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                 BigInt                         @unique @default(autoincrement())
+  tenant_id                                String                         @db.Uuid
+  company_id                               String?                        @db.Uuid
+  branch_id                                String?                        @db.Uuid
+  created_at                               DateTime                       @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime                       @default(now()) @db.Timestamptz(6)
+  deleted_at                               DateTime?                      @db.Timestamptz(6)
+  created_by                               String?                        @db.Uuid
+  updated_by                               String?                        @db.Uuid
+  deleted_by                               String?                        @db.Uuid
+  version                                  Int                            @default(1)
+  row_version                              BigInt                         @default(0)
+  is_active                                Boolean                        @default(true)
+  is_deleted                               Boolean?                       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                             String?
+  metadata                                 Json                           @default("{}")
+  report_definition_id                     String                         @db.Uuid
+  layout_html                              String
+  report_template_translations             report_template_translations[]
+  report_definitions                       report_definitions             @relation(fields: [report_definition_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("reports")
+}

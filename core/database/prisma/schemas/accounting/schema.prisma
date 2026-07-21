@@ -1,0 +1,760 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "./generated"
+  previewFeatures = ["multiSchema"]
+  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["accounting"]
+}
+
+model account_reconciliations {
+  id                                              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                        BigInt            @unique @default(autoincrement())
+  tenant_id                                       String            @db.Uuid
+  company_id                                      String            @db.Uuid
+  branch_id                                       String?           @db.Uuid
+  created_at                                      DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at                                      DateTime          @default(now()) @db.Timestamptz(6)
+  deleted_at                                      DateTime?         @db.Timestamptz(6)
+  created_by                                      String?           @db.Uuid
+  updated_by                                      String?           @db.Uuid
+  deleted_by                                      String?           @db.Uuid
+  version                                         Int               @default(1)
+  row_version                                     BigInt            @default(0)
+  is_active                                       Boolean           @default(true)
+  is_deleted                                      Boolean?          @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                    String?
+  metadata                                        Json              @default("{}")
+  account_id                                      String            @db.Uuid
+  reconciled_balance                              Decimal           @db.Decimal(18, 4)
+  subledger_balance                               Decimal           @db.Decimal(18, 4)
+  chart_of_accounts                               chart_of_accounts @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("accounting")
+}
+
+model account_types {
+  id                                    String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                              BigInt              @unique @default(autoincrement())
+  tenant_id                             String              @db.Uuid
+  company_id                            String?             @db.Uuid
+  branch_id                             String?             @db.Uuid
+  created_at                            DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime            @default(now()) @db.Timestamptz(6)
+  deleted_at                            DateTime?           @db.Timestamptz(6)
+  created_by                            String?             @db.Uuid
+  updated_by                            String?             @db.Uuid
+  deleted_by                            String?             @db.Uuid
+  version                               Int                 @default(1)
+  row_version                           BigInt              @default(0)
+  is_active                             Boolean             @default(true)
+  is_deleted                            Boolean?            @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                          String?
+  metadata                              Json                @default("{}")
+  code                                  String
+  normal_balance                        String
+  chart_of_accounts                     chart_of_accounts[]
+
+  @@schema("accounting")
+}
+
+model accounting_dimension_values {
+  id                                                  String                           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                            BigInt                           @unique @default(autoincrement())
+  tenant_id                                           String                           @db.Uuid
+  company_id                                          String?                          @db.Uuid
+  branch_id                                           String?                          @db.Uuid
+  created_at                                          DateTime                         @default(now()) @db.Timestamptz(6)
+  updated_at                                          DateTime                         @default(now()) @db.Timestamptz(6)
+  deleted_at                                          DateTime?                        @db.Timestamptz(6)
+  created_by                                          String?                          @db.Uuid
+  updated_by                                          String?                          @db.Uuid
+  deleted_by                                          String?                          @db.Uuid
+  version                                             Int                              @default(1)
+  row_version                                         BigInt                           @default(0)
+  is_active                                           Boolean                          @default(true)
+  is_deleted                                          Boolean?                         @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                        String?
+  metadata                                            Json                             @default("{}")
+  dimension_id                                        String                           @db.Uuid
+  code                                                String
+  accounting_dimensions                               accounting_dimensions            @relation(fields: [dimension_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  journal_entry_dimension_values                      journal_entry_dimension_values[]
+
+  @@schema("accounting")
+}
+
+model accounting_dimensions {
+  id                                            String                        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                      BigInt                        @unique @default(autoincrement())
+  tenant_id                                     String                        @db.Uuid
+  company_id                                    String                        @db.Uuid
+  branch_id                                     String?                       @db.Uuid
+  created_at                                    DateTime                      @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime                      @default(now()) @db.Timestamptz(6)
+  deleted_at                                    DateTime?                     @db.Timestamptz(6)
+  created_by                                    String?                       @db.Uuid
+  updated_by                                    String?                       @db.Uuid
+  deleted_by                                    String?                       @db.Uuid
+  version                                       Int                           @default(1)
+  row_version                                   BigInt                        @default(0)
+  is_active                                     Boolean                       @default(true)
+  is_deleted                                    Boolean?                      @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                  String?
+  metadata                                      Json                          @default("{}")
+  name                                          String
+  accounting_dimension_values                   accounting_dimension_values[]
+
+  @@schema("accounting")
+}
+
+model accounting_rule_lines {
+  id                                            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                      BigInt            @unique @default(autoincrement())
+  tenant_id                                     String            @db.Uuid
+  company_id                                    String?           @db.Uuid
+  branch_id                                     String?           @db.Uuid
+  created_at                                    DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime          @default(now()) @db.Timestamptz(6)
+  deleted_at                                    DateTime?         @db.Timestamptz(6)
+  created_by                                    String?           @db.Uuid
+  updated_by                                    String?           @db.Uuid
+  deleted_by                                    String?           @db.Uuid
+  version                                       Int               @default(1)
+  row_version                                   BigInt            @default(0)
+  is_active                                     Boolean           @default(true)
+  is_deleted                                    Boolean?          @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                  String?
+  metadata                                      Json              @default("{}")
+  rule_id                                       String            @db.Uuid
+  account_id                                    String            @db.Uuid
+  entry_side                                    String
+  amount_formula                                String
+  chart_of_accounts                             chart_of_accounts @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  accounting_rules                              accounting_rules  @relation(fields: [rule_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("accounting")
+}
+
+model accounting_rules {
+  id                                       String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                 BigInt                  @unique @default(autoincrement())
+  tenant_id                                String                  @db.Uuid
+  company_id                               String                  @db.Uuid
+  branch_id                                String?                 @db.Uuid
+  created_at                               DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime                @default(now()) @db.Timestamptz(6)
+  deleted_at                               DateTime?               @db.Timestamptz(6)
+  created_by                               String?                 @db.Uuid
+  updated_by                               String?                 @db.Uuid
+  deleted_by                               String?                 @db.Uuid
+  version                                  Int                     @default(1)
+  row_version                              BigInt                  @default(0)
+  is_active                                Boolean                 @default(true)
+  is_deleted                               Boolean?                @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                             String?
+  metadata                                 Json                    @default("{}")
+  event_code                               String
+  accounting_rule_lines                    accounting_rule_lines[]
+
+  @@schema("accounting")
+}
+
+model balance_sheet_snapshots {
+  id                                              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                        BigInt         @unique @default(autoincrement())
+  tenant_id                                       String         @db.Uuid
+  company_id                                      String         @db.Uuid
+  branch_id                                       String?        @db.Uuid
+  created_at                                      DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                                      DateTime       @default(now()) @db.Timestamptz(6)
+  deleted_at                                      DateTime?      @db.Timestamptz(6)
+  created_by                                      String?        @db.Uuid
+  updated_by                                      String?        @db.Uuid
+  deleted_by                                      String?        @db.Uuid
+  version                                         Int            @default(1)
+  row_version                                     BigInt         @default(0)
+  is_active                                       Boolean        @default(true)
+  is_deleted                                      Boolean?       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                    String?
+  metadata                                        Json           @default("{}")
+  fiscal_period_id                                String         @db.Uuid
+  snapshot_data                                   Json
+  fiscal_periods                                  fiscal_periods @relation(fields: [fiscal_period_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("accounting")
+}
+
+model budget_lines {
+  id                                   String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                             BigInt            @unique @default(autoincrement())
+  tenant_id                            String            @db.Uuid
+  company_id                           String?           @db.Uuid
+  branch_id                            String?           @db.Uuid
+  created_at                           DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at                           DateTime          @default(now()) @db.Timestamptz(6)
+  deleted_at                           DateTime?         @db.Timestamptz(6)
+  created_by                           String?           @db.Uuid
+  updated_by                           String?           @db.Uuid
+  deleted_by                           String?           @db.Uuid
+  version                              Int               @default(1)
+  row_version                          BigInt            @default(0)
+  is_active                            Boolean           @default(true)
+  is_deleted                           Boolean?          @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                         String?
+  metadata                             Json              @default("{}")
+  budget_id                            String            @db.Uuid
+  account_id                           String            @db.Uuid
+  period_number                        Int               @db.SmallInt
+  budgeted_amount                      Decimal           @db.Decimal(18, 4)
+  chart_of_accounts                    chart_of_accounts @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  budgets                              budgets           @relation(fields: [budget_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("accounting")
+}
+
+model budgets {
+  id                              String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                        BigInt         @unique @default(autoincrement())
+  tenant_id                       String         @db.Uuid
+  company_id                      String         @db.Uuid
+  branch_id                       String?        @db.Uuid
+  created_at                      DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                      DateTime       @default(now()) @db.Timestamptz(6)
+  deleted_at                      DateTime?      @db.Timestamptz(6)
+  created_by                      String?        @db.Uuid
+  updated_by                      String?        @db.Uuid
+  deleted_by                      String?        @db.Uuid
+  version                         Int            @default(1)
+  row_version                     BigInt         @default(0)
+  is_active                       Boolean        @default(true)
+  is_deleted                      Boolean?       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                    String?
+  metadata                        Json           @default("{}")
+  fiscal_year_id                  String         @db.Uuid
+  cost_center_id                  String?        @db.Uuid
+  name                            String
+  budget_lines                    budget_lines[]
+  cost_centers                    cost_centers?  @relation(fields: [cost_center_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fiscal_years                    fiscal_years   @relation(fields: [fiscal_year_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("accounting")
+}
+
+model cash_flow_snapshots {
+  id                                          String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                    BigInt         @unique @default(autoincrement())
+  tenant_id                                   String         @db.Uuid
+  company_id                                  String         @db.Uuid
+  branch_id                                   String?        @db.Uuid
+  created_at                                  DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                                  DateTime       @default(now()) @db.Timestamptz(6)
+  deleted_at                                  DateTime?      @db.Timestamptz(6)
+  created_by                                  String?        @db.Uuid
+  updated_by                                  String?        @db.Uuid
+  deleted_by                                  String?        @db.Uuid
+  version                                     Int            @default(1)
+  row_version                                 BigInt         @default(0)
+  is_active                                   Boolean        @default(true)
+  is_deleted                                  Boolean?       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                String?
+  metadata                                    Json           @default("{}")
+  fiscal_period_id                            String         @db.Uuid
+  snapshot_data                               Json
+  fiscal_periods                              fiscal_periods @relation(fields: [fiscal_period_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("accounting")
+}
+
+model chart_of_accounts {
+  id                                        String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt                    @unique @default(autoincrement())
+  tenant_id                                 String                    @db.Uuid
+  company_id                                String                    @db.Uuid
+  branch_id                                 String?                   @db.Uuid
+  created_at                                DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime                  @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime?                 @db.Timestamptz(6)
+  created_by                                String?                   @db.Uuid
+  updated_by                                String?                   @db.Uuid
+  deleted_by                                String?                   @db.Uuid
+  version                                   Int                       @default(1)
+  row_version                               BigInt                    @default(0)
+  is_active                                 Boolean                   @default(true)
+  is_deleted                                Boolean?                  @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json                      @default("{}")
+  code                                      String
+  name                                      String
+  account_type_id                           String                    @db.Uuid
+  parent_account_id                         String?                   @db.Uuid
+  accepts_postings                          Boolean                   @default(true)
+  account_reconciliations                   account_reconciliations[]
+  accounting_rule_lines                     accounting_rule_lines[]
+  budget_lines                              budget_lines[]
+  account_types                             account_types             @relation(fields: [account_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  chart_of_accounts                         chart_of_accounts?        @relation("chart_of_accountsTochart_of_accounts", fields: [parent_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_chart_of_accounts                   chart_of_accounts[]       @relation("chart_of_accountsTochart_of_accounts")
+  journal_entry_lines                       journal_entry_lines[]
+
+  @@schema("accounting")
+}
+
+model consolidated_financial_snapshots {
+  id                                                       String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                                 BigInt     @unique @default(autoincrement())
+  tenant_id                                                String     @db.Uuid
+  company_id                                               String?    @db.Uuid
+  branch_id                                                String?    @db.Uuid
+  created_at                                               DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                                               DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                                               DateTime?  @db.Timestamptz(6)
+  created_by                                               String?    @db.Uuid
+  updated_by                                               String?    @db.Uuid
+  deleted_by                                               String?    @db.Uuid
+  version                                                  Int        @default(1)
+  row_version                                              BigInt     @default(0)
+  is_active                                                Boolean    @default(true)
+  is_deleted                                               Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                             String?
+  metadata                                                 Json       @default("{}")
+  consolidation_label                                      String
+  snapshot_data                                            Json
+
+  @@schema("accounting")
+}
+
+model cost_centers {
+  id                                   String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                             BigInt                @unique @default(autoincrement())
+  tenant_id                            String                @db.Uuid
+  company_id                           String                @db.Uuid
+  branch_id                            String?               @db.Uuid
+  created_at                           DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at                           DateTime              @default(now()) @db.Timestamptz(6)
+  deleted_at                           DateTime?             @db.Timestamptz(6)
+  created_by                           String?               @db.Uuid
+  updated_by                           String?               @db.Uuid
+  deleted_by                           String?               @db.Uuid
+  version                              Int                   @default(1)
+  row_version                          BigInt                @default(0)
+  is_active                            Boolean               @default(true)
+  is_deleted                           Boolean?              @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                         String?
+  metadata                             Json                  @default("{}")
+  code                                 String
+  name                                 String
+  budgets                              budgets[]
+  journal_entry_lines                  journal_entry_lines[]
+
+  @@schema("accounting")
+}
+
+model currency_revaluations {
+  id                                            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                      BigInt         @unique @default(autoincrement())
+  tenant_id                                     String         @db.Uuid
+  company_id                                    String         @db.Uuid
+  branch_id                                     String?        @db.Uuid
+  created_at                                    DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime       @default(now()) @db.Timestamptz(6)
+  deleted_at                                    DateTime?      @db.Timestamptz(6)
+  created_by                                    String?        @db.Uuid
+  updated_by                                    String?        @db.Uuid
+  deleted_by                                    String?        @db.Uuid
+  version                                       Int            @default(1)
+  row_version                                   BigInt         @default(0)
+  is_active                                     Boolean        @default(true)
+  is_deleted                                    Boolean?       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                  String?
+  metadata                                      Json           @default("{}")
+  fiscal_period_id                              String         @db.Uuid
+  journal_entry_id                              String?        @db.Uuid
+  fiscal_periods                                fiscal_periods @relation(fields: [fiscal_period_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("accounting")
+}
+
+model fiscal_periods {
+  id                                     String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                               BigInt                       @unique @default(autoincrement())
+  tenant_id                              String                       @db.Uuid
+  company_id                             String                       @db.Uuid
+  branch_id                              String?                      @db.Uuid
+  created_at                             DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                             DateTime                     @default(now()) @db.Timestamptz(6)
+  deleted_at                             DateTime?                    @db.Timestamptz(6)
+  created_by                             String?                      @db.Uuid
+  updated_by                             String?                      @db.Uuid
+  deleted_by                             String?                      @db.Uuid
+  version                                Int                          @default(1)
+  row_version                            BigInt                       @default(0)
+  is_active                              Boolean                      @default(true)
+  is_deleted                             Boolean?                     @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                           String?
+  metadata                               Json                         @default("{}")
+  fiscal_year_id                         String                       @db.Uuid
+  period_number                          Int                          @db.SmallInt
+  starts_on                              DateTime                     @db.Date
+  ends_on                                DateTime                     @db.Date
+  status                                 String                       @default("open")
+  balance_sheet_snapshots                balance_sheet_snapshots[]
+  cash_flow_snapshots                    cash_flow_snapshots[]
+  currency_revaluations                  currency_revaluations[]
+  fiscal_years                           fiscal_years                 @relation(fields: [fiscal_year_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  income_statement_snapshots             income_statement_snapshots[]
+  journal_entries                        journal_entries[]
+  period_closing_logs                    period_closing_logs[]
+
+  @@schema("accounting")
+}
+
+model fiscal_years {
+  id                                   String                          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                             BigInt                          @unique @default(autoincrement())
+  tenant_id                            String                          @db.Uuid
+  company_id                           String                          @db.Uuid
+  branch_id                            String?                         @db.Uuid
+  created_at                           DateTime                        @default(now()) @db.Timestamptz(6)
+  updated_at                           DateTime                        @default(now()) @db.Timestamptz(6)
+  deleted_at                           DateTime?                       @db.Timestamptz(6)
+  created_by                           String?                         @db.Uuid
+  updated_by                           String?                         @db.Uuid
+  deleted_by                           String?                         @db.Uuid
+  version                              Int                             @default(1)
+  row_version                          BigInt                          @default(0)
+  is_active                            Boolean                         @default(true)
+  is_deleted                           Boolean?                        @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                         String?
+  metadata                             Json                            @default("{}")
+  year_label                           String
+  starts_on                            DateTime                        @db.Date
+  ends_on                              DateTime                        @db.Date
+  is_closed                            Boolean                         @default(false)
+  budgets                              budgets[]
+  fiscal_periods                       fiscal_periods[]
+
+  @@schema("accounting")
+}
+
+model ifrs_adjustments {
+  id                                       String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                 BigInt     @unique @default(autoincrement())
+  tenant_id                                String     @db.Uuid
+  company_id                               String?    @db.Uuid
+  branch_id                                String?    @db.Uuid
+  created_at                               DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                               DateTime?  @db.Timestamptz(6)
+  created_by                               String?    @db.Uuid
+  updated_by                               String?    @db.Uuid
+  deleted_by                               String?    @db.Uuid
+  version                                  Int        @default(1)
+  row_version                              BigInt     @default(0)
+  is_active                                Boolean    @default(true)
+  is_deleted                               Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                             String?
+  metadata                                 Json       @default("{}")
+  journal_entry_id                         String     @db.Uuid
+  ifrs_standard_reference                  String?
+
+  @@schema("accounting")
+}
+
+model income_statement_snapshots {
+  id                                                 String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                           BigInt         @unique @default(autoincrement())
+  tenant_id                                          String         @db.Uuid
+  company_id                                         String         @db.Uuid
+  branch_id                                          String?        @db.Uuid
+  created_at                                         DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                                         DateTime       @default(now()) @db.Timestamptz(6)
+  deleted_at                                         DateTime?      @db.Timestamptz(6)
+  created_by                                         String?        @db.Uuid
+  updated_by                                         String?        @db.Uuid
+  deleted_by                                         String?        @db.Uuid
+  version                                            Int            @default(1)
+  row_version                                        BigInt         @default(0)
+  is_active                                          Boolean        @default(true)
+  is_deleted                                         Boolean?       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                       String?
+  metadata                                           Json           @default("{}")
+  fiscal_period_id                                   String         @db.Uuid
+  snapshot_data                                      Json
+  fiscal_periods                                     fiscal_periods @relation(fields: [fiscal_period_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("accounting")
+}
+
+model intercompany_transactions {
+  id                                                               String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                                         BigInt     @unique @default(autoincrement())
+  tenant_id                                                        String     @db.Uuid
+  company_id                                                       String?    @db.Uuid
+  branch_id                                                        String?    @db.Uuid
+  created_at                                                       DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                                                       DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                                                       DateTime?  @db.Timestamptz(6)
+  created_by                                                       String?    @db.Uuid
+  updated_by                                                       String?    @db.Uuid
+  deleted_by                                                       String?    @db.Uuid
+  version                                                          Int        @default(1)
+  row_version                                                      BigInt     @default(0)
+  is_active                                                        Boolean    @default(true)
+  is_deleted                                                       Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                                     String?
+  metadata                                                         Json       @default("{}")
+  source_company_id                                                String     @db.Uuid
+  target_company_id                                                String     @db.Uuid
+  source_journal_entry_id                                          String?    @db.Uuid
+  target_journal_entry_id                                          String?    @db.Uuid
+  amount                                                           Decimal    @db.Decimal(18, 4)
+
+  @@schema("accounting")
+}
+
+model journal_entries {
+  id                                      String               @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                BigInt               @default(autoincrement())
+  tenant_id                               String               @db.Uuid
+  company_id                              String               @db.Uuid
+  branch_id                               String?              @db.Uuid
+  created_at                              DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime             @default(now()) @db.Timestamptz(6)
+  deleted_at                              DateTime?            @db.Timestamptz(6)
+  created_by                              String?              @db.Uuid
+  updated_by                              String?              @db.Uuid
+  deleted_by                              String?              @db.Uuid
+  version                                 Int                  @default(1)
+  row_version                             BigInt               @default(0)
+  is_active                               Boolean              @default(true)
+  is_deleted                              Boolean?             @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                            String?
+  metadata                                Json                 @default("{}")
+  document_number                         String
+  fiscal_period_id                        String               @db.Uuid
+  status_id                               String               @db.Uuid
+  source_module                           String?
+  source_entity_id                        String?              @db.Uuid
+  posting_date                            DateTime             @default(dbgenerated("CURRENT_DATE")) @db.Date
+  description                             String?
+  fiscal_periods                          fiscal_periods       @relation(fields: [fiscal_period_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  journal_entry_status                    journal_entry_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id, posting_date])
+  @@unique([local_id, posting_date])
+  @@schema("accounting")
+}
+
+model journal_entry_dimension_values {
+  id                                                     String                      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                               BigInt                      @unique @default(autoincrement())
+  tenant_id                                              String                      @db.Uuid
+  company_id                                             String?                     @db.Uuid
+  branch_id                                              String?                     @db.Uuid
+  created_at                                             DateTime                    @default(now()) @db.Timestamptz(6)
+  updated_at                                             DateTime                    @default(now()) @db.Timestamptz(6)
+  deleted_at                                             DateTime?                   @db.Timestamptz(6)
+  created_by                                             String?                     @db.Uuid
+  updated_by                                             String?                     @db.Uuid
+  deleted_by                                             String?                     @db.Uuid
+  version                                                Int                         @default(1)
+  row_version                                            BigInt                      @default(0)
+  is_active                                              Boolean                     @default(true)
+  is_deleted                                             Boolean?                    @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                           String?
+  metadata                                               Json                        @default("{}")
+  journal_entry_line_id                                  String                      @db.Uuid
+  dimension_value_id                                     String                      @db.Uuid
+  accounting_dimension_values                            accounting_dimension_values @relation(fields: [dimension_value_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  journal_entry_lines                                    journal_entry_lines         @relation(fields: [journal_entry_line_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("accounting")
+}
+
+model journal_entry_lines {
+  id                                          String                           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                    BigInt                           @unique @default(autoincrement())
+  tenant_id                                   String                           @db.Uuid
+  company_id                                  String?                          @db.Uuid
+  branch_id                                   String?                          @db.Uuid
+  created_at                                  DateTime                         @default(now()) @db.Timestamptz(6)
+  updated_at                                  DateTime                         @default(now()) @db.Timestamptz(6)
+  deleted_at                                  DateTime?                        @db.Timestamptz(6)
+  created_by                                  String?                          @db.Uuid
+  updated_by                                  String?                          @db.Uuid
+  deleted_by                                  String?                          @db.Uuid
+  version                                     Int                              @default(1)
+  row_version                                 BigInt                           @default(0)
+  is_active                                   Boolean                          @default(true)
+  is_deleted                                  Boolean?                         @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                String?
+  metadata                                    Json                             @default("{}")
+  journal_entry_id                            String                           @db.Uuid
+  account_id                                  String                           @db.Uuid
+  cost_center_id                              String?                          @db.Uuid
+  profit_center_id                            String?                          @db.Uuid
+  debit_amount                                Decimal                          @default(0) @db.Decimal(18, 4)
+  credit_amount                               Decimal                          @default(0) @db.Decimal(18, 4)
+  journal_entry_dimension_values              journal_entry_dimension_values[]
+  chart_of_accounts                           chart_of_accounts                @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  cost_centers                                cost_centers?                    @relation(fields: [cost_center_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  profit_centers                              profit_centers?                  @relation(fields: [profit_center_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("accounting")
+}
+
+model journal_entry_status {
+  id                                           String                         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                     BigInt                         @unique @default(autoincrement())
+  tenant_id                                    String                         @db.Uuid
+  company_id                                   String?                        @db.Uuid
+  branch_id                                    String?                        @db.Uuid
+  created_at                                   DateTime                       @default(now()) @db.Timestamptz(6)
+  updated_at                                   DateTime                       @default(now()) @db.Timestamptz(6)
+  deleted_at                                   DateTime?                      @db.Timestamptz(6)
+  created_by                                   String?                        @db.Uuid
+  updated_by                                   String?                        @db.Uuid
+  deleted_by                                   String?                        @db.Uuid
+  version                                      Int                            @default(1)
+  row_version                                  BigInt                         @default(0)
+  is_active                                    Boolean                        @default(true)
+  is_deleted                                   Boolean?                       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                 String?
+  metadata                                     Json                           @default("{}")
+  code                                         String
+  journal_entries                              journal_entries[]
+  journal_entry_status_history                 journal_entry_status_history[]
+
+  @@schema("accounting")
+}
+
+model journal_entry_status_history {
+  id                                                   String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                             BigInt               @unique @default(autoincrement())
+  tenant_id                                            String               @db.Uuid
+  company_id                                           String?              @db.Uuid
+  branch_id                                            String?              @db.Uuid
+  created_at                                           DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at                                           DateTime             @default(now()) @db.Timestamptz(6)
+  deleted_at                                           DateTime?            @db.Timestamptz(6)
+  created_by                                           String?              @db.Uuid
+  updated_by                                           String?              @db.Uuid
+  deleted_by                                           String?              @db.Uuid
+  version                                              Int                  @default(1)
+  row_version                                          BigInt               @default(0)
+  is_active                                            Boolean              @default(true)
+  is_deleted                                           Boolean?             @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                         String?
+  metadata                                             Json                 @default("{}")
+  journal_entry_id                                     String               @db.Uuid
+  status_id                                            String               @db.Uuid
+  journal_entry_status                                 journal_entry_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("accounting")
+}
+
+model period_closing_logs {
+  id                                                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                              BigInt         @unique @default(autoincrement())
+  tenant_id                                             String         @db.Uuid
+  company_id                                            String?        @db.Uuid
+  branch_id                                             String?        @db.Uuid
+  created_at                                            DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                                            DateTime       @default(now()) @db.Timestamptz(6)
+  deleted_at                                            DateTime?      @db.Timestamptz(6)
+  created_by                                            String?        @db.Uuid
+  updated_by                                            String?        @db.Uuid
+  deleted_by                                            String?        @db.Uuid
+  version                                               Int            @default(1)
+  row_version                                           BigInt         @default(0)
+  is_active                                             Boolean        @default(true)
+  is_deleted                                            Boolean?       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                          String?
+  metadata                                              Json           @default("{}")
+  fiscal_period_id                                      String         @db.Uuid
+  action                                                String
+  performed_by_user_id                                  String         @db.Uuid
+  fiscal_periods                                        fiscal_periods @relation(fields: [fiscal_period_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("accounting")
+}
+
+model profit_centers {
+  id                                     String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                               BigInt                @unique @default(autoincrement())
+  tenant_id                              String                @db.Uuid
+  company_id                             String                @db.Uuid
+  branch_id                              String?               @db.Uuid
+  created_at                             DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at                             DateTime              @default(now()) @db.Timestamptz(6)
+  deleted_at                             DateTime?             @db.Timestamptz(6)
+  created_by                             String?               @db.Uuid
+  updated_by                             String?               @db.Uuid
+  deleted_by                             String?               @db.Uuid
+  version                                Int                   @default(1)
+  row_version                            BigInt                @default(0)
+  is_active                              Boolean               @default(true)
+  is_deleted                             Boolean?              @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                           String?
+  metadata                               Json                  @default("{}")
+  code                                   String
+  name                                   String
+  journal_entry_lines                    journal_entry_lines[]
+
+  @@schema("accounting")
+}
+
+model recurring_journal_entry_generations {
+  id                                                          String                            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                                    BigInt                            @unique @default(autoincrement())
+  tenant_id                                                   String                            @db.Uuid
+  company_id                                                  String?                           @db.Uuid
+  branch_id                                                   String?                           @db.Uuid
+  created_at                                                  DateTime                          @default(now()) @db.Timestamptz(6)
+  updated_at                                                  DateTime                          @default(now()) @db.Timestamptz(6)
+  deleted_at                                                  DateTime?                         @db.Timestamptz(6)
+  created_by                                                  String?                           @db.Uuid
+  updated_by                                                  String?                           @db.Uuid
+  deleted_by                                                  String?                           @db.Uuid
+  version                                                     Int                               @default(1)
+  row_version                                                 BigInt                            @default(0)
+  is_active                                                   Boolean                           @default(true)
+  is_deleted                                                  Boolean?                          @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                                String?
+  metadata                                                    Json                              @default("{}")
+  template_id                                                 String                            @db.Uuid
+  journal_entry_id                                            String                            @db.Uuid
+  recurring_journal_entry_templates                           recurring_journal_entry_templates @relation(fields: [template_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("accounting")
+}
+
+model recurring_journal_entry_templates {
+  id                                                        String                                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                                  BigInt                                @unique @default(autoincrement())
+  tenant_id                                                 String                                @db.Uuid
+  company_id                                                String                                @db.Uuid
+  branch_id                                                 String?                               @db.Uuid
+  created_at                                                DateTime                              @default(now()) @db.Timestamptz(6)
+  updated_at                                                DateTime                              @default(now()) @db.Timestamptz(6)
+  deleted_at                                                DateTime?                             @db.Timestamptz(6)
+  created_by                                                String?                               @db.Uuid
+  updated_by                                                String?                               @db.Uuid
+  deleted_by                                                String?                               @db.Uuid
+  version                                                   Int                                   @default(1)
+  row_version                                               BigInt                                @default(0)
+  is_active                                                 Boolean                               @default(true)
+  is_deleted                                                Boolean?                              @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                              String?
+  metadata                                                  Json                                  @default("{}")
+  name                                                      String
+  frequency                                                 String
+  recurring_journal_entry_generations                       recurring_journal_entry_generations[]
+
+  @@schema("accounting")
+}

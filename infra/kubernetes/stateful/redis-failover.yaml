@@ -1,0 +1,29 @@
+# Redis de alta disponibilidad vía el operador Spotahome (redis-operator,
+# CRD RedisFailover) — implementa docs/architecture/31-infraestructura-
+# completa.md §11: "Redis Sentinel (3 nodos mínimo, quórum)... el cliente
+# Redis de core/cache se conecta vía Sentinel, no a un nodo fijo". Requiere
+# el operador ya instalado (prerequisito, ver README).
+apiVersion: databases.spotahome.com/v1
+kind: RedisFailover
+metadata:
+  name: gorazus-redis
+spec:
+  sentinel:
+    replicas: 3
+    resources:
+      requests: { cpu: 50m, memory: 64Mi }
+      limits: { cpu: 200m, memory: 128Mi }
+  redis:
+    replicas: 3
+    resources:
+      requests: { cpu: 100m, memory: 256Mi }
+      limits: { cpu: 500m, memory: 512Mi }
+    storage:
+      persistentVolumeClaim:
+        metadata:
+          name: redis-data
+        spec:
+          accessModes: ['ReadWriteOnce']
+          resources:
+            requests:
+              storage: 5Gi

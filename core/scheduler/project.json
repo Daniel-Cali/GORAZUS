@@ -1,0 +1,28 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "core-scheduler",
+  "sourceRoot": "core/scheduler",
+  "projectType": "library",
+  "tags": ["type:core"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/core/scheduler",
+        "main": "core/scheduler/index.ts",
+        "tsConfig": "core/scheduler/tsconfig.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/core/scheduler"],
+      "options": {
+        "jestConfig": "core/scheduler/jest.config.ts"
+      }
+    }
+  }
+}

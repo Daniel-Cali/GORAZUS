@@ -1,0 +1,42 @@
+# GORAZUS ERP — excluye del contexto de build de Docker todo lo que .gitignore también excluye
+# del repo, EXCEPTO los clientes Prisma generados (core/database/prisma/schemas/*/generated/):
+# esos SÍ hacen falta dentro de la imagen en runtime y el Dockerfile no los regenera durante el
+# build, así que a diferencia de .gitignore, acá se incluyen a propósito (docs/00-auditoria-2026-07-20.md
+# §5, hallazgo "contexto de build de 8+GB" — la causa real era la ausencia total de este archivo).
+
+node_modules
+**/node_modules
+
+.git
+
+dist
+build
+tmp
+out-tsc
+**/dist
+**/build
+
+.nx/cache
+.nx/workspace-data
+
+.env
+.env.*
+!.env.example
+
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+coverage
+**/coverage
+
+apps/web/.vite
+
+.playwright-browsers
+
+docs/database/erd/assets

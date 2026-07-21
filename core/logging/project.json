@@ -1,0 +1,28 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "core-logging",
+  "sourceRoot": "core/logging",
+  "projectType": "library",
+  "tags": ["type:core"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/core/logging",
+        "main": "core/logging/index.ts",
+        "tsConfig": "core/logging/tsconfig.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/core/logging"],
+      "options": {
+        "jestConfig": "core/logging/jest.config.ts"
+      }
+    }
+  }
+}

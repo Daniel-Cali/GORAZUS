@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "seguridad-frontend",
+  "sourceRoot": "modules/seguridad/frontend",
+  "projectType": "library",
+  "tags": ["type:frontend"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

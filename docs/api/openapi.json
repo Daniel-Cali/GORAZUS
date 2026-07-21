@@ -1,0 +1,332 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/health/live": {
+      "get": {
+        "operationId": "HealthController_live",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/health/ready": {
+      "get": {
+        "operationId": "HealthController_ready",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "summary": "Login",
+        "description": "Resuelve el tenant por slug, valida credenciales y emite un access token + cookie httpOnly de refresh.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credenciales inválidas (tenant, email o password incorrectos)."
+          }
+        },
+        "tags": ["auth"]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "summary": "Refresh",
+        "description": "Rota el refresh token (cookie httpOnly) y emite un nuevo access token.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshResponseEnvelopeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Sin cookie de refresh o sesión inválida/expirada."
+          }
+        },
+        "tags": ["auth"]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "summary": "Logout",
+        "description": "Revoca la sesión actual (no las demás sesiones del usuario — Fase 2).",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Sesión revocada."
+          }
+        },
+        "tags": ["auth"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/roles": {
+      "get": {
+        "operationId": "RolesController_listar",
+        "summary": "Listar roles",
+        "description": "Requiere seguridad.gestionar_roles.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "RolesController_crear",
+        "summary": "Crear rol",
+        "description": "Requiere seguridad.gestionar_roles.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/roles/{id}/permisos": {
+      "post": {
+        "operationId": "RolesController_asignarPermiso",
+        "summary": "Asignar permiso a rol",
+        "description": "Requiere seguridad.gestionar_roles.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/usuarios": {
+      "get": {
+        "operationId": "UsuariosController_listar",
+        "summary": "Listar usuarios",
+        "description": "Requiere seguridad.gestionar_usuarios.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "UsuariosController_crear",
+        "summary": "Crear usuario",
+        "description": "Alta con contraseña temporal — sin flujo de invitación por email todavía (Fase 2). Requiere seguridad.gestionar_usuarios.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/usuarios/{id}/desactivar": {
+      "post": {
+        "operationId": "UsuariosController_desactivar",
+        "summary": "Desactivar usuario",
+        "description": "Baja lógica (is_active=false) — no revoca sesiones/API keys todavía (Fase 2). Requiere seguridad.gestionar_usuarios.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/usuarios/{id}/roles": {
+      "post": {
+        "operationId": "UsuariosController_asignarRol",
+        "summary": "Asignar rol a usuario",
+        "description": "Requiere seguridad.gestionar_usuarios.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "GORAZUS ERP API",
+    "description": "API del backend GORAZUS ERP",
+    "version": "0.1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "UsuarioAutenticadoDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "name", "email"]
+      },
+      "LoginResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string",
+            "description": "JWT de acceso, vida corta (~15 min)"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UsuarioAutenticadoDto"
+          },
+          "activeCompanyId": {
+            "type": "object",
+            "nullable": true
+          },
+          "activeBranchId": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": ["accessToken", "user", "activeCompanyId", "activeBranchId"]
+      },
+      "LoginResponseEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/LoginResponseDto"
+          }
+        },
+        "required": ["data"]
+      },
+      "RefreshResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          }
+        },
+        "required": ["accessToken"]
+      },
+      "RefreshResponseEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/RefreshResponseDto"
+          }
+        },
+        "required": ["data"]
+      }
+    }
+  }
+}

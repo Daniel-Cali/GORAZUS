@@ -1,0 +1,20 @@
+# GORAZUS ERP — scrape config local (Docker Compose). El exporter de
+# métricas ya existe en el código (core/observability/metrics.ts,
+# @opentelemetry/exporter-prometheus, puerto METRICS_PORT=9464, path
+# /metrics) — este archivo es lo que faltaba para que algo lo consuma.
+# En Kubernetes, el scrape lo hace el Prometheus Operator vía el
+# `PodMonitor` ya anotado en infra/kubernetes/base/api-deployment.yaml,
+# no este archivo (ver infra/kubernetes/README.md).
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: gorazus-api
+    static_configs:
+      - targets: ['api:9464']
+        labels:
+          service: api
+
+rule_files:
+  - /etc/prometheus/alert-rules.yml

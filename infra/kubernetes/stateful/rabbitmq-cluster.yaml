@@ -1,0 +1,24 @@
+# RabbitMQ de alta disponibilidad vía el RabbitMQ Cluster Operator (oficial,
+# Team RabbitMQ) — implementa docs/architecture/31-infraestructura-completa.md
+# §11: "Cluster de 3 nodos con quorum queues... garantiza que un mensaje
+# sobrevive la caída de un nodo sin perderse". Requiere el operador ya
+# instalado (prerequisito, ver README).
+apiVersion: rabbitmq.com/v1beta1
+kind: RabbitmqCluster
+metadata:
+  name: gorazus-rabbitmq
+spec:
+  replicas: 3
+  resources:
+    requests: { cpu: 250m, memory: 512Mi }
+    limits: { cpu: '1', memory: 1Gi }
+  persistence:
+    storageClassName: '' # StorageClass por defecto del cluster real
+    storage: 10Gi
+  rabbitmq:
+    additionalConfig: |
+      # Quorum queues por defecto para toda cola nueva — ver core/messaging/
+      # event-bus.service.ts (cada consumidor declara su propia cola, nunca
+      # colas espejo clásicas, deprecadas por RabbitMQ).
+      queue_master_locator = min-masters
+      default_queue_type = quorum

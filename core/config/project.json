@@ -1,0 +1,28 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "core-config",
+  "sourceRoot": "core/config",
+  "projectType": "library",
+  "tags": ["type:core"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/core/config",
+        "main": "core/config/index.ts",
+        "tsConfig": "core/config/tsconfig.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/core/config"],
+      "options": {
+        "jestConfig": "core/config/jest.config.ts"
+      }
+    }
+  }
+}

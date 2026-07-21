@@ -1,0 +1,12 @@
+{
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "name": "ui-kit",
+  "sourceRoot": "ui-kit",
+  "projectType": "library",
+  "tags": ["type:ui-kit"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

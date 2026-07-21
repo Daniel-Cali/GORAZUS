@@ -1,0 +1,637 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "./generated"
+  previewFeatures = ["multiSchema"]
+  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["security"]
+}
+
+model access_control_lists {
+  id                                           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                     BigInt        @unique @default(autoincrement())
+  tenant_id                                    String        @db.Uuid
+  company_id                                   String?       @db.Uuid
+  branch_id                                    String?       @db.Uuid
+  created_at                                   DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at                                   DateTime      @default(now()) @db.Timestamptz(6)
+  deleted_at                                   DateTime?     @db.Timestamptz(6)
+  created_by                                   String?       @db.Uuid
+  updated_by                                   String?       @db.Uuid
+  deleted_by                                   String?       @db.Uuid
+  version                                      Int           @default(1)
+  row_version                                  BigInt        @default(0)
+  is_active                                    Boolean       @default(true)
+  is_deleted                                   Boolean?      @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                 String?
+  metadata                                     Json          @default("{}")
+  name                                         String
+  resource_type                                String
+  acl_entries                                  acl_entries[]
+
+  @@schema("security")
+}
+
+model acl_entries {
+  id                                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                            BigInt               @unique @default(autoincrement())
+  tenant_id                           String               @db.Uuid
+  company_id                          String?              @db.Uuid
+  branch_id                           String?              @db.Uuid
+  created_at                          DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at                          DateTime             @default(now()) @db.Timestamptz(6)
+  deleted_at                          DateTime?            @db.Timestamptz(6)
+  created_by                          String?              @db.Uuid
+  updated_by                          String?              @db.Uuid
+  deleted_by                          String?              @db.Uuid
+  version                             Int                  @default(1)
+  row_version                         BigInt               @default(0)
+  is_active                           Boolean              @default(true)
+  is_deleted                          Boolean?             @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                        String?
+  metadata                            Json                 @default("{}")
+  acl_id                              String               @db.Uuid
+  subject_type                        String
+  subject_id                          String               @db.Uuid
+  resource_id                         String?              @db.Uuid
+  effect                              String
+  access_control_lists                access_control_lists @relation(fields: [acl_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("security")
+}
+
+model api_key_rate_limits {
+  id                                          String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                    BigInt     @unique @default(autoincrement())
+  tenant_id                                   String     @db.Uuid
+  company_id                                  String?    @db.Uuid
+  branch_id                                   String?    @db.Uuid
+  created_at                                  DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                                  DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                                  DateTime?  @db.Timestamptz(6)
+  created_by                                  String?    @db.Uuid
+  updated_by                                  String?    @db.Uuid
+  deleted_by                                  String?    @db.Uuid
+  version                                     Int        @default(1)
+  row_version                                 BigInt     @default(0)
+  is_active                                   Boolean    @default(true)
+  is_deleted                                  Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                String?
+  metadata                                    Json       @default("{}")
+  api_key_id                                  String     @db.Uuid
+  requests_per_minute                         Int        @default(60)
+
+  @@schema("security")
+}
+
+model data_encryption_keys {
+  id                                           String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                     BigInt                     @unique @default(autoincrement())
+  tenant_id                                    String                     @db.Uuid
+  company_id                                   String?                    @db.Uuid
+  branch_id                                    String?                    @db.Uuid
+  created_at                                   DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at                                   DateTime                   @default(now()) @db.Timestamptz(6)
+  deleted_at                                   DateTime?                  @db.Timestamptz(6)
+  created_by                                   String?                    @db.Uuid
+  updated_by                                   String?                    @db.Uuid
+  deleted_by                                   String?                    @db.Uuid
+  version                                      Int                        @default(1)
+  row_version                                  BigInt                     @default(0)
+  is_active                                    Boolean                    @default(true)
+  is_deleted                                   Boolean?                   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                 String?
+  metadata                                     Json                       @default("{}")
+  kms_key_reference                            String
+  purpose                                      String
+  is_current                                   Boolean                    @default(true)
+  encryption_key_rotations                     encryption_key_rotations[]
+
+  @@schema("security")
+}
+
+model encryption_key_rotations {
+  id                                                       String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                                 BigInt               @unique @default(autoincrement())
+  tenant_id                                                String               @db.Uuid
+  company_id                                               String?              @db.Uuid
+  branch_id                                                String?              @db.Uuid
+  created_at                                               DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at                                               DateTime             @default(now()) @db.Timestamptz(6)
+  deleted_at                                               DateTime?            @db.Timestamptz(6)
+  created_by                                               String?              @db.Uuid
+  updated_by                                               String?              @db.Uuid
+  deleted_by                                               String?              @db.Uuid
+  version                                                  Int                  @default(1)
+  row_version                                              BigInt               @default(0)
+  is_active                                                Boolean              @default(true)
+  is_deleted                                               Boolean?             @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                             String?
+  metadata                                                 Json                 @default("{}")
+  encryption_key_id                                        String               @db.Uuid
+  rotated_at                                               DateTime             @default(now()) @db.Timestamptz(6)
+  rotated_by_user_id                                       String?              @db.Uuid
+  data_encryption_keys                                     data_encryption_keys @relation(fields: [encryption_key_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("security")
+}
+
+model ip_allowlist_entries {
+  id                                           String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                     BigInt              @unique @default(autoincrement())
+  tenant_id                                    String              @db.Uuid
+  company_id                                   String?             @db.Uuid
+  branch_id                                    String?             @db.Uuid
+  created_at                                   DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                                   DateTime            @default(now()) @db.Timestamptz(6)
+  deleted_at                                   DateTime?           @db.Timestamptz(6)
+  created_by                                   String?             @db.Uuid
+  updated_by                                   String?             @db.Uuid
+  deleted_by                                   String?             @db.Uuid
+  version                                      Int                 @default(1)
+  row_version                                  BigInt              @default(0)
+  is_active                                    Boolean             @default(true)
+  is_deleted                                   Boolean?            @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                 String?
+  metadata                                     Json                @default("{}")
+  cidr_range                                   Unsupported("cidr")
+
+  @@schema("security")
+}
+
+model ip_denylist_entries {
+  id                                          String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                    BigInt              @unique @default(autoincrement())
+  tenant_id                                   String              @db.Uuid
+  company_id                                  String?             @db.Uuid
+  branch_id                                   String?             @db.Uuid
+  created_at                                  DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                                  DateTime            @default(now()) @db.Timestamptz(6)
+  deleted_at                                  DateTime?           @db.Timestamptz(6)
+  created_by                                  String?             @db.Uuid
+  updated_by                                  String?             @db.Uuid
+  deleted_by                                  String?             @db.Uuid
+  version                                     Int                 @default(1)
+  row_version                                 BigInt              @default(0)
+  is_active                                   Boolean             @default(true)
+  is_deleted                                  Boolean?            @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                String?
+  metadata                                    Json                @default("{}")
+  cidr_range                                  Unsupported("cidr")
+  reason                                      String?
+
+  @@schema("security")
+}
+
+model login_attempts {
+  id                                     String     @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                               BigInt     @default(autoincrement())
+  tenant_id                              String     @db.Uuid
+  company_id                             String?    @db.Uuid
+  branch_id                              String?    @db.Uuid
+  created_at                             DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                             DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                             DateTime?  @db.Timestamptz(6)
+  created_by                             String?    @db.Uuid
+  updated_by                             String?    @db.Uuid
+  deleted_by                             String?    @db.Uuid
+  version                                Int        @default(1)
+  row_version                            BigInt     @default(0)
+  is_active                              Boolean    @default(true)
+  is_deleted                             Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                           String?
+  metadata                               Json       @default("{}")
+  user_id                                String?    @db.Uuid
+  email_attempted                        String
+  ip_address                             String?    @db.Inet
+  succeeded                              Boolean
+
+  @@id([id, created_at])
+  @@unique([local_id, created_at])
+  @@schema("security")
+}
+
+model oauth_client_scopes {
+  id                                          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                    BigInt        @unique @default(autoincrement())
+  tenant_id                                   String        @db.Uuid
+  company_id                                  String?       @db.Uuid
+  branch_id                                   String?       @db.Uuid
+  created_at                                  DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at                                  DateTime      @default(now()) @db.Timestamptz(6)
+  deleted_at                                  DateTime?     @db.Timestamptz(6)
+  created_by                                  String?       @db.Uuid
+  updated_by                                  String?       @db.Uuid
+  deleted_by                                  String?       @db.Uuid
+  version                                     Int           @default(1)
+  row_version                                 BigInt        @default(0)
+  is_active                                   Boolean       @default(true)
+  is_deleted                                  Boolean?      @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                String?
+  metadata                                    Json          @default("{}")
+  client_id                                   String        @db.Uuid
+  scope_id                                    String        @db.Uuid
+  oauth_clients                               oauth_clients @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  oauth_scopes                                oauth_scopes  @relation(fields: [scope_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("security")
+}
+
+model oauth_clients {
+  id                                    String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                              BigInt                @unique @default(autoincrement())
+  tenant_id                             String                @db.Uuid
+  company_id                            String?               @db.Uuid
+  branch_id                             String?               @db.Uuid
+  created_at                            DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime              @default(now()) @db.Timestamptz(6)
+  deleted_at                            DateTime?             @db.Timestamptz(6)
+  created_by                            String?               @db.Uuid
+  updated_by                            String?               @db.Uuid
+  deleted_by                            String?               @db.Uuid
+  version                               Int                   @default(1)
+  row_version                           BigInt                @default(0)
+  is_active                             Boolean               @default(true)
+  is_deleted                            Boolean?              @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                          String?
+  metadata                              Json                  @default("{}")
+  name                                  String
+  client_id                             String                @unique(map: "uq_security_oauth_clients_client_id")
+  client_secret_hash                    String
+  redirect_uris                         String[]
+  oauth_client_scopes                   oauth_client_scopes[]
+  oauth_tokens                          oauth_tokens[]
+
+  @@schema("security")
+}
+
+model oauth_scopes {
+  id                                   String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                             BigInt                @unique @default(autoincrement())
+  tenant_id                            String                @db.Uuid
+  company_id                           String?               @db.Uuid
+  branch_id                            String?               @db.Uuid
+  created_at                           DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at                           DateTime              @default(now()) @db.Timestamptz(6)
+  deleted_at                           DateTime?             @db.Timestamptz(6)
+  created_by                           String?               @db.Uuid
+  updated_by                           String?               @db.Uuid
+  deleted_by                           String?               @db.Uuid
+  version                              Int                   @default(1)
+  row_version                          BigInt                @default(0)
+  is_active                            Boolean               @default(true)
+  is_deleted                           Boolean?              @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                         String?
+  metadata                             Json                  @default("{}")
+  code                                 String                @unique(map: "uq_security_oauth_scopes_code")
+  description                          String?
+  oauth_client_scopes                  oauth_client_scopes[]
+
+  @@schema("security")
+}
+
+model oauth_tokens {
+  id                                   String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                             BigInt        @unique @default(autoincrement())
+  tenant_id                            String        @db.Uuid
+  company_id                           String?       @db.Uuid
+  branch_id                            String?       @db.Uuid
+  created_at                           DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at                           DateTime      @default(now()) @db.Timestamptz(6)
+  deleted_at                           DateTime?     @db.Timestamptz(6)
+  created_by                           String?       @db.Uuid
+  updated_by                           String?       @db.Uuid
+  deleted_by                           String?       @db.Uuid
+  version                              Int           @default(1)
+  row_version                          BigInt        @default(0)
+  is_active                            Boolean       @default(true)
+  is_deleted                           Boolean?      @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                         String?
+  metadata                             Json          @default("{}")
+  client_id                            String        @db.Uuid
+  user_id                              String?       @db.Uuid
+  access_token_hash                    String
+  refresh_token_hash                   String?
+  expires_at                           DateTime      @db.Timestamptz(6)
+  revoked_at                           DateTime?     @db.Timestamptz(6)
+  oauth_clients                        oauth_clients @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("security")
+}
+
+model password_history {
+  id                                       String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                 BigInt     @unique @default(autoincrement())
+  tenant_id                                String     @db.Uuid
+  company_id                               String?    @db.Uuid
+  branch_id                                String?    @db.Uuid
+  created_at                               DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                               DateTime?  @db.Timestamptz(6)
+  created_by                               String?    @db.Uuid
+  updated_by                               String?    @db.Uuid
+  deleted_by                               String?    @db.Uuid
+  version                                  Int        @default(1)
+  row_version                              BigInt     @default(0)
+  is_active                                Boolean    @default(true)
+  is_deleted                               Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                             String?
+  metadata                                 Json       @default("{}")
+  user_id                                  String     @db.Uuid
+  password_hash                            String
+
+  @@schema("security")
+}
+
+model password_policies {
+  id                                        String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt              @unique @default(autoincrement())
+  tenant_id                                 String              @db.Uuid
+  company_id                                String?             @db.Uuid
+  branch_id                                 String?             @db.Uuid
+  created_at                                DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime            @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime?           @db.Timestamptz(6)
+  created_by                                String?             @db.Uuid
+  updated_by                                String?             @db.Uuid
+  deleted_by                                String?             @db.Uuid
+  version                                   Int                 @default(1)
+  row_version                               BigInt              @default(0)
+  is_active                                 Boolean             @default(true)
+  is_deleted                                Boolean?            @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json                @default("{}")
+  min_length                                Int                 @default(12) @db.SmallInt
+  requires_uppercase                        Boolean             @default(true)
+  requires_number                           Boolean             @default(true)
+  requires_symbol                           Boolean             @default(true)
+  expires_after_days                        Int?
+  history_count                             Int                 @default(5) @db.SmallInt
+  security_policies                         security_policies[]
+
+  @@schema("security")
+}
+
+model permission_delegations {
+  id                                                    String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                              BigInt      @unique @default(autoincrement())
+  tenant_id                                             String      @db.Uuid
+  company_id                                            String?     @db.Uuid
+  branch_id                                             String?     @db.Uuid
+  created_at                                            DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at                                            DateTime    @default(now()) @db.Timestamptz(6)
+  deleted_at                                            DateTime?   @db.Timestamptz(6)
+  created_by                                            String?     @db.Uuid
+  updated_by                                            String?     @db.Uuid
+  deleted_by                                            String?     @db.Uuid
+  version                                               Int         @default(1)
+  row_version                                           BigInt      @default(0)
+  is_active                                             Boolean     @default(true)
+  is_deleted                                            Boolean?    @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                          String?
+  metadata                                              Json        @default("{}")
+  delegator_user_id                                     String      @db.Uuid
+  delegate_user_id                                      String      @db.Uuid
+  permission_id                                         String      @db.Uuid
+  starts_at                                             DateTime    @default(now()) @db.Timestamptz(6)
+  ends_at                                               DateTime    @db.Timestamptz(6)
+
+  @@schema("security")
+}
+
+model security_audit_logs {
+  id                                             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                       BigInt     @unique @default(autoincrement())
+  tenant_id                                      String     @db.Uuid
+  company_id                                     String?    @db.Uuid
+  branch_id                                      String?    @db.Uuid
+  created_at                                     DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                                     DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                                     DateTime?  @db.Timestamptz(6)
+  created_by                                     String?    @db.Uuid
+  updated_by                                     String?    @db.Uuid
+  deleted_by                                     String?    @db.Uuid
+  version                                        Int        @default(1)
+  row_version                                    BigInt     @default(0)
+  is_active                                      Boolean    @default(true)
+  is_deleted                                     Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                   String?
+  metadata                                       Json       @default("{}")
+  event_type                                     String
+  actor_user_id                                  String?    @db.Uuid
+  ip_address                                     String?    @db.Inet
+  details                                        Json       @default("{}")
+
+  @@schema("security")
+}
+
+model security_incident_events {
+  id                                               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                         BigInt             @unique @default(autoincrement())
+  tenant_id                                        String             @db.Uuid
+  company_id                                       String?            @db.Uuid
+  branch_id                                        String?            @db.Uuid
+  created_at                                       DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                                       DateTime           @default(now()) @db.Timestamptz(6)
+  deleted_at                                       DateTime?          @db.Timestamptz(6)
+  created_by                                       String?            @db.Uuid
+  updated_by                                       String?            @db.Uuid
+  deleted_by                                       String?            @db.Uuid
+  version                                          Int                @default(1)
+  row_version                                      BigInt             @default(0)
+  is_active                                        Boolean            @default(true)
+  is_deleted                                       Boolean?           @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                     String?
+  metadata                                         Json               @default("{}")
+  incident_id                                      String             @db.Uuid
+  event_description                                String
+  occurred_at                                      DateTime           @default(now()) @db.Timestamptz(6)
+  security_incidents                               security_incidents @relation(fields: [incident_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("security")
+}
+
+model security_incidents {
+  id                                         String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                   BigInt                     @unique @default(autoincrement())
+  tenant_id                                  String                     @db.Uuid
+  company_id                                 String?                    @db.Uuid
+  branch_id                                  String?                    @db.Uuid
+  created_at                                 DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime                   @default(now()) @db.Timestamptz(6)
+  deleted_at                                 DateTime?                  @db.Timestamptz(6)
+  created_by                                 String?                    @db.Uuid
+  updated_by                                 String?                    @db.Uuid
+  deleted_by                                 String?                    @db.Uuid
+  version                                    Int                        @default(1)
+  row_version                                BigInt                     @default(0)
+  is_active                                  Boolean                    @default(true)
+  is_deleted                                 Boolean?                   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                               String?
+  metadata                                   Json                       @default("{}")
+  title                                      String
+  severity                                   String
+  status                                     String                     @default("open")
+  security_incident_events                   security_incident_events[]
+
+  @@schema("security")
+}
+
+model security_policies {
+  id                                        String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt             @unique @default(autoincrement())
+  tenant_id                                 String             @db.Uuid
+  company_id                                String?            @db.Uuid
+  branch_id                                 String?            @db.Uuid
+  created_at                                DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime           @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime?          @db.Timestamptz(6)
+  created_by                                String?            @db.Uuid
+  updated_by                                String?            @db.Uuid
+  deleted_by                                String?            @db.Uuid
+  version                                   Int                @default(1)
+  row_version                               BigInt             @default(0)
+  is_active                                 Boolean            @default(true)
+  is_deleted                                Boolean?           @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json               @default("{}")
+  password_policy_id                        String?            @db.Uuid
+  max_login_attempts                        Int                @default(5) @db.SmallInt
+  lockout_duration_minutes                  Int                @default(15) @db.SmallInt
+  requires_2fa                              Boolean            @default(false)
+  session_timeout_minutes                   Int                @default(30) @db.SmallInt
+  password_policies                         password_policies? @relation(fields: [password_policy_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("security")
+}
+
+model session_activity_logs {
+  id                                            String     @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                      BigInt     @default(autoincrement())
+  tenant_id                                     String     @db.Uuid
+  company_id                                    String?    @db.Uuid
+  branch_id                                     String?    @db.Uuid
+  created_at                                    DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                                    DateTime?  @db.Timestamptz(6)
+  created_by                                    String?    @db.Uuid
+  updated_by                                    String?    @db.Uuid
+  deleted_by                                    String?    @db.Uuid
+  version                                       Int        @default(1)
+  row_version                                   BigInt     @default(0)
+  is_active                                     Boolean    @default(true)
+  is_deleted                                    Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                  String?
+  metadata                                      Json       @default("{}")
+  session_id                                    String     @db.Uuid
+  event_type                                    String
+
+  @@id([id, created_at])
+  @@unique([local_id, created_at])
+  @@schema("security")
+}
+
+model trusted_devices {
+  id                                      String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                BigInt       @unique @default(autoincrement())
+  tenant_id                               String       @db.Uuid
+  company_id                              String?      @db.Uuid
+  branch_id                               String?      @db.Uuid
+  created_at                              DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime     @default(now()) @db.Timestamptz(6)
+  deleted_at                              DateTime?    @db.Timestamptz(6)
+  created_by                              String?      @db.Uuid
+  updated_by                              String?      @db.Uuid
+  deleted_by                              String?      @db.Uuid
+  version                                 Int          @default(1)
+  row_version                             BigInt       @default(0)
+  is_active                               Boolean      @default(true)
+  is_deleted                              Boolean?     @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                            String?
+  metadata                                Json         @default("{}")
+  user_id                                 String       @db.Uuid
+  device_id                               String       @db.Uuid
+  trusted_until                           DateTime     @db.Timestamptz(6)
+
+  @@schema("security")
+}
+
+model two_factor_backup_codes {
+  id                                              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                        BigInt     @unique @default(autoincrement())
+  tenant_id                                       String     @db.Uuid
+  company_id                                      String?    @db.Uuid
+  branch_id                                       String?    @db.Uuid
+  created_at                                      DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                                      DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                                      DateTime?  @db.Timestamptz(6)
+  created_by                                      String?    @db.Uuid
+  updated_by                                      String?    @db.Uuid
+  deleted_by                                      String?    @db.Uuid
+  version                                         Int        @default(1)
+  row_version                                     BigInt     @default(0)
+  is_active                                       Boolean    @default(true)
+  is_deleted                                      Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                    String?
+  metadata                                        Json       @default("{}")
+  user_id                                         String     @db.Uuid
+  code_hash                                       String
+  used_at                                         DateTime?  @db.Timestamptz(6)
+
+  @@schema("security")
+}
+
+model two_factor_challenges {
+  id                                            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                      BigInt     @unique @default(autoincrement())
+  tenant_id                                     String     @db.Uuid
+  company_id                                    String?    @db.Uuid
+  branch_id                                     String?    @db.Uuid
+  created_at                                    DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                                    DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                                    DateTime?  @db.Timestamptz(6)
+  created_by                                    String?    @db.Uuid
+  updated_by                                    String?    @db.Uuid
+  deleted_by                                    String?    @db.Uuid
+  version                                       Int        @default(1)
+  row_version                                   BigInt     @default(0)
+  is_active                                     Boolean    @default(true)
+  is_deleted                                    Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                  String?
+  metadata                                      Json       @default("{}")
+  user_id                                       String     @db.Uuid
+  succeeded                                     Boolean
+  ip_address                                    String?    @db.Inet
+
+  @@schema("security")
+}
+
+model two_factor_credentials {
+  id                                             String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                       BigInt     @unique @default(autoincrement())
+  tenant_id                                      String     @db.Uuid
+  company_id                                     String?    @db.Uuid
+  branch_id                                      String?    @db.Uuid
+  created_at                                     DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                                     DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                                     DateTime?  @db.Timestamptz(6)
+  created_by                                     String?    @db.Uuid
+  updated_by                                     String?    @db.Uuid
+  deleted_by                                     String?    @db.Uuid
+  version                                        Int        @default(1)
+  row_version                                    BigInt     @default(0)
+  is_active                                      Boolean    @default(true)
+  is_deleted                                     Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                   String?
+  metadata                                       Json       @default("{}")
+  user_id                                        String     @db.Uuid
+  method                                         String
+  encrypted_secret                               String
+  confirmed_at                                   DateTime?  @db.Timestamptz(6)
+
+  @@schema("security")
+}

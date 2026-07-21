@@ -1,0 +1,15 @@
+{
+  "name": "@gorazus/core-scheduler",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GORAZUS ERP — Scheduler. Ver docs/architecture/32-core-platform/12-arbol-de-carpetas.md.",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "dependencies": {
+    "@nestjs/common": "^10.4.0",
+    "@nestjs/schedule": "^4.1.0",
+    "cron": "3.2.1",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.8.0"
+  }
+}

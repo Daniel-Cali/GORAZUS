@@ -1,0 +1,368 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "./generated"
+  previewFeatures = ["multiSchema"]
+  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["suppliers"]
+}
+
+model supplier_addresses {
+  id                                         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                   BigInt          @unique @default(autoincrement())
+  tenant_id                                  String          @db.Uuid
+  company_id                                 String          @db.Uuid
+  branch_id                                  String?         @db.Uuid
+  created_at                                 DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime        @default(now()) @db.Timestamptz(6)
+  deleted_at                                 DateTime?       @db.Timestamptz(6)
+  created_by                                 String?         @db.Uuid
+  updated_by                                 String?         @db.Uuid
+  deleted_by                                 String?         @db.Uuid
+  version                                    Int             @default(1)
+  row_version                                BigInt          @default(0)
+  is_active                                  Boolean         @default(true)
+  is_deleted                                 Boolean?        @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                               String?
+  metadata                                   Json            @default("{}")
+  supplier_id                                String          @db.Uuid
+  address_type                               String
+  line1                                      String
+  line2                                      String?
+  municipality_id                            String?         @db.Uuid
+  postal_code                                String?
+  is_default                                 Boolean         @default(false)
+  suppliers                                  suppliers       @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("suppliers")
+}
+
+model supplier_bank_accounts {
+  id                                             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                       BigInt    @unique @default(autoincrement())
+  tenant_id                                      String    @db.Uuid
+  company_id                                     String    @db.Uuid
+  branch_id                                      String?   @db.Uuid
+  created_at                                     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                                     DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at                                     DateTime? @db.Timestamptz(6)
+  created_by                                     String?   @db.Uuid
+  updated_by                                     String?   @db.Uuid
+  deleted_by                                     String?   @db.Uuid
+  version                                        Int       @default(1)
+  row_version                                    BigInt    @default(0)
+  is_active                                      Boolean   @default(true)
+  is_deleted                                     Boolean?  @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                   String?
+  metadata                                       Json      @default("{}")
+  supplier_id                                    String    @db.Uuid
+  bank_name                                      String
+  encrypted_account_number                       String
+  suppliers                                      suppliers @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("suppliers")
+}
+
+model supplier_block_history {
+  id                                             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                       BigInt    @unique @default(autoincrement())
+  tenant_id                                      String    @db.Uuid
+  company_id                                     String    @db.Uuid
+  branch_id                                      String?   @db.Uuid
+  created_at                                     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                                     DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at                                     DateTime? @db.Timestamptz(6)
+  created_by                                     String?   @db.Uuid
+  updated_by                                     String?   @db.Uuid
+  deleted_by                                     String?   @db.Uuid
+  version                                        Int       @default(1)
+  row_version                                    BigInt    @default(0)
+  is_active                                      Boolean   @default(true)
+  is_deleted                                     Boolean?  @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                   String?
+  metadata                                       Json      @default("{}")
+  supplier_id                                    String    @db.Uuid
+  action                                         String
+  reason                                         String?
+  suppliers                                      suppliers @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("suppliers")
+}
+
+model supplier_classifications {
+  id                                               String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                         BigInt      @unique @default(autoincrement())
+  tenant_id                                        String      @db.Uuid
+  company_id                                       String      @db.Uuid
+  branch_id                                        String?     @db.Uuid
+  created_at                                       DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at                                       DateTime    @default(now()) @db.Timestamptz(6)
+  deleted_at                                       DateTime?   @db.Timestamptz(6)
+  created_by                                       String?     @db.Uuid
+  updated_by                                       String?     @db.Uuid
+  deleted_by                                       String?     @db.Uuid
+  version                                          Int         @default(1)
+  row_version                                      BigInt      @default(0)
+  is_active                                        Boolean     @default(true)
+  is_deleted                                       Boolean?    @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                     String?
+  metadata                                         Json        @default("{}")
+  name                                             String
+  suppliers                                        suppliers[]
+
+  @@schema("suppliers")
+}
+
+model supplier_contacts {
+  id                                        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt    @unique @default(autoincrement())
+  tenant_id                                 String    @db.Uuid
+  company_id                                String    @db.Uuid
+  branch_id                                 String?   @db.Uuid
+  created_at                                DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime? @db.Timestamptz(6)
+  created_by                                String?   @db.Uuid
+  updated_by                                String?   @db.Uuid
+  deleted_by                                String?   @db.Uuid
+  version                                   Int       @default(1)
+  row_version                               BigInt    @default(0)
+  is_active                                 Boolean   @default(true)
+  is_deleted                                Boolean?  @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json      @default("{}")
+  supplier_id                               String    @db.Uuid
+  full_name                                 String
+  email                                     String?
+  phone                                     String?
+  is_primary                                Boolean   @default(false)
+  suppliers                                 suppliers @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("suppliers")
+}
+
+model supplier_credit_limit_history {
+  id                                                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                              BigInt    @unique @default(autoincrement())
+  tenant_id                                             String    @db.Uuid
+  company_id                                            String    @db.Uuid
+  branch_id                                             String?   @db.Uuid
+  created_at                                            DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                                            DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at                                            DateTime? @db.Timestamptz(6)
+  created_by                                            String?   @db.Uuid
+  updated_by                                            String?   @db.Uuid
+  deleted_by                                            String?   @db.Uuid
+  version                                               Int       @default(1)
+  row_version                                           BigInt    @default(0)
+  is_active                                             Boolean   @default(true)
+  is_deleted                                            Boolean?  @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                          String?
+  metadata                                              Json      @default("{}")
+  supplier_id                                           String    @db.Uuid
+  previous_limit                                        Decimal?  @db.Decimal(18, 4)
+  new_limit                                             Decimal?  @db.Decimal(18, 4)
+  suppliers                                             suppliers @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("suppliers")
+}
+
+model supplier_credit_profiles {
+  id                                               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                         BigInt    @unique @default(autoincrement())
+  tenant_id                                        String    @db.Uuid
+  company_id                                       String    @db.Uuid
+  branch_id                                        String?   @db.Uuid
+  created_at                                       DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                                       DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at                                       DateTime? @db.Timestamptz(6)
+  created_by                                       String?   @db.Uuid
+  updated_by                                       String?   @db.Uuid
+  deleted_by                                       String?   @db.Uuid
+  version                                          Int       @default(1)
+  row_version                                      BigInt    @default(0)
+  is_active                                        Boolean   @default(true)
+  is_deleted                                       Boolean?  @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                     String?
+  metadata                                         Json      @default("{}")
+  supplier_id                                      String    @db.Uuid
+  credit_limit                                     Decimal?  @db.Decimal(18, 4)
+  payment_terms_days                               Int       @default(0)
+  suppliers                                        suppliers @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("suppliers")
+}
+
+model supplier_evaluation_criteria {
+  id                                                   String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                             BigInt                       @unique @default(autoincrement())
+  tenant_id                                            String                       @db.Uuid
+  company_id                                           String                       @db.Uuid
+  branch_id                                            String?                      @db.Uuid
+  created_at                                           DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                                           DateTime                     @default(now()) @db.Timestamptz(6)
+  deleted_at                                           DateTime?                    @db.Timestamptz(6)
+  created_by                                           String?                      @db.Uuid
+  updated_by                                           String?                      @db.Uuid
+  deleted_by                                           String?                      @db.Uuid
+  version                                              Int                          @default(1)
+  row_version                                          BigInt                       @default(0)
+  is_active                                            Boolean                      @default(true)
+  is_deleted                                           Boolean?                     @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                         String?
+  metadata                                             Json                         @default("{}")
+  name                                                 String
+  weight_percentage                                    Decimal                      @db.Decimal(5, 2)
+  supplier_evaluation_scores                           supplier_evaluation_scores[]
+
+  @@schema("suppliers")
+}
+
+model supplier_evaluation_scores {
+  id                                                 String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                           BigInt                       @unique @default(autoincrement())
+  tenant_id                                          String                       @db.Uuid
+  company_id                                         String                       @db.Uuid
+  branch_id                                          String?                      @db.Uuid
+  created_at                                         DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                                         DateTime                     @default(now()) @db.Timestamptz(6)
+  deleted_at                                         DateTime?                    @db.Timestamptz(6)
+  created_by                                         String?                      @db.Uuid
+  updated_by                                         String?                      @db.Uuid
+  deleted_by                                         String?                      @db.Uuid
+  version                                            Int                          @default(1)
+  row_version                                        BigInt                       @default(0)
+  is_active                                          Boolean                      @default(true)
+  is_deleted                                         Boolean?                     @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                       String?
+  metadata                                           Json                         @default("{}")
+  evaluation_id                                      String                       @db.Uuid
+  criteria_id                                        String                       @db.Uuid
+  score                                              Decimal                      @db.Decimal(5, 2)
+  supplier_evaluation_criteria                       supplier_evaluation_criteria @relation(fields: [criteria_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  supplier_evaluations                               supplier_evaluations         @relation(fields: [evaluation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("suppliers")
+}
+
+model supplier_evaluations {
+  id                                                     String                       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                               BigInt                       @unique @default(autoincrement())
+  tenant_id                                              String                       @db.Uuid
+  company_id                                             String                       @db.Uuid
+  branch_id                                              String?                      @db.Uuid
+  created_at                                             DateTime                     @default(now()) @db.Timestamptz(6)
+  updated_at                                             DateTime                     @default(now()) @db.Timestamptz(6)
+  deleted_at                                             DateTime?                    @db.Timestamptz(6)
+  created_by                                             String?                      @db.Uuid
+  updated_by                                             String?                      @db.Uuid
+  deleted_by                                             String?                      @db.Uuid
+  version                                                Int                          @default(1)
+  row_version                                            BigInt                       @default(0)
+  is_active                                              Boolean                      @default(true)
+  is_deleted                                             Boolean?                     @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                           String?
+  metadata                                               Json                         @default("{}")
+  supplier_id                                            String                       @db.Uuid
+  evaluated_by_user_id                                   String                       @db.Uuid
+  evaluation_date                                        DateTime                     @default(dbgenerated("CURRENT_DATE")) @db.Date
+  overall_score                                          Decimal?                     @db.Decimal(5, 2)
+  supplier_evaluation_scores                             supplier_evaluation_scores[]
+  suppliers                                              suppliers                    @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("suppliers")
+}
+
+model supplier_history {
+  id                                       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                 BigInt    @unique @default(autoincrement())
+  tenant_id                                String    @db.Uuid
+  company_id                               String    @db.Uuid
+  branch_id                                String?   @db.Uuid
+  created_at                               DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at                               DateTime? @db.Timestamptz(6)
+  created_by                               String?   @db.Uuid
+  updated_by                               String?   @db.Uuid
+  deleted_by                               String?   @db.Uuid
+  version                                  Int       @default(1)
+  row_version                              BigInt    @default(0)
+  is_active                                Boolean   @default(true)
+  is_deleted                               Boolean?  @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                             String?
+  metadata                                 Json      @default("{}")
+  supplier_id                              String    @db.Uuid
+  event_description                        String
+  occurred_at                              DateTime  @default(now()) @db.Timestamptz(6)
+  suppliers                                suppliers @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("suppliers")
+}
+
+model supplier_withholding_profiles {
+  id                                                    String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                              BigInt             @unique @default(autoincrement())
+  tenant_id                                             String             @db.Uuid
+  company_id                                            String             @db.Uuid
+  branch_id                                             String?            @db.Uuid
+  created_at                                            DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                                            DateTime           @default(now()) @db.Timestamptz(6)
+  deleted_at                                            DateTime?          @db.Timestamptz(6)
+  created_by                                            String?            @db.Uuid
+  updated_by                                            String?            @db.Uuid
+  deleted_by                                            String?            @db.Uuid
+  version                                               Int                @default(1)
+  row_version                                           BigInt             @default(0)
+  is_active                                             Boolean            @default(true)
+  is_deleted                                            Boolean?           @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                          String?
+  metadata                                              Json               @default("{}")
+  supplier_id                                           String             @db.Uuid
+  withholding_rule_id                                   String?            @db.Uuid
+  suppliers                                             suppliers          @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("suppliers")
+}
+
+model suppliers {
+  id                                String                          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                          BigInt                          @unique @default(autoincrement())
+  tenant_id                         String                          @db.Uuid
+  company_id                        String                          @db.Uuid
+  branch_id                         String?                         @db.Uuid
+  created_at                        DateTime                        @default(now()) @db.Timestamptz(6)
+  updated_at                        DateTime                        @default(now()) @db.Timestamptz(6)
+  deleted_at                        DateTime?                       @db.Timestamptz(6)
+  created_by                        String?                         @db.Uuid
+  updated_by                        String?                         @db.Uuid
+  deleted_by                        String?                         @db.Uuid
+  version                           Int                             @default(1)
+  row_version                       BigInt                          @default(0)
+  is_active                         Boolean                         @default(true)
+  is_deleted                        Boolean?                        @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                      String?
+  metadata                          Json                            @default("{}")
+  legal_name                        String
+  trade_name                        String?
+  tax_id                            String
+  payment_terms_days                Int                             @default(0)
+  is_blocked                        Boolean                         @default(false)
+  block_reason                      String?
+  classification_id                 String?                         @db.Uuid
+  supplier_addresses                supplier_addresses[]
+  supplier_bank_accounts            supplier_bank_accounts[]
+  supplier_block_history            supplier_block_history[]
+  supplier_contacts                 supplier_contacts[]
+  supplier_credit_limit_history     supplier_credit_limit_history[]
+  supplier_credit_profiles          supplier_credit_profiles[]
+  supplier_evaluations              supplier_evaluations[]
+  supplier_history                  supplier_history[]
+  supplier_withholding_profiles     supplier_withholding_profiles[]
+  supplier_classifications          supplier_classifications?       @relation(fields: [classification_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("suppliers")
+}

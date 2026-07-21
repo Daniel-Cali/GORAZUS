@@ -1,0 +1,28 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "core-storage",
+  "sourceRoot": "core/storage",
+  "projectType": "library",
+  "tags": ["type:core"],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/core/storage",
+        "main": "core/storage/index.ts",
+        "tsConfig": "core/storage/tsconfig.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/core/storage"],
+      "options": {
+        "jestConfig": "core/storage/jest.config.ts"
+      }
+    }
+  }
+}

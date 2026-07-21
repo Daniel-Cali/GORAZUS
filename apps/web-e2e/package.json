@@ -1,0 +1,9 @@
+{
+  "name": "@gorazus/web-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GORAZUS ERP — Playwright E2E real contra apps/web + apps/api. Ver README.md de esta carpeta.",
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

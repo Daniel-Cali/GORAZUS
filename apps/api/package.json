@@ -1,0 +1,28 @@
+{
+  "name": "@gorazus/api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GORAZUS ERP — composition root del backend (NestJS). Ver docs/architecture/01-estructura-monorepo.md §3.",
+  "main": "./src/main.ts",
+  "dependencies": {
+    "@gorazus/core-config": "workspace:*",
+    "@gorazus/core-logging": "workspace:*",
+    "@gorazus/core-http": "workspace:*",
+    "@gorazus/core-health": "workspace:*",
+    "@gorazus/core-kernel": "workspace:*",
+    "@gorazus/core-observability": "workspace:*",
+    "@gorazus/core-cache": "workspace:*",
+    "@gorazus/core-storage": "workspace:*",
+    "@gorazus/core-messaging": "workspace:*",
+    "@gorazus/core-scheduler": "workspace:*",
+    "@gorazus/core-database": "workspace:*",
+    "@gorazus/core-notifications": "workspace:*",
+    "@gorazus/core-ollama": "workspace:*",
+    "@nestjs/common": "^10.4.0",
+    "@nestjs/core": "^10.4.0",
+    "@nestjs/config": "^3.3.0",
+    "@nestjs/platform-express": "^10.4.0",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.8.0"
+  }
+}

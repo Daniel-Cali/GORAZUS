@@ -1,0 +1,54 @@
+# PostgreSQL de alta disponibilidad vía CloudNativePG — implementa la
+# arquitectura ya fijada en docs/database/10-estrategia-alta-disponibilidad.md
+# (Patroni sobre etcd/Consul como almacén de consenso) sin reinventarla:
+# CloudNativePG corre Patroni internamente. Requiere el operador CloudNativePG
+# ya instalado en el cluster (prerequisito, no gestionado por este Kustomize
+# — ver infra/kubernetes/README.md).
+#
+# NOTA DE GOBERNANZA (FASE 05, 2026-07-20): 31-infraestructura-completa.md §11
+# dice explícitamente "este documento fija la arquitectura objetivo, no
+# reemplaza el ADR que formalizaría la implementación real" — este manifiesto
+# es la expresión concreta de esa arquitectura ya documentada, pero el ADR
+# formal (docs/architecture/11-gobernanza-y-adrs.md §2) todavía no se redactó
+# — hacerlo antes de aplicar esto contra un cluster real de producción.
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: gorazus-postgres
+spec:
+  instances: 3 # 1 primaria + 2 réplicas — RTO/failover automático vía Patroni
+  imageName: ghcr.io/cloudnative-pg/postgresql:17
+
+  postgresql:
+    parameters:
+      max_connections: '200'
+      shared_buffers: 256MB
+
+  bootstrap:
+    initdb:
+      database: gorazus
+      owner: gorazus_app
+      # gorazus_superuser (bootstrap) NUNCA debe coincidir con gorazus_app —
+      # ver docs/database/SECURITY.md §2, hallazgo crítico corregido FASE 05.
+      # CloudNativePG ya crea un superusuario propio distinto del `owner`
+      # declarado acá, evitando estructuralmente la colisión que causó el
+      # bug en Docker Compose.
+
+  storage:
+    size: 50Gi
+    storageClass: '' # el StorageClass por defecto del cluster real
+
+  monitoring:
+    enablePodMonitor: true # scrape automático por el Prometheus Operator, ver stateful/README
+
+  backup:
+    retentionPolicy: '30d'
+    barmanObjectStore:
+      destinationPath: s3://gorazus-backups/postgres # bucket real a definir por entorno, ver overlay
+      s3Credentials:
+        accessKeyId:
+          name: postgres-backup-credentials
+          key: ACCESS_KEY_ID
+        secretAccessKey:
+          name: postgres-backup-credentials
+          key: SECRET_ACCESS_KEY

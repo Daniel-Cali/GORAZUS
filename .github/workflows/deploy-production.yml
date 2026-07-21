@@ -1,0 +1,48 @@
+# GORAZUS ERP — deploy a producción.
+# Ver docs/architecture/31-infraestructura-completa.md §8.
+# Disparo manual (workflow_dispatch) o tag de release — NUNCA
+# automático en push. Promociona el artefacto YA validado en staging
+# (misma imagen por digest, no rebuild) — requiere aprobación de un
+# GitHub Environment protegido con reviewers designados.
+#
+# NOTA: mismo estado que deploy-staging.yml — los pasos de
+# push/kubectl quedan como placeholder hasta que exista el registry y
+# los manifiestos de infra/kubernetes/overlays/production.
+
+name: Deploy Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'SHA o tag de la imagen ya validada en staging (no se reconstruye)'
+        required: true
+  release:
+    types: [published]
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    environment: production # Environment protegido con reviewers, configurado en GitHub — secrets de production nunca legibles desde staging
+    steps:
+      - uses: actions/checkout@v4
+
+      # NOTA (FASE 05, 2026-07-20): infra/kubernetes/overlays/production ya existe y está
+      # validado con `kubectl kustomize` (ver infra/kubernetes/README.md) — los pasos de
+      # abajo siguen comentados porque el REGISTRY/CLUSTER reales no están provisionados.
+
+      # - name: Promover imagen ya construida (sin rebuild)
+      #   run: | # pendiente: secret REGISTRY_URL, no provisionado todavía
+      #     docker pull ${{ secrets.REGISTRY_URL }}/gorazus/api:${{ inputs.image_tag }}
+      #     docker pull ${{ secrets.REGISTRY_URL }}/gorazus/web:${{ inputs.image_tag }}
+      #     docker tag ${{ secrets.REGISTRY_URL }}/gorazus/api:${{ inputs.image_tag }} ${{ secrets.REGISTRY_URL }}/gorazus/api:production
+      #     docker tag ${{ secrets.REGISTRY_URL }}/gorazus/web:${{ inputs.image_tag }} ${{ secrets.REGISTRY_URL }}/gorazus/web:production
+      #     docker push ${{ secrets.REGISTRY_URL }}/gorazus/api:production
+      #     docker push ${{ secrets.REGISTRY_URL }}/gorazus/web:production
+
+      # - name: Deploy a Kubernetes (namespace production)
+      #   run: | # pendiente: secret KUBE_CONFIG (kubeconfig del cluster real), no provisionado todavía
+      #     kubectl config use-context production
+      #     kubectl apply -k infra/kubernetes/overlays/production
+      #     kubectl -n production rollout status deployment/api --timeout=300s
+      #     kubectl -n production rollout status deployment/web --timeout=300s

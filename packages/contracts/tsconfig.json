@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../dist/packages/contracts",
+    "declaration": true,
+    "types": []
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["**/*.spec.ts", "node_modules", "dist"]
+}

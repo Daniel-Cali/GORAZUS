@@ -1,0 +1,63 @@
+# GORAZUS ERP — deploy automático a staging tras merge a main.
+# Ver docs/architecture/31-infraestructura-completa.md §8.
+# Build completo de imágenes Docker (no solo lo afectado — el
+# artefacto desplegado debe ser reproducible completo, a diferencia
+# del gate de PR que sí se acota a lo afectado) + deploy a Kubernetes.
+#
+# NOTA: los pasos de `docker push`/`kubectl apply` quedan como
+# placeholder hasta que exista el registry real y los manifiestos de
+# infra/kubernetes/ (ver docs/architecture/31 §2.3) — no se inventa un
+# registry/cluster que todavía no está provisionado.
+
+name: Deploy Staging
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false # nunca cancelar un deploy a mitad de camino
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build imagen api
+        run: docker build -f apps/api/Dockerfile --target production -t gorazus/api:${{ github.sha }} .
+
+      - name: Build imagen web
+        run: docker build -f apps/web/Dockerfile --target production -t gorazus/web:${{ github.sha }} .
+
+      # NOTA (FASE 05, 2026-07-20): infra/kubernetes/overlays/staging ya existe y está
+      # validado con `kubectl kustomize` (ver infra/kubernetes/README.md) — los pasos de
+      # abajo siguen comentados porque el REGISTRY real y el CLUSTER real (secrets
+      # REGISTRY_URL/KUBE_CONFIG) no están provisionados todavía, no manifiestos faltantes.
+
+      # - name: Push a registry
+      #   run: | # pendiente: secret REGISTRY_URL/REGISTRY_TOKEN, no provisionado todavía
+      #     docker tag gorazus/api:${{ github.sha }} ${{ secrets.REGISTRY_URL }}/gorazus/api:${{ github.sha }}
+      #     docker tag gorazus/web:${{ github.sha }} ${{ secrets.REGISTRY_URL }}/gorazus/web:${{ github.sha }}
+      #     docker push ${{ secrets.REGISTRY_URL }}/gorazus/api:${{ github.sha }}
+      #     docker push ${{ secrets.REGISTRY_URL }}/gorazus/web:${{ github.sha }}
+
+      # - name: Deploy a Kubernetes (namespace staging)
+      #   run: | # pendiente: secret KUBE_CONFIG (kubeconfig del cluster real), no provisionado todavía
+      #     kubectl config use-context staging
+      #     kubectl kustomize infra/kubernetes/overlays/staging | \
+      #       sed "s|gorazus/api:staging|${{ secrets.REGISTRY_URL }}/gorazus/api:${{ github.sha }}|; s|gorazus/web:staging|${{ secrets.REGISTRY_URL }}/gorazus/web:${{ github.sha }}|" | \
+      #       kubectl apply -f -
+      #     kubectl -n staging rollout status deployment/api --timeout=180s
+      #     kubectl -n staging rollout status deployment/web --timeout=180s

@@ -1,0 +1,33 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "declaration": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUncheckedIndexedAccess": true,
+    "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "importHelpers": true,
+    "baseUrl": ".",
+    "rootDir": ".",
+    "paths": {
+      "@gorazus/contracts": ["packages/contracts/index.ts"],
+      "@gorazus/contracts/*": ["packages/contracts/*"],
+      "@gorazus/tooling/*": ["packages/tooling/*"],
+      "@gorazus/ui-kit": ["ui-kit/index.ts"],
+      "@gorazus/ui-kit/*": ["ui-kit/*"],
+      "@gorazus/modules/*": ["modules/*/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp", "dist"]
+}

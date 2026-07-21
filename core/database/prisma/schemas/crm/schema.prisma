@@ -1,0 +1,489 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "./generated"
+  previewFeatures = ["multiSchema"]
+  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["crm"]
+}
+
+model calendar_event_attendees {
+  id                                               String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                         BigInt          @unique @default(autoincrement())
+  tenant_id                                        String          @db.Uuid
+  company_id                                       String?         @db.Uuid
+  branch_id                                        String?         @db.Uuid
+  created_at                                       DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at                                       DateTime        @default(now()) @db.Timestamptz(6)
+  deleted_at                                       DateTime?       @db.Timestamptz(6)
+  created_by                                       String?         @db.Uuid
+  updated_by                                       String?         @db.Uuid
+  deleted_by                                       String?         @db.Uuid
+  version                                          Int             @default(1)
+  row_version                                      BigInt          @default(0)
+  is_active                                        Boolean         @default(true)
+  is_deleted                                       Boolean?        @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                     String?
+  metadata                                         Json            @default("{}")
+  event_id                                         String          @db.Uuid
+  user_id                                          String?         @db.Uuid
+  external_email                                   String?
+  calendar_events                                  calendar_events @relation(fields: [event_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("crm")
+}
+
+model calendar_events {
+  id                                         String                     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                   BigInt                     @unique @default(autoincrement())
+  tenant_id                                  String                     @db.Uuid
+  company_id                                 String?                    @db.Uuid
+  branch_id                                  String?                    @db.Uuid
+  created_at                                 DateTime                   @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime                   @default(now()) @db.Timestamptz(6)
+  deleted_at                                 DateTime?                  @db.Timestamptz(6)
+  created_by                                 String?                    @db.Uuid
+  updated_by                                 String?                    @db.Uuid
+  deleted_by                                 String?                    @db.Uuid
+  version                                    Int                        @default(1)
+  row_version                                BigInt                     @default(0)
+  is_active                                  Boolean                    @default(true)
+  is_deleted                                 Boolean?                   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                               String?
+  metadata                                   Json                       @default("{}")
+  owner_user_id                              String                     @db.Uuid
+  title                                      String
+  starts_at                                  DateTime                   @db.Timestamptz(6)
+  ends_at                                    DateTime                   @db.Timestamptz(6)
+  lead_id                                    String?                    @db.Uuid
+  opportunity_id                             String?                    @db.Uuid
+  calendar_event_attendees                   calendar_event_attendees[]
+  leads                                      leads?                     @relation(fields: [lead_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  opportunities                              opportunities?             @relation(fields: [opportunity_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("crm")
+}
+
+model call_logs {
+  id                                String     @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                          BigInt     @default(autoincrement())
+  tenant_id                         String     @db.Uuid
+  company_id                        String?    @db.Uuid
+  branch_id                         String?    @db.Uuid
+  created_at                        DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                        DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                        DateTime?  @db.Timestamptz(6)
+  created_by                        String?    @db.Uuid
+  updated_by                        String?    @db.Uuid
+  deleted_by                        String?    @db.Uuid
+  version                           Int        @default(1)
+  row_version                       BigInt     @default(0)
+  is_active                         Boolean    @default(true)
+  is_deleted                        Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                      String?
+  metadata                          Json       @default("{}")
+  lead_id                           String?    @db.Uuid
+  customer_id                       String?    @db.Uuid
+  duration_seconds                  Int?
+  outcome                           String?
+  leads                             leads?     @relation(fields: [lead_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id, created_at])
+  @@unique([local_id, created_at])
+  @@schema("crm")
+}
+
+model campaign_members {
+  id                                       String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                 BigInt     @unique @default(autoincrement())
+  tenant_id                                String     @db.Uuid
+  company_id                               String?    @db.Uuid
+  branch_id                                String?    @db.Uuid
+  created_at                               DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                               DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                               DateTime?  @db.Timestamptz(6)
+  created_by                               String?    @db.Uuid
+  updated_by                               String?    @db.Uuid
+  deleted_by                               String?    @db.Uuid
+  version                                  Int        @default(1)
+  row_version                              BigInt     @default(0)
+  is_active                                Boolean    @default(true)
+  is_deleted                               Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                             String?
+  metadata                                 Json       @default("{}")
+  campaign_id                              String     @db.Uuid
+  lead_id                                  String     @db.Uuid
+  campaigns                                campaigns  @relation(fields: [campaign_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  leads                                    leads      @relation(fields: [lead_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("crm")
+}
+
+model campaigns {
+  id                                String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                          BigInt             @unique @default(autoincrement())
+  tenant_id                         String             @db.Uuid
+  company_id                        String             @db.Uuid
+  branch_id                         String?            @db.Uuid
+  created_at                        DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at                        DateTime           @default(now()) @db.Timestamptz(6)
+  deleted_at                        DateTime?          @db.Timestamptz(6)
+  created_by                        String?            @db.Uuid
+  updated_by                        String?            @db.Uuid
+  deleted_by                        String?            @db.Uuid
+  version                           Int                @default(1)
+  row_version                       BigInt             @default(0)
+  is_active                         Boolean            @default(true)
+  is_deleted                        Boolean?           @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                      String?
+  metadata                          Json               @default("{}")
+  name                              String
+  budget_amount                     Decimal?           @db.Decimal(18, 4)
+  starts_on                         DateTime?          @db.Date
+  ends_on                           DateTime?          @db.Date
+  campaign_members                  campaign_members[]
+
+  @@schema("crm")
+}
+
+model email_logs {
+  id                                 String     @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                           BigInt     @default(autoincrement())
+  tenant_id                          String     @db.Uuid
+  company_id                         String?    @db.Uuid
+  branch_id                          String?    @db.Uuid
+  created_at                         DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                         DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                         DateTime?  @db.Timestamptz(6)
+  created_by                         String?    @db.Uuid
+  updated_by                         String?    @db.Uuid
+  deleted_by                         String?    @db.Uuid
+  version                            Int        @default(1)
+  row_version                        BigInt     @default(0)
+  is_active                          Boolean    @default(true)
+  is_deleted                         Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                       String?
+  metadata                           Json       @default("{}")
+  lead_id                            String?    @db.Uuid
+  customer_id                        String?    @db.Uuid
+  subject                            String?
+  direction                          String
+  leads                              leads?     @relation(fields: [lead_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id, created_at])
+  @@unique([local_id, created_at])
+  @@schema("crm")
+}
+
+model follow_up_activities {
+  id                                                    String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                              BigInt         @unique @default(autoincrement())
+  tenant_id                                             String         @db.Uuid
+  company_id                                            String         @db.Uuid
+  branch_id                                             String?        @db.Uuid
+  created_at                                            DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at                                            DateTime       @default(now()) @db.Timestamptz(6)
+  deleted_at                                            DateTime?      @db.Timestamptz(6)
+  created_by                                            String?        @db.Uuid
+  updated_by                                            String?        @db.Uuid
+  deleted_by                                            String?        @db.Uuid
+  version                                               Int            @default(1)
+  row_version                                           BigInt         @default(0)
+  is_active                                             Boolean        @default(true)
+  is_deleted                                            Boolean?       @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                          String?
+  metadata                                              Json           @default("{}")
+  lead_id                                               String?        @db.Uuid
+  opportunity_id                                        String?        @db.Uuid
+  assigned_to_user_id                                   String         @db.Uuid
+  due_at                                                DateTime       @db.Timestamptz(6)
+  completed_at                                          DateTime?      @db.Timestamptz(6)
+  leads                                                 leads?         @relation(fields: [lead_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  opportunities                                         opportunities? @relation(fields: [opportunity_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("crm")
+}
+
+model lead_sources {
+  id                                   String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                             BigInt     @unique @default(autoincrement())
+  tenant_id                            String     @db.Uuid
+  company_id                           String?    @db.Uuid
+  branch_id                            String?    @db.Uuid
+  created_at                           DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                           DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                           DateTime?  @db.Timestamptz(6)
+  created_by                           String?    @db.Uuid
+  updated_by                           String?    @db.Uuid
+  deleted_by                           String?    @db.Uuid
+  version                              Int        @default(1)
+  row_version                          BigInt     @default(0)
+  is_active                            Boolean    @default(true)
+  is_deleted                           Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                         String?
+  metadata                             Json       @default("{}")
+  name                                 String
+  leads                                leads[]
+
+  @@schema("crm")
+}
+
+model lead_status {
+  id                                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                            BigInt                @unique @default(autoincrement())
+  tenant_id                           String                @db.Uuid
+  company_id                          String?               @db.Uuid
+  branch_id                           String?               @db.Uuid
+  created_at                          DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at                          DateTime              @default(now()) @db.Timestamptz(6)
+  deleted_at                          DateTime?             @db.Timestamptz(6)
+  created_by                          String?               @db.Uuid
+  updated_by                          String?               @db.Uuid
+  deleted_by                          String?               @db.Uuid
+  version                             Int                   @default(1)
+  row_version                         BigInt                @default(0)
+  is_active                           Boolean               @default(true)
+  is_deleted                          Boolean?              @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                        String?
+  metadata                            Json                  @default("{}")
+  code                                String
+  lead_status_history                 lead_status_history[]
+  leads                               leads[]
+
+  @@schema("crm")
+}
+
+model lead_status_history {
+  id                                          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                    BigInt      @unique @default(autoincrement())
+  tenant_id                                   String      @db.Uuid
+  company_id                                  String?     @db.Uuid
+  branch_id                                   String?     @db.Uuid
+  created_at                                  DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at                                  DateTime    @default(now()) @db.Timestamptz(6)
+  deleted_at                                  DateTime?   @db.Timestamptz(6)
+  created_by                                  String?     @db.Uuid
+  updated_by                                  String?     @db.Uuid
+  deleted_by                                  String?     @db.Uuid
+  version                                     Int         @default(1)
+  row_version                                 BigInt      @default(0)
+  is_active                                   Boolean     @default(true)
+  is_deleted                                  Boolean?    @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                String?
+  metadata                                    Json        @default("{}")
+  lead_id                                     String      @db.Uuid
+  status_id                                   String      @db.Uuid
+  leads                                       leads       @relation(fields: [lead_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lead_status                                 lead_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("crm")
+}
+
+model leads {
+  id                            String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                      BigInt                 @unique @default(autoincrement())
+  tenant_id                     String                 @db.Uuid
+  company_id                    String                 @db.Uuid
+  branch_id                     String?                @db.Uuid
+  created_at                    DateTime               @default(now()) @db.Timestamptz(6)
+  updated_at                    DateTime               @default(now()) @db.Timestamptz(6)
+  deleted_at                    DateTime?              @db.Timestamptz(6)
+  created_by                    String?                @db.Uuid
+  updated_by                    String?                @db.Uuid
+  deleted_by                    String?                @db.Uuid
+  version                       Int                    @default(1)
+  row_version                   BigInt                 @default(0)
+  is_active                     Boolean                @default(true)
+  is_deleted                    Boolean?               @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                  String?
+  metadata                      Json                   @default("{}")
+  full_name                     String
+  email                         String?
+  phone                         String?
+  source_id                     String?                @db.Uuid
+  status_id                     String                 @db.Uuid
+  assigned_salesperson_id       String?                @db.Uuid
+  converted_customer_id         String?                @db.Uuid
+  calendar_events               calendar_events[]
+  call_logs                     call_logs[]
+  campaign_members              campaign_members[]
+  email_logs                    email_logs[]
+  follow_up_activities          follow_up_activities[]
+  lead_status_history           lead_status_history[]
+  lead_sources                  lead_sources?          @relation(fields: [source_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  lead_status                   lead_status            @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  opportunities                 opportunities[]
+  whatsapp_logs                 whatsapp_logs[]
+
+  @@schema("crm")
+}
+
+model opportunities {
+  id                                    String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                              BigInt                    @unique @default(autoincrement())
+  tenant_id                             String                    @db.Uuid
+  company_id                            String                    @db.Uuid
+  branch_id                             String?                   @db.Uuid
+  created_at                            DateTime                  @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime                  @default(now()) @db.Timestamptz(6)
+  deleted_at                            DateTime?                 @db.Timestamptz(6)
+  created_by                            String?                   @db.Uuid
+  updated_by                            String?                   @db.Uuid
+  deleted_by                            String?                   @db.Uuid
+  version                               Int                       @default(1)
+  row_version                           BigInt                    @default(0)
+  is_active                             Boolean                   @default(true)
+  is_deleted                            Boolean?                  @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                          String?
+  metadata                              Json                      @default("{}")
+  lead_id                               String?                   @db.Uuid
+  customer_id                           String?                   @db.Uuid
+  funnel_stage_id                       String                    @db.Uuid
+  estimated_amount                      Decimal                   @default(0) @db.Decimal(18, 4)
+  status                                String                    @default("open")
+  loss_reason_id                        String?                   @db.Uuid
+  resulting_sales_order_id              String?                   @db.Uuid
+  calendar_events                       calendar_events[]
+  follow_up_activities                  follow_up_activities[]
+  sales_funnel_stages                   sales_funnel_stages       @relation(fields: [funnel_stage_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  leads                                 leads?                    @relation(fields: [lead_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  opportunity_loss_reasons              opportunity_loss_reasons? @relation(fields: [loss_reason_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  opportunity_lines                     opportunity_lines[]
+
+  @@schema("crm")
+}
+
+model opportunity_lines {
+  id                                        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt        @unique @default(autoincrement())
+  tenant_id                                 String        @db.Uuid
+  company_id                                String?       @db.Uuid
+  branch_id                                 String?       @db.Uuid
+  created_at                                DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime      @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime?     @db.Timestamptz(6)
+  created_by                                String?       @db.Uuid
+  updated_by                                String?       @db.Uuid
+  deleted_by                                String?       @db.Uuid
+  version                                   Int           @default(1)
+  row_version                               BigInt        @default(0)
+  is_active                                 Boolean       @default(true)
+  is_deleted                                Boolean?      @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json          @default("{}")
+  opportunity_id                            String        @db.Uuid
+  product_id                                String        @db.Uuid
+  estimated_quantity                        Decimal       @db.Decimal(18, 6)
+  opportunities                             opportunities @relation(fields: [opportunity_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("crm")
+}
+
+model opportunity_loss_reasons {
+  id                                               String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                         BigInt          @unique @default(autoincrement())
+  tenant_id                                        String          @db.Uuid
+  company_id                                       String?         @db.Uuid
+  branch_id                                        String?         @db.Uuid
+  created_at                                       DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at                                       DateTime        @default(now()) @db.Timestamptz(6)
+  deleted_at                                       DateTime?       @db.Timestamptz(6)
+  created_by                                       String?         @db.Uuid
+  updated_by                                       String?         @db.Uuid
+  deleted_by                                       String?         @db.Uuid
+  version                                          Int             @default(1)
+  row_version                                      BigInt          @default(0)
+  is_active                                        Boolean         @default(true)
+  is_deleted                                       Boolean?        @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                     String?
+  metadata                                         Json            @default("{}")
+  name                                             String
+  opportunities                                    opportunities[]
+
+  @@schema("crm")
+}
+
+model sales_funnel_stages {
+  id                                          String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                    BigInt          @unique @default(autoincrement())
+  tenant_id                                   String          @db.Uuid
+  company_id                                  String?         @db.Uuid
+  branch_id                                   String?         @db.Uuid
+  created_at                                  DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at                                  DateTime        @default(now()) @db.Timestamptz(6)
+  deleted_at                                  DateTime?       @db.Timestamptz(6)
+  created_by                                  String?         @db.Uuid
+  updated_by                                  String?         @db.Uuid
+  deleted_by                                  String?         @db.Uuid
+  version                                     Int             @default(1)
+  row_version                                 BigInt          @default(0)
+  is_active                                   Boolean         @default(true)
+  is_deleted                                  Boolean?        @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                String?
+  metadata                                    Json            @default("{}")
+  funnel_id                                   String          @db.Uuid
+  name                                        String
+  stage_order                                 Int             @db.SmallInt
+  win_probability_percentage                  Decimal         @default(0) @db.Decimal(5, 2)
+  opportunities                               opportunities[]
+  sales_funnels                               sales_funnels   @relation(fields: [funnel_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("crm")
+}
+
+model sales_funnels {
+  id                                    String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                              BigInt                @unique @default(autoincrement())
+  tenant_id                             String                @db.Uuid
+  company_id                            String                @db.Uuid
+  branch_id                             String?               @db.Uuid
+  created_at                            DateTime              @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime              @default(now()) @db.Timestamptz(6)
+  deleted_at                            DateTime?             @db.Timestamptz(6)
+  created_by                            String?               @db.Uuid
+  updated_by                            String?               @db.Uuid
+  deleted_by                            String?               @db.Uuid
+  version                               Int                   @default(1)
+  row_version                           BigInt                @default(0)
+  is_active                             Boolean               @default(true)
+  is_deleted                            Boolean?              @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                          String?
+  metadata                              Json                  @default("{}")
+  name                                  String
+  sales_funnel_stages                   sales_funnel_stages[]
+
+  @@schema("crm")
+}
+
+model whatsapp_logs {
+  id                                    String     @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                              BigInt     @default(autoincrement())
+  tenant_id                             String     @db.Uuid
+  company_id                            String?    @db.Uuid
+  branch_id                             String?    @db.Uuid
+  created_at                            DateTime   @default(now()) @db.Timestamptz(6)
+  updated_at                            DateTime   @default(now()) @db.Timestamptz(6)
+  deleted_at                            DateTime?  @db.Timestamptz(6)
+  created_by                            String?    @db.Uuid
+  updated_by                            String?    @db.Uuid
+  deleted_by                            String?    @db.Uuid
+  version                               Int        @default(1)
+  row_version                           BigInt     @default(0)
+  is_active                             Boolean    @default(true)
+  is_deleted                            Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                          String?
+  metadata                              Json       @default("{}")
+  lead_id                               String?    @db.Uuid
+  customer_id                           String?    @db.Uuid
+  message_body                          String?
+  direction                             String
+  leads                                 leads?     @relation(fields: [lead_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([id, created_at])
+  @@unique([local_id, created_at])
+  @@schema("crm")
+}
