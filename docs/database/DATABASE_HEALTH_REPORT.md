@@ -196,6 +196,24 @@ complejidad en [FUNCTIONAL_GAPS.md](./FUNCTIONAL_GAPS.md). Ningún proceso
 de negocio simulado requiere rediseño estructural. Detalle:
 [BUSINESS_VALIDATION.md](./BUSINESS_VALIDATION.md).
 
+**Parte 7 (rendimiento y escalabilidad):** confirmado que la estrategia de
+índices ya es Enterprise-grade (BTree 3.884, BRIN 55 ya usado en tablas
+particionadas por tiempo, GIN 9 para búsqueda trigram/JSONB, 828 índices
+parciales, 11 covering) — 0 índices nuevos necesarios. `EXPLAIN` real
+(sin datos, `ANALYZE` no es posible en `dev` vacío) confirmó cobertura de
+índice para los 10 patrones de consulta crítica pedidos, y encontró una
+guía de uso real: las consultas de Kardex/movimientos necesitan rango de
+`created_at` para poda de particiones (~11x más barato). Configuración de
+Postgres revisada: `random_page_cost=4` (debería ser 1.1 para SSD) y
+`pg_stat_statements` deshabilitado son los 2 hallazgos reales, ninguno
+aplicado (requieren reinicio de contenedor). 4 Materialized Views
+candidatas identificadas (Rotación/Top Productos/Compras/Utilidad). No se
+ejecutó una prueba de carga real de miles de usuarios contra el entorno
+compartido — decisión explícita de no arriesgar el servicio en vivo. 93%
+de rendimiento (diseño Enterprise-Ready, validación bajo carga real
+pendiente de un entorno dedicado). Detalle:
+[PERFORMANCE_REPORT.md](./PERFORMANCE_REPORT.md).
+
 ## 9. Trazabilidad
 
 | Punto pedido en la fase                                                                 | Cerrado en                                                                                                                                                                                |
