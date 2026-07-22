@@ -1,12 +1,16 @@
-import type { ConfigService } from '@nestjs/config';
+import type { CacheService } from '@gorazus/core-cache';
 import type { tenants, users } from '@gorazus/core-database';
 import { TenantRepository } from '../repositories/tenant.repository';
 import { UserRepository } from '../repositories/user.repository';
-import { SessionRepository } from '../repositories/session.repository';
 import {
   LoginAttemptRecord,
   LoginAttemptRepository,
 } from '../repositories/login-attempt.repository';
+import {
+  TwoFactorCredential,
+  TwoFactorCredentialRepository,
+} from '../repositories/two-factor-credential.repository';
+import { IssueLoginSessionService, LoginResult } from './issue-login-session.service';
 import {
   CredencialesInvalidasException,
   CuentaBloqueadaException,
@@ -38,18 +42,32 @@ const USER: Pick<
   branch_id: null,
 };
 
+const FAKE_LOGIN_RESULT: LoginResult = {
+  accessToken: 'fake-access-token',
+  refreshToken: 'fake-refresh-token',
+  refreshTokenExpiresAt: new Date('2026-01-01'),
+  user: { id: USER.id, name: USER.full_name, email: USER.email },
+  activeCompanyId: null,
+  activeBranchId: null,
+};
+
 describe('LoginUseCase', () => {
   let tenantRepository: TenantRepository;
   let userRepository: UserRepository;
-  let sessionRepository: SessionRepository;
   let loginAttemptRepository: LoginAttemptRepository;
-  let configService: ConfigService;
+  let twoFactorCredentialRepository: TwoFactorCredentialRepository;
+  let issueLoginSessionService: IssueLoginSessionService;
+  let cacheService: CacheService;
   let recordedAttempts: LoginAttemptRecord[];
   let recentFailures: number;
+  let twoFactorCredential: TwoFactorCredential | null;
+  let cacheSetCalls: Array<{ key: string; value: unknown; ttlSeconds: number }>;
 
   beforeEach(() => {
     recordedAttempts = [];
     recentFailures = 0;
+    twoFactorCredential = null;
+    cacheSetCalls = [];
 
     tenantRepository = {
       findBySlug: jest.fn(async (slug: string) => (slug === 'demo' ? (TENANT as tenants) : null)),
@@ -61,10 +79,6 @@ describe('LoginUseCase', () => {
       ),
     } as unknown as UserRepository;
 
-    sessionRepository = {
-      create: jest.fn(async () => ({}) as never),
-    } as unknown as SessionRepository;
-
     loginAttemptRepository = {
       countRecentFailures: jest.fn(async () => recentFailures),
       record: jest.fn(async (attempt: LoginAttemptRecord) => {
@@ -72,28 +86,42 @@ describe('LoginUseCase', () => {
       }),
     } as unknown as LoginAttemptRepository;
 
-    configService = {
-      getOrThrow: jest.fn(() => 'test-secret'),
-    } as unknown as ConfigService;
+    twoFactorCredentialRepository = {
+      findConfirmedByUserId: jest.fn(async () => twoFactorCredential),
+    } as unknown as TwoFactorCredentialRepository;
+
+    issueLoginSessionService = {
+      issue: jest.fn(async () => FAKE_LOGIN_RESULT),
+    } as unknown as IssueLoginSessionService;
+
+    cacheService = {
+      set: jest.fn(async (key: string, value: unknown, ttlSeconds: number) => {
+        cacheSetCalls.push({ key, value, ttlSeconds });
+      }),
+    } as unknown as CacheService;
   });
 
   function buildUseCase(): LoginUseCase {
     return new LoginUseCase(
       tenantRepository,
       userRepository,
-      sessionRepository,
       loginAttemptRepository,
-      configService,
+      twoFactorCredentialRepository,
+      issueLoginSessionService,
+      cacheService,
     );
   }
 
-  it('login con credenciales correctas registra el intento como exitoso y devuelve los tokens', async () => {
+  it('login con credenciales correctas y sin 2FA emite tokens directamente', async () => {
     const useCase = buildUseCase();
 
-    const result = await useCase.execute('demo', USER.email, 'Test1234!', '203.0.113.5');
+    const outcome = await useCase.execute('demo', USER.email, 'Test1234!', '203.0.113.5');
 
-    expect(result.accessToken).toEqual(expect.any(String));
-    expect(result.refreshToken).toEqual(expect.any(String));
+    expect(outcome.requiresTwoFactor).toBe(false);
+    if (!outcome.requiresTwoFactor) {
+      expect(outcome.result).toBe(FAKE_LOGIN_RESULT);
+    }
+    expect(issueLoginSessionService.issue).toHaveBeenCalledWith(USER);
     expect(recordedAttempts).toEqual([
       expect.objectContaining({
         tenantId: 'tenant-1',
@@ -102,6 +130,27 @@ describe('LoginUseCase', () => {
         succeeded: true,
       }),
     ]);
+  });
+
+  it('login con credenciales correctas y 2FA confirmado NO emite tokens — devuelve un challengeToken', async () => {
+    twoFactorCredential = { encryptedSecret: 'irrelevante-para-este-test' };
+    const useCase = buildUseCase();
+
+    const outcome = await useCase.execute('demo', USER.email, 'Test1234!');
+
+    expect(outcome.requiresTwoFactor).toBe(true);
+    if (outcome.requiresTwoFactor) {
+      expect(outcome.challengeToken).toEqual(expect.any(String));
+    }
+    expect(issueLoginSessionService.issue).not.toHaveBeenCalled();
+    // El intento se registra como exitoso igual — la contraseña sí era correcta.
+    expect(recordedAttempts).toEqual([expect.objectContaining({ succeeded: true })]);
+    expect(cacheSetCalls).toHaveLength(1);
+    expect(cacheSetCalls[0]?.value).toEqual({
+      userId: USER.id,
+      tenantId: 'tenant-1',
+      email: USER.email,
+    });
   });
 
   it('login con contraseña incorrecta registra el intento como fallido y lanza CredencialesInvalidasException', async () => {

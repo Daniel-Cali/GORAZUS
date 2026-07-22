@@ -17,6 +17,20 @@ export class LoginResponseEnvelopeDto {
   @ApiProperty({ type: LoginResponseDto }) data!: LoginResponseDto;
 }
 
+export class TwoFactorRequiredResponseDto {
+  @ApiProperty({ description: 'Siempre `true` en esta forma de la respuesta.' })
+  requiresTwoFactor!: true;
+  @ApiProperty({
+    description:
+      'Token opaco de un solo uso, vida ~5 min — se envía a POST /auth/login/2fa junto al código TOTP.',
+  })
+  challengeToken!: string;
+}
+
+export class TwoFactorRequiredEnvelopeDto {
+  @ApiProperty({ type: TwoFactorRequiredResponseDto }) data!: TwoFactorRequiredResponseDto;
+}
+
 export class RefreshResponseDto {
   @ApiProperty() accessToken!: string;
 }

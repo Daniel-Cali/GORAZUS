@@ -6,17 +6,26 @@ import { CurrentUser, Public, ZodValidationPipe } from '@gorazus/core-http';
 import type { UserContext } from '@gorazus/contracts';
 import { loginSchema, type LoginInput } from '../validators/login.schema';
 import {
+  twoFactorLoginSchema,
+  type TwoFactorLoginInput,
+} from '../validators/two-factor-login.schema';
+import {
   forgotPasswordSchema,
   resetPasswordSchema,
   type ForgotPasswordInput,
   type ResetPasswordInput,
 } from '../validators/password-reset.schema';
 import { LoginUseCase } from '../services/login.usecase';
+import { CompleteTwoFactorLoginUseCase } from '../services/complete-two-factor-login.usecase';
 import { RefreshTokenUseCase } from '../services/refresh-token.usecase';
 import { LogoutUseCase } from '../services/logout.usecase';
 import { ForgotPasswordUseCase } from '../services/forgot-password.usecase';
 import { ResetPasswordUseCase } from '../services/reset-password.usecase';
-import { LoginResponseEnvelopeDto, RefreshResponseEnvelopeDto } from '../dto/login-response.dto';
+import {
+  LoginResponseEnvelopeDto,
+  RefreshResponseEnvelopeDto,
+  TwoFactorRequiredEnvelopeDto,
+} from '../dto/login-response.dto';
 
 const REFRESH_COOKIE = 'refreshToken';
 
@@ -26,6 +35,7 @@ const REFRESH_COOKIE = 'refreshToken';
 export class AuthController {
   constructor(
     private readonly loginUseCase: LoginUseCase,
+    private readonly completeTwoFactorLoginUseCase: CompleteTwoFactorLoginUseCase,
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
     private readonly logoutUseCase: LogoutUseCase,
     private readonly forgotPasswordUseCase: ForgotPasswordUseCase,
@@ -38,6 +48,12 @@ export class AuthController {
       'Resuelve el tenant por slug, valida credenciales y emite un access token + cookie httpOnly de refresh.',
   })
   @ApiResponse({ status: 200, type: LoginResponseEnvelopeDto })
+  @ApiResponse({
+    status: 200,
+    type: TwoFactorRequiredEnvelopeDto,
+    description:
+      'Contraseña correcta, pero el usuario tiene 2FA confirmado — todavía sin tokens, completar con POST /auth/login/2fa.',
+  })
   @ApiResponse({
     status: 401,
     description: 'Credenciales inválidas (tenant, email o password incorrectos).',
@@ -58,12 +74,50 @@ export class AuthController {
     @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const result = await this.loginUseCase.execute(
+    const outcome = await this.loginUseCase.execute(
       body.tenantSlug,
       body.email,
       body.password,
       request.ip ?? null,
     );
+    if (outcome.requiresTwoFactor) {
+      return { data: { requiresTwoFactor: true, challengeToken: outcome.challengeToken } };
+    }
+    const { result } = outcome;
+    setRefreshCookie(response, result.refreshToken, result.refreshTokenExpiresAt);
+    return {
+      data: {
+        accessToken: result.accessToken,
+        user: result.user,
+        activeCompanyId: result.activeCompanyId,
+        activeBranchId: result.activeBranchId,
+      },
+    };
+  }
+
+  @ApiOperation({
+    summary: 'Login — segundo paso (2FA)',
+    description:
+      'Completa un login que POST /auth/login dejó pendiente de 2FA — verifica el código TOTP y recién ahí emite tokens.',
+  })
+  @ApiResponse({ status: 200, type: LoginResponseEnvelopeDto })
+  @ApiResponse({
+    status: 400,
+    description: 'Código TOTP incorrecto (el challengeToken sigue vivo, se puede reintentar).',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'challengeToken inexistente/expirado (~5 min) — hay que volver a /auth/login.',
+  })
+  @Public()
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Post('login/2fa')
+  @HttpCode(HttpStatus.OK)
+  async completeTwoFactorLogin(
+    @Body(new ZodValidationPipe(twoFactorLoginSchema)) body: TwoFactorLoginInput,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const result = await this.completeTwoFactorLoginUseCase.execute(body.challengeToken, body.code);
     setRefreshCookie(response, result.refreshToken, result.refreshTokenExpiresAt);
     return {
       data: {

@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { DatabaseModule } from '@gorazus/core-database';
 import { AuthController } from './controllers/auth.controller';
 import { LoginUseCase } from './services/login.usecase';
+import { CompleteTwoFactorLoginUseCase } from './services/complete-two-factor-login.usecase';
+import { IssueLoginSessionService } from './services/issue-login-session.service';
 import { RefreshTokenUseCase } from './services/refresh-token.usecase';
 import { LogoutUseCase } from './services/logout.usecase';
 import { ForgotPasswordUseCase } from './services/forgot-password.usecase';
@@ -18,6 +20,8 @@ import { TokenRepository } from './repositories/token.repository';
 import { TokenRepositoryPrisma } from './repositories/token.repository.prisma';
 import { LoginAttemptRepository } from './repositories/login-attempt.repository';
 import { LoginAttemptRepositoryPrisma } from './repositories/login-attempt.repository.prisma';
+import { TwoFactorCredentialRepository } from './repositories/two-factor-credential.repository';
+import { TwoFactorCredentialRepositoryPrisma } from './repositories/two-factor-credential.repository.prisma';
 
 /**
  * Wiring de Nest (docs/architecture/02 §5) — `auth` no exporta ningún
@@ -31,6 +35,8 @@ import { LoginAttemptRepositoryPrisma } from './repositories/login-attempt.repos
   controllers: [AuthController],
   providers: [
     LoginUseCase,
+    CompleteTwoFactorLoginUseCase,
+    IssueLoginSessionService,
     RefreshTokenUseCase,
     LogoutUseCase,
     ForgotPasswordUseCase,
@@ -40,6 +46,7 @@ import { LoginAttemptRepositoryPrisma } from './repositories/login-attempt.repos
     { provide: SessionRepository, useClass: SessionRepositoryPrisma },
     { provide: TokenRepository, useClass: TokenRepositoryPrisma },
     { provide: LoginAttemptRepository, useClass: LoginAttemptRepositoryPrisma },
+    { provide: TwoFactorCredentialRepository, useClass: TwoFactorCredentialRepositoryPrisma },
     { provide: PasswordResetNotifier, useClass: LoggingPasswordResetNotifier },
   ],
 })
