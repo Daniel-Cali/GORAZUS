@@ -23,6 +23,81 @@
         }
       }
     },
+    "/api/v1/files": {
+      "post": {
+        "operationId": "StorageController_upload",
+        "summary": "Subir un archivo",
+        "description": "Multipart, campo \"file\". Devuelve la key para pedir descarga o borrar después.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Archivo subido — devuelve key/contentType/size."
+          },
+          "400": {
+            "description": "Falta el archivo o excede el tamaño máximo."
+          }
+        },
+        "tags": ["archivos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/files/{key}": {
+      "get": {
+        "operationId": "StorageController_getDownloadUrl",
+        "summary": "Obtener una URL firmada de descarga",
+        "description": "No redirige ni transmite el archivo — devuelve una URL firmada de corta duración (5 min) que el cliente usa directamente contra MinIO, sin exponerle credenciales.",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "URL firmada."
+          }
+        },
+        "tags": ["archivos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "StorageController_remove",
+        "summary": "Borrar un archivo",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Borrado (idempotente — no falla si ya no existía)."
+          }
+        },
+        "tags": ["archivos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "operationId": "AuthController_login",
@@ -42,6 +117,36 @@
           },
           "401": {
             "description": "Credenciales inválidas (tenant, email o password incorrectos)."
+          },
+          "429": {
+            "description": "Cuenta bloqueada temporalmente (5+ intentos fallidos en 15 minutos) o límite de requests excedido."
+          }
+        },
+        "tags": ["auth"]
+      }
+    },
+    "/api/v1/auth/login/2fa": {
+      "post": {
+        "operationId": "AuthController_completeTwoFactorLogin",
+        "summary": "Login — segundo paso (2FA)",
+        "description": "Completa un login que POST /auth/login dejó pendiente de 2FA — verifica el código TOTP y recién ahí emite tokens.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseEnvelopeDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Código TOTP incorrecto (el challengeToken sigue vivo, se puede reintentar)."
+          },
+          "401": {
+            "description": "challengeToken inexistente/expirado (~5 min) — hay que volver a /auth/login."
           }
         },
         "tags": ["auth"]
@@ -66,6 +171,9 @@
           },
           "401": {
             "description": "Sin cookie de refresh o sesión inválida/expirada."
+          },
+          "403": {
+            "description": "El header Origin no coincide con CORS_ORIGIN (protección CSRF)."
           }
         },
         "tags": ["auth"]

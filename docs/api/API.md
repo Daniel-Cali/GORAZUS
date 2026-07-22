@@ -8,17 +8,18 @@ al spec.
 Prefijo de todas las rutas: `/api/v1`. Formato de error: ver
 `docs/architecture/07-convenciones-y-estandares.md` (`{ error: { code, message, details } }`).
 Autenticación: Bearer JWT (`Authorization: Bearer <accessToken>`) salvo los endpoints marcados
-`@Public()` (`login`, `refresh`, `forgot-password`, `reset-password`).
+`@Public()` (`login`, `login/2fa`, `refresh`, `forgot-password`, `reset-password`).
 
 ## `auth` — autenticación
 
-| Método | Ruta                    | Descripción                                                                                                                                                         |
-| ------ | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| POST   | `/auth/login`           | Resuelve tenant por `tenantSlug`, valida credenciales, emite JWT + cookie httpOnly de refresh.                                                                      |
-| POST   | `/auth/refresh`         | Rota el refresh token (cookie), emite un nuevo access token.                                                                                                        |
-| POST   | `/auth/logout`          | Revoca la sesión actual.                                                                                                                                            |
-| POST   | `/auth/forgot-password` | Genera un token de restablecimiento — siempre responde 200 (anti-enumeración). El token se entrega vía log (`LoggingPasswordResetNotifier`, canal email pendiente). |
-| POST   | `/auth/reset-password`  | Consume el token, fija la nueva contraseña, revoca todas las sesiones del usuario.                                                                                  |
+| Método | Ruta                    | Descripción                                                                                                                                                                                                                                                                   |
+| ------ | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| POST   | `/auth/login`           | Resuelve tenant por `tenantSlug`, valida credenciales. Si el usuario tiene 2FA confirmado devuelve `{ requiresTwoFactor: true, challengeToken }` sin tokens; si no, emite JWT + cookie httpOnly de refresh directo. 5 req/60s propio; bloquea la cuenta 15 min tras 5 fallos. |
+| POST   | `/auth/login/2fa`       | Segundo paso — `{ challengeToken, code }` (TOTP). Completa lo que `login` dejó pendiente, emite JWT + cookie de refresh.                                                                                                                                                      |
+| POST   | `/auth/refresh`         | Rota el refresh token (cookie, `SameSite=Strict` + chequeo de `Origin`), emite un nuevo access token.                                                                                                                                                                         |
+| POST   | `/auth/logout`          | Revoca la sesión actual — el access token deja de ser válido de inmediato (antes seguía vivo hasta expirar solo, ~15 min).                                                                                                                                                    |
+| POST   | `/auth/forgot-password` | Genera un token de restablecimiento — siempre responde 200 (anti-enumeración). El link se entrega por email real (`EmailPasswordResetNotifier`, SMTP/MailHog en dev).                                                                                                         |
+| POST   | `/auth/reset-password`  | Consume el token, fija la nueva contraseña, revoca todas las sesiones del usuario.                                                                                                                                                                                            |
 
 ## `configuracion` — Core (catálogos maestros)
 
@@ -64,8 +65,20 @@ de catálogo de países/jurisdicciones todavía).
 | POST     | `/seguridad/2fa/confirmar`            | Confirmar con un código TOTP real, activa 2FA.                                 | Self-service                      |
 | DELETE   | `/seguridad/2fa`                      | Deshabilitar 2FA.                                                              | Self-service                      |
 
-2FA es "preparado": el mecanismo (setup/confirmar/deshabilitar) es real y funcional, pero todavía
-no es un paso obligatorio de `POST /auth/login` — ver `CHANGELOG.md`.
+2FA ya es un paso obligatorio del login para quien lo tenga confirmado — ver `/auth/login` y
+`/auth/login/2fa` arriba, y `CHANGELOG.md`.
+
+## `files` — almacenamiento genérico (MinIO)
+
+| Método | Ruta           | Descripción                                                                                             |
+| ------ | -------------- | ------------------------------------------------------------------------------------------------------- |
+| POST   | `/files`       | Subir un archivo (`multipart/form-data`, campo `file`, máx. 25MB). Devuelve `key`/`contentType`/`size`. |
+| GET    | `/files/{key}` | URL firmada de descarga (~5 min) — nunca credenciales de MinIO directas al cliente.                     |
+| DELETE | `/files/{key}` | Borrar (idempotente).                                                                                   |
+
+Bucket por tenant (`archivos-<tenantId>`), no uno global. Sin tabla de metadata propia todavía — el
+`key` devuelto se guarda en la columna `metadata JSONB` del registro de negocio que lo necesite,
+cuando exista ese módulo.
 
 ## `health` — probes de infraestructura (sin auth, `@Public()`)
 
