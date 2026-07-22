@@ -17,17 +17,17 @@ import { AuthModule } from '../auth.module';
 import { PasswordResetNotifier } from '../services/password-reset-notifier.port';
 
 /**
- * `PasswordResetNotifier` real solo loguea el token (no existe canal email
- * todavía, ver `password-reset-notifier.port.ts`) — el test lo reemplaza
- * por un fake que captura el token en memoria para poder ejercer el flujo
- * completo (forgot → reset) sin necesitar un canal de entrega real.
+ * El test reemplaza `PasswordResetNotifier` (real: `EmailPasswordResetNotifier`,
+ * vía SMTP/MailHog) por un fake que captura el token en memoria, para
+ * ejercer el flujo completo (forgot → reset) sin depender de que MailHog
+ * esté arriba ni de parsear el correo real.
  *
  * Usa un usuario descartable propio (no el `admin@demo.local` compartido
  * por el resto de la suite e2e) para no mutar su contraseña.
  */
 class FakePasswordResetNotifier extends PasswordResetNotifier {
   lastToken: string | null = null;
-  async enviarTokenReset(_email: string, token: string): Promise<void> {
+  async enviarTokenReset(_tenantSlug: string, _email: string, token: string): Promise<void> {
     this.lastToken = token;
   }
 }

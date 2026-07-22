@@ -9,7 +9,7 @@ import { LogoutUseCase } from './services/logout.usecase';
 import { ForgotPasswordUseCase } from './services/forgot-password.usecase';
 import { ResetPasswordUseCase } from './services/reset-password.usecase';
 import { PasswordResetNotifier } from './services/password-reset-notifier.port';
-import { LoggingPasswordResetNotifier } from './services/logging-password-reset-notifier';
+import { EmailPasswordResetNotifier } from './services/email-password-reset-notifier';
 import { TenantRepository } from './repositories/tenant.repository';
 import { TenantRepositoryPrisma } from './repositories/tenant.repository.prisma';
 import { UserRepository } from './repositories/user.repository';
@@ -47,7 +47,7 @@ import { TwoFactorCredentialRepositoryPrisma } from './repositories/two-factor-c
     { provide: TokenRepository, useClass: TokenRepositoryPrisma },
     { provide: LoginAttemptRepository, useClass: LoginAttemptRepositoryPrisma },
     { provide: TwoFactorCredentialRepository, useClass: TwoFactorCredentialRepositoryPrisma },
-    { provide: PasswordResetNotifier, useClass: LoggingPasswordResetNotifier },
+    { provide: PasswordResetNotifier, useClass: EmailPasswordResetNotifier },
   ],
 })
 export class AuthModule {}

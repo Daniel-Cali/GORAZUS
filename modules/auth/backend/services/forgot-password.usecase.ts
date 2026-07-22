@@ -54,6 +54,6 @@ export class ForgotPasswordUseCase {
       expires_at: expiresAt,
     });
 
-    await this.notifier.enviarTokenReset(usuario.email, token, expiresAt);
+    await this.notifier.enviarTokenReset(tenantSlug, usuario.email, token, expiresAt);
   }
 }

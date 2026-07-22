@@ -9,8 +9,14 @@ export class LoggingPasswordResetNotifier extends PasswordResetNotifier {
     super();
   }
 
-  async enviarTokenReset(email: string, token: string, expiresAt: Date): Promise<void> {
-    this.logger.log('Token de restablecimiento de contraseña generado (canal email pendiente)', {
+  async enviarTokenReset(
+    tenantSlug: string,
+    email: string,
+    token: string,
+    expiresAt: Date,
+  ): Promise<void> {
+    this.logger.log('Token de restablecimiento de contraseña generado (sin enviar por email)', {
+      tenantSlug,
       email,
       token,
       expiresAt: expiresAt.toISOString(),

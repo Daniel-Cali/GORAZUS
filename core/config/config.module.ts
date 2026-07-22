@@ -5,6 +5,7 @@ import databaseConfig from './namespaces/database.config';
 import redisConfig from './namespaces/redis.config';
 import rabbitmqConfig from './namespaces/rabbitmq.config';
 import storageConfig from './namespaces/storage.config';
+import mailConfig from './namespaces/mail.config';
 import authConfig from './namespaces/auth.config';
 import notificationsConfig from './namespaces/notifications.config';
 import ollamaConfig from './namespaces/ollama.config';
@@ -29,6 +30,7 @@ import seguridadConfig from './namespaces/seguridad.config';
         redisConfig,
         rabbitmqConfig,
         storageConfig,
+        mailConfig,
         authConfig,
         notificationsConfig,
         ollamaConfig,
