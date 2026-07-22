@@ -1,9 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "rootDir": "../..",
     "outDir": "../../dist/core/storage",
     "declarationDir": "../../dist/core/storage/types",
-    "types": ["node"]
+    "types": ["node", "multer"]
   },
   "include": ["**/*.ts"],
   "exclude": ["**/*.spec.ts"]

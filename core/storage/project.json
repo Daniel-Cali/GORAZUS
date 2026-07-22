@@ -6,12 +6,10 @@
   "tags": ["type:core"],
   "targets": {
     "build": {
-      "executor": "@nx/js:tsc",
-      "outputs": ["{options.outputPath}"],
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/core/storage"],
       "options": {
-        "outputPath": "dist/core/storage",
-        "main": "core/storage/index.ts",
-        "tsConfig": "core/storage/tsconfig.json"
+        "command": "tsc -p core/storage/tsconfig.json"
       }
     },
     "lint": {
