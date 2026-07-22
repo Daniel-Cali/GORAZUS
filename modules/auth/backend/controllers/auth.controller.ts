@@ -1,4 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { CurrentUser, Public, ZodValidationPipe } from '@gorazus/core-http';
@@ -41,14 +42,28 @@ export class AuthController {
     status: 401,
     description: 'Credenciales inválidas (tenant, email o password incorrectos).',
   })
+  @ApiResponse({
+    status: 429,
+    description:
+      'Cuenta bloqueada temporalmente (5+ intentos fallidos en 15 minutos) o límite de requests excedido.',
+  })
   @Public()
+  // Más estricto que el límite global (100/60s, core/http/http.module.ts) —
+  // login es el endpoint más sensible a fuerza bruta de todo el API.
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(
     @Body(new ZodValidationPipe(loginSchema)) body: LoginInput,
+    @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const result = await this.loginUseCase.execute(body.tenantSlug, body.email, body.password);
+    const result = await this.loginUseCase.execute(
+      body.tenantSlug,
+      body.email,
+      body.password,
+      request.ip ?? null,
+    );
     setRefreshCookie(response, result.refreshToken, result.refreshTokenExpiresAt);
     return {
       data: {

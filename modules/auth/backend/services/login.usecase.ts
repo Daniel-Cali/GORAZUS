@@ -13,14 +13,33 @@ import { DomainException } from '@gorazus/core-http';
 import { TenantRepository } from '../repositories/tenant.repository';
 import { UserRepository } from '../repositories/user.repository';
 import { SessionRepository } from '../repositories/session.repository';
+import { LoginAttemptRepository } from '../repositories/login-attempt.repository';
 import { Usuario } from '../entities/usuario.entity';
 
 const ACCESS_TOKEN_TTL = '15m';
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 días — docs/architecture/09 §1
 
+// Ventana + umbral de bloqueo por intentos fallidos (security.login_attempts,
+// docs/database/sql/02_security.sql — tabla ya existía, sin nada que la
+// escribiera hasta esta sesión). Auto-expira: no hay "desbloqueo" explícito,
+// simplemente deja de haber >=5 fallos en la ventana de 15 minutos.
+// Trade-off conocido y aceptado: como el bloqueo cuenta por (tenant, email)
+// sin importar si el usuario existe, un atacante puede forzar el bloqueo de
+// la cuenta de una víctima real fallando 5 veces a propósito (self-DoS) —
+// mitigarlo del todo requeriría CAPTCHA o límite también por IP, fuera de
+// alcance de esta fase.
+const LOGIN_LOCKOUT_THRESHOLD = 5;
+const LOGIN_LOCKOUT_WINDOW_MS = 15 * 60 * 1000;
+
 export class CredencialesInvalidasException extends DomainException {
   constructor() {
     super('CREDENCIALES_INVALIDAS', 'El usuario o la contraseña son incorrectos.', 401);
+  }
+}
+
+export class CuentaBloqueadaException extends DomainException {
+  constructor() {
+    super('CUENTA_BLOQUEADA', 'Demasiados intentos fallidos. Probá de nuevo en unos minutos.', 429);
   }
 }
 
@@ -45,17 +64,34 @@ export class LoginUseCase {
     private readonly tenantRepository: TenantRepository,
     private readonly userRepository: UserRepository,
     private readonly sessionRepository: SessionRepository,
+    private readonly loginAttemptRepository: LoginAttemptRepository,
     private readonly configService: ConfigService,
   ) {}
 
-  async execute(tenantSlug: string, email: string, password: string): Promise<LoginResult> {
+  async execute(
+    tenantSlug: string,
+    email: string,
+    password: string,
+    ipAddress: string | null = null,
+  ): Promise<LoginResult> {
     const tenant = await this.tenantRepository.findBySlug(tenantSlug);
     if (!tenant) {
       throw new CredencialesInvalidasException();
     }
 
+    const since = new Date(Date.now() - LOGIN_LOCKOUT_WINDOW_MS);
+    const recentFailures = await this.loginAttemptRepository.countRecentFailures(
+      tenant.id,
+      email,
+      since,
+    );
+    if (recentFailures >= LOGIN_LOCKOUT_THRESHOLD) {
+      throw new CuentaBloqueadaException();
+    }
+
     const record = await this.userRepository.findByEmail(tenant.id, email);
     if (!record) {
+      await this.registrarIntento(tenant.id, email, null, ipAddress, false);
       throw new CredencialesInvalidasException();
     }
 
@@ -68,13 +104,17 @@ export class LoginUseCase {
       record.is_active,
     );
     if (!usuario.puedeAutenticarse()) {
+      await this.registrarIntento(tenant.id, email, record.id, ipAddress, false);
       throw new CredencialesInvalidasException();
     }
 
     const passwordValida = await verifyPassword(password, usuario.passwordHash!);
     if (!passwordValida) {
+      await this.registrarIntento(tenant.id, email, record.id, ipAddress, false);
       throw new CredencialesInvalidasException();
     }
+
+    await this.registrarIntento(tenant.id, email, usuario.id, ipAddress, true);
 
     const sessionId = generateUuid();
     const refreshToken = randomBytes(32).toString('hex');
@@ -122,5 +162,21 @@ export class LoginUseCase {
       activeCompanyId: record.company_id,
       activeBranchId: record.branch_id,
     };
+  }
+
+  private async registrarIntento(
+    tenantId: string,
+    email: string,
+    userId: string | null,
+    ipAddress: string | null,
+    succeeded: boolean,
+  ): Promise<void> {
+    await this.loginAttemptRepository.record({
+      tenantId,
+      emailAttempted: email,
+      userId,
+      ipAddress,
+      succeeded,
+    });
   }
 }

@@ -16,6 +16,8 @@ import { SessionRepository } from './repositories/session.repository';
 import { SessionRepositoryPrisma } from './repositories/session.repository.prisma';
 import { TokenRepository } from './repositories/token.repository';
 import { TokenRepositoryPrisma } from './repositories/token.repository.prisma';
+import { LoginAttemptRepository } from './repositories/login-attempt.repository';
+import { LoginAttemptRepositoryPrisma } from './repositories/login-attempt.repository.prisma';
 
 /**
  * Wiring de Nest (docs/architecture/02 §5) — `auth` no exporta ningún
@@ -37,6 +39,7 @@ import { TokenRepositoryPrisma } from './repositories/token.repository.prisma';
     { provide: UserRepository, useClass: UserRepositoryPrisma },
     { provide: SessionRepository, useClass: SessionRepositoryPrisma },
     { provide: TokenRepository, useClass: TokenRepositoryPrisma },
+    { provide: LoginAttemptRepository, useClass: LoginAttemptRepositoryPrisma },
     { provide: PasswordResetNotifier, useClass: LoggingPasswordResetNotifier },
   ],
 })

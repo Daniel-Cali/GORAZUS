@@ -69,6 +69,22 @@ export async function bootstrap(rootModule: unknown): Promise<INestApplication> 
   // class-validator, ver core/http/pipes/zod-validation.pipe.ts), y un
   // ZodValidationPipe necesita el schema de cada endpoint como
   // argumento — se aplica por controller/parámetro, no globalmente.
+  // `nginx` (infra/nginx/nginx.conf) ya manda X-Forwarded-For/X-Real-IP —
+  // sin esto, Express ignora esos headers y `req.ip` siempre resuelve a la
+  // IP interna de nginx, no la del cliente real. Afecta directamente el
+  // rate limiting (ThrottlerGuard, core/http/http.module.ts) y el registro
+  // de intentos de login (security.login_attempts) — ambos confían en
+  // `req.ip`. `1` = confiar en un solo proxy inmediato (el propio nginx del
+  // compose/K8s), no toda la cadena.
+  // `getHttpAdapter().getInstance()` en vez de `app.set(...)` directo:
+  // `INestApplication` (el tipo genérico, agnóstico de plataforma) no
+  // expone `.set()` — solo `NestExpressApplication` lo hace, y tipar
+  // `bootstrap()` para eso acoplaría esta función a Express en su firma
+  // pública. La instancia real sigue siendo la app de Express de siempre.
+  (app.getHttpAdapter().getInstance() as { set: (key: string, value: unknown) => void }).set(
+    'trust proxy',
+    1,
+  );
   app.use(helmet());
   app.use(compression());
   app.use(cookieParser());
