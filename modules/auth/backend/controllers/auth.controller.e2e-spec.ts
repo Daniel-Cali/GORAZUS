@@ -137,4 +137,12 @@ describe('AuthController (e2e)', () => {
     const response = await request(app.getHttpServer()).post('/api/v1/auth/refresh');
     expect(response.status).toBe(401);
   });
+
+  it('POST /auth/refresh con Origin distinto a CORS_ORIGIN devuelve 403 (protección CSRF)', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/auth/refresh')
+      .set('Origin', 'https://sitio-atacante.example')
+      .set('Cookie', 'refreshToken=lo-que-sea');
+    expect(response.status).toBe(403);
+  });
 });

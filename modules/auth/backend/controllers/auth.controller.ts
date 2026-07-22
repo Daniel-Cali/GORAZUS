@@ -1,5 +1,15 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  ForbiddenException,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Req,
+  Res,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
+import { ConfigService } from '@nestjs/config';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { CurrentUser, Public, ZodValidationPipe } from '@gorazus/core-http';
@@ -40,6 +50,7 @@ export class AuthController {
     private readonly logoutUseCase: LogoutUseCase,
     private readonly forgotPasswordUseCase: ForgotPasswordUseCase,
     private readonly resetPasswordUseCase: ResetPasswordUseCase,
+    private readonly configService: ConfigService,
   ) {}
 
   @ApiOperation({
@@ -135,10 +146,28 @@ export class AuthController {
   })
   @ApiResponse({ status: 200, type: RefreshResponseEnvelopeDto })
   @ApiResponse({ status: 401, description: 'Sin cookie de refresh o sesión inválida/expirada.' })
+  @ApiResponse({
+    status: 403,
+    description: 'El header Origin no coincide con CORS_ORIGIN (protección CSRF).',
+  })
   @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   async refresh(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
+    // Único endpoint autenticado solo por cookie (todo el resto usa Bearer
+    // en el header Authorization, que un sitio de terceros no puede setear
+    // en un request cross-site sin permiso CORS explícito — CSRF no aplica
+    // ahí). `sameSite: 'strict'` en la cookie (setRefreshCookie, más abajo)
+    // ya bloquea el envío cross-site en navegadores modernos; este chequeo
+    // de Origin es la segunda capa, no la única, para navegadores/proxies
+    // que no lo respeten. Sin Origin (clientes no-browser: curl, apps
+    // nativas) se deja pasar — no hay navegador de por medio que pueda
+    // sufrir CSRF.
+    const origin = request.headers.origin;
+    if (origin && origin !== this.configService.get<string>('CORS_ORIGIN')) {
+      throw new ForbiddenException('Origin no permitido.');
+    }
+
     const refreshToken = (request.cookies as Record<string, string | undefined> | undefined)?.[
       REFRESH_COOKIE
     ];
@@ -206,7 +235,15 @@ function setRefreshCookie(response: Response, refreshToken: string, expiresAt: D
   response.cookie(REFRESH_COOKIE, refreshToken, {
     httpOnly: true,
     secure: process.env['NODE_ENV'] === 'production',
-    sameSite: 'lax',
+    // 'strict' (antes 'lax') — protección CSRF principal para este único
+    // endpoint autenticado por cookie. El SPA nunca necesita que esta
+    // cookie viaje en una navegación top-level cross-site (siempre la usa
+    // desde dentro de la propia app, vía fetch/XHR same-site), así que
+    // 'strict' no rompe ningún caso de uso legítimo — solo cierra el hueco
+    // que 'lax' deja abierto (algunas implementaciones de navegador
+    // conceden una ventana de gracia a cookies 'lax' recién creadas en
+    // POSTs cross-site). Ver también el chequeo de Origin en refresh().
+    sameSite: 'strict',
     expires: expiresAt,
     path: '/api/v1/auth',
   });
