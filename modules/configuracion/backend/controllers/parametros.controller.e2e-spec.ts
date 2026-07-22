@@ -6,6 +6,7 @@ import { ConfigModule } from '@gorazus/core-config';
 import { LoggingModule } from '@gorazus/core-logging';
 import { initMetrics } from '@gorazus/core-observability';
 import { HttpModule } from '@gorazus/core-http';
+import { CacheModule } from '@gorazus/core-cache';
 import { DatabaseModule } from '@gorazus/core-database';
 import type { AccessTokenPayload } from '@gorazus/contracts';
 // Ruta relativa — ver empresas.controller.e2e-spec.ts para la justificación completa.
@@ -52,6 +53,7 @@ describe('ParametrosController / ConfiguracionController (e2e)', () => {
         ConfigModule,
         LoggingModule,
         HttpModule,
+        CacheModule,
         DatabaseModule,
         SeguridadModule,
         ConfiguracionModule,

@@ -6,6 +6,7 @@ import { ConfigModule } from '@gorazus/core-config';
 import { LoggingModule } from '@gorazus/core-logging';
 import { initMetrics } from '@gorazus/core-observability';
 import { HttpModule } from '@gorazus/core-http';
+import { CacheModule } from '@gorazus/core-cache';
 import { DatabaseModule } from '@gorazus/core-database';
 import { AuthModule } from '../auth.module';
 
@@ -31,7 +32,7 @@ describe('AuthController (e2e)', () => {
     initMetrics();
 
     const moduleRef = await Test.createTestingModule({
-      imports: [ConfigModule, LoggingModule, HttpModule, DatabaseModule, AuthModule],
+      imports: [ConfigModule, LoggingModule, HttpModule, CacheModule, DatabaseModule, AuthModule],
     }).compile();
 
     app = moduleRef.createNestApplication();
@@ -66,13 +67,11 @@ describe('AuthController (e2e)', () => {
   });
 
   it('POST /auth/login con tenant inexistente devuelve el mismo 401 genérico (sin enumeración)', async () => {
-    const response = await request(app.getHttpServer())
-      .post('/api/v1/auth/login')
-      .send({
-        tenantSlug: 'tenant-que-no-existe',
-        email: 'admin@demo.local',
-        password: 'Test1234!',
-      });
+    const response = await request(app.getHttpServer()).post('/api/v1/auth/login').send({
+      tenantSlug: 'tenant-que-no-existe',
+      email: 'admin@demo.local',
+      password: 'Test1234!',
+    });
 
     expect(response.status).toBe(401);
     expect(response.body.error.code).toBe('CREDENCIALES_INVALIDAS');
@@ -91,10 +90,16 @@ describe('AuthController (e2e)', () => {
     expect(response.status).toBe(401);
   });
 
-  it('flujo completo login → refresh: la cookie rotada permite obtener un nuevo access token', async () => {
+  it('flujo completo login → refresh → logout: cookie rotada, y el access token deja de servir tras logout', async () => {
+    // Un solo login para las tres etapas — @Throttle({ limit: 5, ttl: 60_000 })
+    // en /auth/login (auth.controller.ts) comparte contador con el resto de
+    // los tests de este describe (misma app, mismo "IP" de supertest); sumar
+    // otro POST /auth/login acá agotaría el límite antes de llegar al login
+    // exitoso de más abajo.
     const loginResponse = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ tenantSlug: 'demo', email: 'admin@demo.local', password: 'Test1234!' });
+    const accessToken = loginResponse.body.data.accessToken as string;
 
     const cookie = loginResponse.headers['set-cookie']?.[0];
     expect(cookie).toBeDefined();
@@ -113,6 +118,19 @@ describe('AuthController (e2e)', () => {
     const refreshCookie = refreshResponse.headers['set-cookie']?.[0];
     expect(refreshCookie).toBeDefined();
     expect(refreshCookie).not.toBe(cookie);
+
+    const firstLogout = await request(app.getHttpServer())
+      .post('/api/v1/auth/logout')
+      .set('Authorization', `Bearer ${accessToken}`);
+    expect(firstLogout.status).toBe(204);
+
+    // Mismo access token original, ya con la sesión revocada — sin esto
+    // (fase previa a esta sesión) seguía siendo válido hasta expirar solo
+    // (~15 min) sin importar que el usuario ya hubiera hecho logout.
+    const reuseAfterLogout = await request(app.getHttpServer())
+      .post('/api/v1/auth/logout')
+      .set('Authorization', `Bearer ${accessToken}`);
+    expect(reuseAfterLogout.status).toBe(401);
   });
 
   it('POST /auth/refresh sin cookie devuelve 401', async () => {

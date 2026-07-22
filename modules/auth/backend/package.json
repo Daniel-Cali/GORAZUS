@@ -5,6 +5,7 @@
   "description": "GORAZUS ERP — feature auth (login, refresh, logout). Ver docs/architecture/13-modulo-auth.md. Solo se importa por ruta relativa desde apps/api, nunca por nombre de paquete.",
   "dependencies": {
     "@gorazus/contracts": "workspace:*",
+    "@gorazus/core-cache": "workspace:*",
     "@gorazus/core-database": "workspace:*",
     "@gorazus/core-http": "workspace:*",
     "@nestjs/common": "^10.4.0",

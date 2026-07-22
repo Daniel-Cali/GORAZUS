@@ -6,6 +6,7 @@ import { ConfigModule } from '@gorazus/core-config';
 import { LoggingModule } from '@gorazus/core-logging';
 import { initMetrics } from '@gorazus/core-observability';
 import { HttpModule } from '@gorazus/core-http';
+import { CacheModule } from '@gorazus/core-cache';
 import { DatabaseModule } from '@gorazus/core-database';
 import type { AccessTokenPayload } from '@gorazus/contracts';
 // Ruta relativa — necesita la clase PrismaClient real (constructible) del cliente
@@ -62,7 +63,14 @@ describe('RolesController (e2e)', () => {
     adminToken = jwt.sign(payload, process.env['JWT_ACCESS_SECRET']!, { expiresIn: '5m' });
 
     const moduleRef = await Test.createTestingModule({
-      imports: [ConfigModule, LoggingModule, HttpModule, DatabaseModule, SeguridadModule],
+      imports: [
+        ConfigModule,
+        LoggingModule,
+        HttpModule,
+        CacheModule,
+        DatabaseModule,
+        SeguridadModule,
+      ],
     }).compile();
 
     app = moduleRef.createNestApplication();

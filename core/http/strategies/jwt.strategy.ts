@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import type { AccessTokenPayload, UserContext } from '@gorazus/contracts';
+import { CacheService } from '@gorazus/core-cache';
+import { revokedSessionCacheKey } from '../revoked-session-cache-key';
 
 /**
  * Verifica la firma/expiración del access token — ver
@@ -13,16 +15,22 @@ import type { AccessTokenPayload, UserContext } from '@gorazus/contracts';
  * a `UserContext` — la resolución de permisos es responsabilidad de
  * `PermissionsGuard`, un paso completamente separado.
  *
- * No valida "sesión revocada" acá (eso requiere consultar Redis, ver
- * §1 del mismo documento: "el estado del refresh token se verifica
- * contra Redis") — el módulo `auth` (Paso 3, todavía no existe) es
- * quien implementa esa verificación en su propio caso de uso de
- * refresh; el access token de corta vida (~15 min) ya acota el riesgo
- * mientras tanto, por diseño.
+ * Revocación: en vez de una blacklist de JWTs crudos, se marca el
+ * `sessionId` (ya embebido en el payload, ya trackeado en
+ * `core.sessions`) como revocado en Redis al hacer logout
+ * (`LogoutUseCase`, `modules/auth/backend`) — acá solo se consulta esa
+ * marca. Evita depender de `core/http` (type:core) sobre un módulo de
+ * negocio: la escritura vive en `auth`, esta estrategia solo lee la
+ * misma clave vía `revokedSessionCacheKey()` (contrato compartido).
+ * TTL corto en Redis (igual al TTL del access token, 15 min) — pasado
+ * eso el JWT ya expiró solo, la marca sería redundante.
  */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(configService: ConfigService) {
+  constructor(
+    configService: ConfigService,
+    private readonly cacheService: CacheService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -30,7 +38,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: AccessTokenPayload): UserContext {
+  async validate(payload: AccessTokenPayload): Promise<UserContext> {
+    const revoked = await this.cacheService.get<boolean>(revokedSessionCacheKey(payload.sessionId));
+    if (revoked) {
+      throw new UnauthorizedException('La sesión fue cerrada.');
+    }
+
     return {
       userId: payload.sub,
       tenantId: payload.tenantId,

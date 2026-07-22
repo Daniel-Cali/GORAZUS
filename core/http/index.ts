@@ -12,6 +12,7 @@ export * from './guards/jwt-auth.guard';
 export * from './guards/permissions.guard';
 export * from './guards/permissions-resolver.interface';
 export * from './strategies/jwt.strategy';
+export * from './revoked-session-cache-key';
 export * from './decorators/public.decorator';
 export * from './decorators/require-permission.decorator';
 export * from './decorators/current-user.decorator';

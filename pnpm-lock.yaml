@@ -353,6 +353,9 @@ importers:
       '@gorazus/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@gorazus/core-cache':
+        specifier: workspace:*
+        version: link:../cache
       '@gorazus/core-logging':
         specifier: workspace:*
         version: link:../logging
@@ -593,6 +596,9 @@ importers:
       '@gorazus/contracts':
         specifier: workspace:*
         version: link:../../../packages/contracts
+      '@gorazus/core-cache':
+        specifier: workspace:*
+        version: link:../../../core/cache
       '@gorazus/core-database':
         specifier: workspace:*
         version: link:../../../core/database
@@ -737,6 +743,9 @@ importers:
         specifier: ^3.24.0
         version: 3.25.76
     devDependencies:
+      '@gorazus/core-cache':
+        specifier: workspace:*
+        version: link:../../../core/cache
       '@gorazus/core-config':
         specifier: workspace:*
         version: link:../../../core/config
@@ -832,6 +841,9 @@ importers:
         specifier: ^3.24.0
         version: 3.25.76
     devDependencies:
+      '@gorazus/core-cache':
+        specifier: workspace:*
+        version: link:../../../core/cache
       '@gorazus/core-config':
         specifier: workspace:*
         version: link:../../../core/config

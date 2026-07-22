@@ -6,6 +6,7 @@ import { ConfigModule } from '@gorazus/core-config';
 import { LoggingModule } from '@gorazus/core-logging';
 import { initMetrics } from '@gorazus/core-observability';
 import { HttpModule } from '@gorazus/core-http';
+import { CacheModule } from '@gorazus/core-cache';
 import { DatabaseModule } from '@gorazus/core-database';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- ver login.usecase.ts, mismo motivo
 import { hashPassword } from '../../../../packages/tooling/utils';
@@ -65,7 +66,7 @@ describe('POST /auth/forgot-password + /auth/reset-password (e2e)', () => {
     });
 
     const moduleRef = await Test.createTestingModule({
-      imports: [ConfigModule, LoggingModule, HttpModule, DatabaseModule, AuthModule],
+      imports: [ConfigModule, LoggingModule, HttpModule, CacheModule, DatabaseModule, AuthModule],
     })
       .overrideProvider(PasswordResetNotifier)
       .useClass(FakePasswordResetNotifier)
