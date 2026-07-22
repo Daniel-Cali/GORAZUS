@@ -364,9 +364,63 @@ ErrorBoundary > RouterProvider`), y `app-shell/module-registry.ts` con las 25 fe
   `core/realtime` es un paquete de Foundation Platform sin empezar (no rastreado antes). Corregido
   en el mismo pase: `.dockerignore` (raíz del monorepo) — no existía ninguno, causa confirmada de
   por qué el build de las imágenes `api`/`web` transfería 8+ GB de contexto.
+- **FASE 2 Backend Core — 2FA exigido en login, Archivos genérico, email real (2026-07-22).**
+  - **`modules/auth/backend` — 2FA integrado al login** (cerraba el propio comentario de cabecera de
+    `DosFactoresService`: "no integrado a LoginUseCase todavía"). `POST /auth/login` ahora, tras
+    validar la contraseña, chequea si el usuario tiene una credencial TOTP confirmada
+    (`security.two_factor_credentials`) — de ser así, retiene los tokens y devuelve un
+    `challengeToken` opaco de un solo uso (Redis, TTL 5 min) en vez de `accessToken`/cookie. Nuevo
+    `POST /auth/login/2fa` completa el login con el código TOTP real. `auth` no puede importar
+    `modules/seguridad` (`@nx/enforce-module-boundaries`), así que `auth` lee
+    `security.two_factor_credentials` con su propio `TwoFactorCredentialRepository` (mismo patrón de
+    Prisma client compartido entre módulos ya usado por `login_attempts`). Emisión de sesión/JWT
+    extraída de `LoginUseCase` a `IssueLoginSessionService`, compartida por el login directo y el de
+    2FA. Verificado end-to-end contra Postgres/Redis reales.
+  - **`core/storage` — primer consumidor real** (`StorageService` envolvía MinIO desde Fase 01 sin
+    que nada lo llamara). `StorageController` nuevo: `POST /files` (multipart), `GET /files/:key`
+    (URL firmada de corta duración, nunca credenciales de MinIO al cliente), `DELETE /files/:key` —
+    un bucket por tenant (`archivos-<tenantId>`), mismo aislamiento multi-tenant que el resto de la
+    plataforma aplicado acá a nivel de bucket (MinIO no tiene RLS). Sin tabla de metadata nueva: la
+    `key` devuelta se guarda en la columna `metadata JSONB` que ya tiene cada entidad, cuando un
+    módulo de negocio real la necesite.
+  - **`modules/auth/backend` — email real de reset de contraseña** (`SMTP_HOST`/`SMTP_PORT` estaban
+    validados en `env.schema.ts` desde Fase 01 sin ningún consumidor). `EmailPasswordResetNotifier`
+    (nodemailer) reemplaza a `LoggingPasswordResetNotifier` como implementación por defecto de
+    `PasswordResetNotifier` — en dev entrega contra MailHog (`http://localhost:8025`), verificado
+    leyendo el correo real capturado vía su API. Nuevo namespace de config `mail`
+    (`core/config/namespaces/mail.config.ts`).
 
 ### Corregido
 
+- **FASE 2 Backend Core — 4 gaps reales de seguridad en el login, encontrados al auditar el módulo
+  `auth` completo contra el checklist de la fase (2026-07-22).**
+  1. **Sin bloqueo por intentos fallidos** — `security.login_attempts` existía en el schema desde la
+     certificación de base de datos sin que nada escribiera en ella. `LoginUseCase` ahora registra
+     cada intento (éxito y fallo) vía `LoginAttemptRepository` nuevo, y rechaza con
+     `CuentaBloqueadaException` (429) tras 5 fallos en 15 minutos, contados por `(tenant, email)` —
+     así el propio 429 no confirma si el email existe. Trade-off documentado: como no distingue
+     email real de inventado, un atacante puede forzar el bloqueo de una cuenta ajena fallando
+     a propósito; cerrar eso del todo pide límite por IP o CAPTCHA, fuera de esta fase.
+  2. **`/auth/login` compartía el límite genérico de 100 req/60s** con el resto del API — ahora tiene
+     su propio `@Throttle({ default: { limit: 5, ttl: 60_000 } })`.
+  3. **El access token no se podía revocar antes de su expiración natural (~15 min)** — el propio
+     `JwtStrategy` documentaba esto como gap conocido. `LogoutUseCase` ahora marca el `sessionId` como
+     revocado en Redis (mismo TTL que el access token); `JwtStrategy.validate()` lo consulta antes de
+     confiar en cualquier JWT, vía un contrato de nombre de clave compartido
+     (`revokedSessionCacheKey()`, `core/http`) sin que `core/http` dependa de `modules/auth`.
+  4. **`POST /auth/refresh` (el único endpoint autenticado solo por cookie) sin protección CSRF
+     explícita** — cookie de refresh pasada de `sameSite: 'lax'` a `'strict'`, más un chequeo
+     explícito de `Origin` contra `CORS_ORIGIN` en el propio handler como segunda capa.
+  - Efecto colateral necesario: `JwtStrategy` (usado por CUALQUIER ruta protegida por
+    `JwtAuthGuard`) ahora depende de `CacheService` — los 11 `*.e2e-spec.ts` que arman su propio
+    `TestingModule` con `HttpModule` necesitaron sumar `CacheModule` a sus imports o la resolución de
+    DI fallaba al arrancar. Se aprovechó la revisión para confirmar que dos hallazgos previos de un
+    audit anterior eran falsos positivos: `sucursales` y `tasas-impuesto` sí tenían cobertura e2e
+    real, solo que anidada dentro de los specs de `empresas`/`impuestos` en vez de en archivos propios.
+  - `app.set('trust proxy', 1)` agregado a `core/kernel/bootstrap.ts` — nginx ya mandaba
+    `X-Forwarded-For`/`X-Real-IP` (`infra/nginx/nginx.conf`) pero Express nunca los usaba, así que
+    `req.ip` (consumido por el rate limiter y por el registro de intentos de login, ambos nuevos acá)
+    siempre resolvía a la IP interna de nginx, no la del cliente real.
 - **FASE 05 — healthcheck de nginx marcaba "unhealthy" pese a responder bien por HTTPS externo
   (2026-07-20).** `infra/nginx/nginx.conf` solo tenía `listen 80;`/`listen 443 ssl;` (IPv4) — el
   propio healthcheck de Docker (`wget http://localhost/...`, ejecutado DENTRO del contenedor)
@@ -586,6 +640,21 @@ ErrorBoundary > RouterProvider`), y `app-shell/module-registry.ts` con las 25 fe
   "Añadido" arriba, sesión 2026-07-20); `/auth/switch-context` (cambio de empresa/sucursal activa)
   sigue siendo un contrato asumido por el frontend (`ui-kit/store/app.store.ts`), sin endpoint real
   todavía.
+- 🟡 **(Nuevo, FASE 2 Backend Core, 2026-07-22)** Sin patrón compartido de sort/filter/search para
+  listados — cada controller (`auditoria`, `configuracion`, etc.) reinventa su propio filtro ad hoc
+  vía query params; funciona hoy, pero se va a fragmentar más con cada uno de los 24 módulos de
+  negocio que todavía no tienen backend. Un DTO/decorator reusable en `core/http` es trabajo de una
+  sesión propia, no se improvisó acá para no imponerle una forma a controllers que ya funcionan.
+- 🟡 **(Nuevo, FASE 2 Backend Core, 2026-07-22)** `modules/almacenes`/`inventario` sigue sin una sola
+  línea de backend (carpetas vacías) — coincide con el orden de construcción ya confirmado
+  (Productos → Inventario → Clientes → Ventas → Caja → POS, ver `ROADMAP.md` §5), no se adelantó acá
+  para no salirse de ese orden ya decidido.
+- 🟡 **(Nuevo, FASE 2 Backend Core, 2026-07-22)** `core/storage`/`core/messaging`/`core/scheduler`
+  ahora tienen (storage) o siguen sin tener (messaging, scheduler) un consumidor real más allá de lo
+  agregado esta sesión — ningún módulo de negocio asocia todavía un archivo subido a uno de sus
+  propios registros (esperado: guardar la `key` en la columna `metadata JSONB` de ese registro), y
+  `EventBusService`/`SchedulerService.addCronJob` siguen sin ningún productor/consumidor/job real
+  registrado. Es trabajo de cada módulo de negocio cuando se construya, no de esta fase.
 - 🟡 **(Nuevo, frontend)** `I18nProvider` (`react-i18next`) y `RequirePermission`/
   `usePermiso()` — ambos documentados en `docs/frontend/ROUTING.md §5.2,§6` — no están
   construidos: `react-i18next` no es dependencia de ningún `package.json` todavía, y la
