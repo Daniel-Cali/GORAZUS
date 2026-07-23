@@ -26,6 +26,13 @@ import { SesionRepository } from './repositories/sesion.repository';
 import { SesionRepositoryPrisma } from './repositories/sesion.repository.prisma';
 import { CredencialDosFactoresRepository } from './repositories/credencial-dos-factores.repository';
 import { CredencialDosFactoresRepositoryPrisma } from './repositories/credencial-dos-factores.repository.prisma';
+import { EmpresaUsuarioRepository } from './repositories/empresa-usuario.repository';
+import { EmpresaUsuarioRepositoryPrisma } from './repositories/empresa-usuario.repository.prisma';
+import { PerfilExtendidoRepository } from './repositories/perfil-extendido.repository';
+import { PerfilExtendidoRepositoryPrisma } from './repositories/perfil-extendido.repository.prisma';
+import { EmpresasUsuarioService } from './services/empresas-usuario.service';
+import { PreferenciasUsuarioService } from './services/preferencias-usuario.service';
+import { AvatarUsuarioService } from './services/avatar-usuario.service';
 
 /**
  * `@Global()` a propósito — el `PermissionsGuard` global de `core/http`
@@ -53,6 +60,9 @@ import { CredencialDosFactoresRepositoryPrisma } from './repositories/credencial
     AuditoriaService,
     SesionesService,
     DosFactoresService,
+    EmpresasUsuarioService,
+    PreferenciasUsuarioService,
+    AvatarUsuarioService,
     { provide: PERMISSIONS_RESOLVER, useExisting: PermissionsResolverService },
     { provide: RolRepository, useClass: RolRepositoryPrisma },
     { provide: PermisoRepository, useClass: PermisoRepositoryPrisma },
@@ -61,6 +71,8 @@ import { CredencialDosFactoresRepositoryPrisma } from './repositories/credencial
     { provide: AuditoriaRepository, useClass: AuditoriaRepositoryPrisma },
     { provide: SesionRepository, useClass: SesionRepositoryPrisma },
     { provide: CredencialDosFactoresRepository, useClass: CredencialDosFactoresRepositoryPrisma },
+    { provide: EmpresaUsuarioRepository, useClass: EmpresaUsuarioRepositoryPrisma },
+    { provide: PerfilExtendidoRepository, useClass: PerfilExtendidoRepositoryPrisma },
   ],
   exports: [PERMISSIONS_RESOLVER],
 })
