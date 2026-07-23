@@ -28,6 +28,8 @@ export type {
   tenants,
   audit_logs,
   tokens,
+  user_companies,
+  user_profiles,
 } from '../prisma/schemas/core/generated';
 /** Consumidos por `core/notifications` (Notification Center, Fase 1 — canal WhatsApp). */
 export type {
