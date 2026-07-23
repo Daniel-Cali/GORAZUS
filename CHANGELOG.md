@@ -445,6 +445,29 @@ ErrorBoundary > RouterProvider`), y `app-shell/module-registry.ts` con las 25 fe
   `TEST_REPORT.md §2` para el detalle honesto de qué se verificó y qué queda pendiente de
   reconfirmar.
 
+- **FASE 03 — Backend Core Enterprise, Parte 02: Autenticación Enterprise (2026-07-22).**
+  A diferencia de Parte 2.1 (aditiva/preparatoria), esta parte cambia comportamiento real de
+  `auth`. Nuevo: `rememberMe` en `POST /auth/login` (refresh token de larga duración, TTL
+  preservado a través de la rotación sin columna nueva — heurística de duración); captura de
+  `ip_address`/`user_agent` en `core.sessions` (columnas que ya existían, sin consumidor);
+  protección de session-hijacking en `POST /auth/refresh` (warning siempre, rechazo opcional vía
+  `AUTH_STRICT_SESSION_VALIDATION`); verificación de empresa/sucursal activa (`OrganizationStatusRepository`,
+  nuevo) en refresh y en `GET /auth/session` (nuevo); `GET /auth/me` (nuevo, identidad mínima);
+  `POST /auth/revoke` (nuevo, revoca una sesión propia o todas — "cerrar sesión en todos los
+  dispositivos"). Adoptado de Parte 2.1: `LoginUseCase`/`RefreshTokenUseCase`/
+  `IssueLoginSessionService` ya leen los TTLs/umbrales desde `ConfigService` en vez de constantes
+  hardcodeadas; `RefreshTokenUseCase` adoptó `signAccessToken()` (JWT Provider) en vez de su
+  `jwt.sign(...)` inline duplicado. **Deliberadamente no implementado**: login por username —
+  `core.users` no tiene esa columna y el modelo de datos está congelado, gap documentado en vez de
+  rellenado apurado (`AUTH_REPORT.md §4`). **Gap detectado (no corregido, fuera de módulo)**:
+  `POST /seguridad/sesiones/:id/revocar` (admin) no marca el `sessionId` en la blacklist de Redis
+  a diferencia de su equivalente de autoservicio nuevo (`TECHNICAL_DEBT.md §1`). 4 casos de uso
+  nuevos con specs unitarios propios (`get-current-user`/`validate-token`/`revoke-token`/
+  `refresh-token`, 22 tests nuevos) — Docker no disponible durante toda la sesión, e2e reales
+  pendientes de reconfirmar (`AUTH_TEST_REPORT.md`). Entregables nuevos: `AUTH_REPORT.md`,
+  `AUTH_TEST_REPORT.md`, `JWT_CONFIGURATION.md`, `OPENAPI_AUTH.md`; `SECURITY_REPORT.md`
+  actualizado. `0.3.1` → `0.4.0` (`MINOR`: funcionalidad real, no aditivo).
+
 ### Corregido
 
 - **FASE 2 Backend Core — 4 gaps reales de seguridad en el login, encontrados al auditar el módulo

@@ -1,14 +1,14 @@
 # Project Status — GORAZUS ERP
 
-> Foto del estado general del proyecto a 2026-07-23. Complementa, sin
+> Foto del estado general del proyecto a 2026-07-22. Complementa, sin
 > duplicar, a [ROADMAP.md](./ROADMAP.md) (estado del código por módulo),
 > [VERSION.md](./VERSION.md) (versión actual), [CHANGELOG.md](./CHANGELOG.md)
 > (detalle por sesión de trabajo), [TECHNICAL_DEBT.md](./TECHNICAL_DEBT.md)
-> (deuda técnica consolidada) y
-> [docs/00-roadmap-fases.md](./docs/00-roadmap-fases.md) (estado de la
-> documentación de arquitectura por fase). Actualizado como entregable de
-> FASE 03 — Backend Core Enterprise, Parte 01 (auditoría) — sin modificar
-> el contenido de esos otros documentos.
+> (deuda técnica consolidada), [AUTH_REPORT.md](./AUTH_REPORT.md) (detalle
+> de esta parte) y [docs/00-roadmap-fases.md](./docs/00-roadmap-fases.md)
+> (estado de la documentación de arquitectura por fase). Actualizado como
+> entregable de FASE 03 — Backend Core Enterprise, Parte 02
+> (Autenticación Enterprise).
 
 ## 1. En una frase
 
@@ -16,31 +16,36 @@ GORAZUS tiene **documentación de arquitectura y base de datos Enterprise
 completa** (32 fases + DDD + certificación de base de datos) y **backend
 real en 3 de 27 módulos de negocio** (`auth`, `seguridad`,
 `configuracion`), con ese núcleo ya endurecido para producción (2FA
-exigido, bloqueo por intentos, revocación de sesión, CSRF, email real) —
-la brecha entre "diseñado" e "implementado" sigue siendo grande en el
-resto de módulos, documentada con honestidad, no oculta.
+exigido, bloqueo por intentos, revocación de sesión — inmediata o bajo
+demanda —, protección de session-hijacking, verificación de
+empresa/sucursal activa, CSRF, email real) — la brecha entre "diseñado" e
+"implementado" sigue siendo grande en el resto de módulos, documentada
+con honestidad, no oculta.
 
 ## 2. Versión actual
 
-**0.3.1** (2026-07-22) — FASE 2, Parte 2.1: infraestructura del módulo
-`auth` preparada (Value Object, Domain Events, JWT Provider, config de
-TTLs), sin tocar el login ya construido. Ver [VERSION.md](./VERSION.md)
-para el historial completo de versiones.
+**0.4.0** (2026-07-22) — FASE 03, Parte 02: Autenticación Enterprise —
+"recordar sesión", protección de session-hijacking, verificación de
+empresa/sucursal activa, `GET /auth/me`, `GET /auth/session`,
+`POST /auth/revoke`, adopción de la config/JWT Provider preparados en
+`0.3.1`. Ver [VERSION.md](./VERSION.md) para el historial completo de
+versiones y [AUTH_REPORT.md](./AUTH_REPORT.md) para el detalle de esta
+parte.
 
 ## 3. Estado del código (resumen de ROADMAP.md)
 
-| Pieza                                                                                                       | Estado                                                                          |
-| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| Bootstrap del monorepo (Nx, pnpm, tsconfig, eslint, prettier)                                               | ✅                                                                              |
-| Infraestructura Docker (Postgres, Redis, RabbitMQ, MinIO, nginx, pgAdmin, MailHog, Prometheus/Grafana/Loki) | ✅ verificada de punta a punta                                                  |
-| CI/CD (GitHub Actions)                                                                                      | ✅ corrigiendo un bug real (apuntaba a una rama `main` inexistente)             |
-| Foundation Platform (`core/*`)                                                                              | ✅ validado con servidor real                                                   |
-| Persistencia (`core/database`, 21 clientes Prisma, RLS)                                                     | ✅                                                                              |
-| Auth Enterprise (login, 2FA exigido, bloqueo, revocación, CSRF, refresh)                                    | ✅ endurecido y probado (FASE 2 Backend Core)                                   |
-| Almacenamiento de archivos (`core/storage`)                                                                 | ✅ endpoint genérico real, sin consumidor de negocio todavía                    |
-| Módulos de negocio con backend real                                                                         | 🟡 3 de 27 (`auth`, `seguridad`, `configuracion`)                               |
-| Resto de módulos de negocio (24, incluyendo `inventario`/Almacenes)                                         | ❌ Sin backend — placeholder de frontend registrado                             |
-| Testing (unitario/integración/e2e/carga/seguridad)                                                          | ✅ 127+ tests reales — ver nota de disponibilidad de Docker en `TEST_REPORT.md` |
+| Pieza                                                                                                        | Estado                                                                          |
+| ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| Bootstrap del monorepo (Nx, pnpm, tsconfig, eslint, prettier)                                                | ✅                                                                              |
+| Infraestructura Docker (Postgres, Redis, RabbitMQ, MinIO, nginx, pgAdmin, MailHog, Prometheus/Grafana/Loki)  | ✅ verificada de punta a punta                                                  |
+| CI/CD (GitHub Actions)                                                                                       | ✅ corrigiendo un bug real (apuntaba a una rama `main` inexistente)             |
+| Foundation Platform (`core/*`)                                                                               | ✅ validado con servidor real                                                   |
+| Persistencia (`core/database`, 21 clientes Prisma, RLS)                                                      | ✅                                                                              |
+| Auth Enterprise (login, 2FA exigido, bloqueo, revocación, CSRF, refresh, hijacking, empresa/sucursal activa) | ✅ endurecido y probado (FASE 2 + FASE 03 Parte 02)                             |
+| Almacenamiento de archivos (`core/storage`)                                                                  | ✅ endpoint genérico real, sin consumidor de negocio todavía                    |
+| Módulos de negocio con backend real                                                                          | 🟡 3 de 27 (`auth`, `seguridad`, `configuracion`)                               |
+| Resto de módulos de negocio (24, incluyendo `inventario`/Almacenes)                                          | ❌ Sin backend — placeholder de frontend registrado                             |
+| Testing (unitario/integración/e2e/carga/seguridad)                                                           | ✅ 127+ tests reales — ver nota de disponibilidad de Docker en `TEST_REPORT.md` |
 
 Ver [ROADMAP.md](./ROADMAP.md) para la tabla completa módulo por módulo.
 

@@ -2,9 +2,12 @@
 
 > Fase 2, Parte 2.1 — Módulo de Autenticación, Infraestructura. Sesión del
 > 2026-07-22, versión **0.3.1**. Este reporte sintetiza la decisión
-> central de esta parte y por qué se ejecutó así — el detalle técnico
+> central de esa parte y por qué se ejecutó así — el detalle técnico
 > vive en `AUTH_ARCHITECTURE.md`/`AUTH_STRUCTURE.md`/`AUTH_DEPENDENCIES.md`/
-> `AUTH_HEALTH_REPORT.md`, no se repite acá.
+> `AUTH_HEALTH_REPORT.md`, no se repite acá. Sigue vigente como historial
+> de esa decisión puntual; para el estado y la funcionalidad agregada
+> DESPUÉS (FASE 03, Parte 02 — Autenticación Enterprise), ver
+> `AUTH_REPORT.md`.
 
 ## 1. La discrepancia de partida, y cómo se resolvió
 

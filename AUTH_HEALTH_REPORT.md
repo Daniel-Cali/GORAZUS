@@ -1,6 +1,9 @@
 # Auth Health Report — GORAZUS ERP
 
-> Fase 2, Parte 2.1. Estado real verificado al cierre de esta parte.
+> Fase 2, Parte 2.1. Estado real verificado al cierre de esa parte — sigue
+> vigente como historial. Para la verificación de la parte siguiente
+> (FASE 03, Parte 02 — Autenticación Enterprise), ver `AUTH_TEST_REPORT.md`
+> y `AUTH_REPORT.md`.
 
 ## 1. Validaciones pedidas
 

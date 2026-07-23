@@ -1,8 +1,10 @@
 # Auth — Arquitectura
 
-> Fase 2, Parte 2.1 — Módulo de Autenticación, Infraestructura. Resumen
-> corto de arquitectura real (código, no diseño especulativo). Diseño
-> original completo y diagramas de secuencia:
+> Actualizado FASE 03, Parte 02 (Autenticación Enterprise, 2026-07-22) —
+> lo preparado en Parte 2.1 (§3, más abajo) ya se adoptó, ver
+> `AUTH_REPORT.md` para el detalle completo de esta parte. Resumen corto
+> de arquitectura real (código, no diseño especulativo). Diseño original
+> completo y diagramas de secuencia:
 > [docs/architecture/13-modulo-auth.md](./docs/architecture/13-modulo-auth.md)
 > (tiene una nota agregada esta sesión donde el código real diverge del
 > diseño original). Historial real de qué se construyó cuándo:
@@ -44,27 +46,38 @@ módulo con su propio repositorio sobre el cliente compartido (nunca
 importándose el uno al otro — `@nx/enforce-module-boundaries` lo hace
 estructuralmente imposible).
 
-## 3. Preparado esta sesión (Parte 2.1) — disponible, no adoptado
+## 3. Preparado en Parte 2.1 — estado de adopción tras Parte 02
 
-No se tocó ningún caso de uso de login/refresh/2FA (ya construidos y
-probados en Parte 2 — Backend Core) — todo lo de abajo es aditivo:
+No se tocó ningún caso de uso de login/refresh/2FA en Parte 2.1 (ya
+construidos y probados en Parte 2 — Backend Core); Parte 02 (FASE 03)
+adoptó la mayor parte de lo preparado ahí:
 
-- **`Email` (Value Object)** — `value-objects/email.vo.ts`. `Usuario`
-  sigue validando el email con su propia regex inline.
+- **`Email` (Value Object)** — `value-objects/email.vo.ts`. Sigue sin
+  adoptar: `Usuario` sigue validando el email con su propia regex
+  inline. No formaba parte del alcance de Parte 02 (login por
+  username/email no tocó la entidad `Usuario`).
 - **Domain Events** — `events/*.event.ts` (`UsuarioAutenticadoEvent`,
   `LoginFallidoEvent`, `CuentaBloqueadaEvent`, `SesionRevocadaEvent`).
-  Ninguno se publica todavía — `EventBusService` (`core/messaging`)
-  sigue sin productores reales en todo el backend.
-- **JWT Provider** — `services/jwt-token.provider.ts` (`signAccessToken`).
-  `IssueLoginSessionService`/`RefreshTokenUseCase` siguen con su propio
-  `jwt.sign(...)` inline, sin adoptar esto todavía.
-- **`GuestGuard`** — `core/http/guards/guest.guard.ts`. Ningún
-  controller lo usa todavía.
+  Siguen sin publicarse — `EventBusService` (`core/messaging`) sigue sin
+  productores reales en todo el backend (`TECHNICAL_DEBT.md §2`).
+- **JWT Provider** — `services/jwt-token.provider.ts` (`signAccessToken`)
+  — ✅ **adoptado**: `IssueLoginSessionService` y `RefreshTokenUseCase`
+  ya lo usan en vez de su `jwt.sign(...)` inline duplicado.
+- **`GuestGuard`** — `core/http/guards/guest.guard.ts`. Sigue sin uso —
+  fuera del alcance de Parte 02 (ningún endpoint nuevo lo necesitaba).
 - **Config de TTLs/umbrales** — `core/config/namespaces/auth.config.ts`
-  expone `accessTokenTtl`/`refreshTokenTtlDays`/`loginLockoutThreshold`/
-  `loginLockoutWindowMinutes`/`twoFactorChallengeTtlMinutes`, todos con
-  default idéntico al valor hardcodeado real. Ningún use case los lee
-  todavía.
+  — ✅ **adoptado**: `LoginUseCase`, `RefreshTokenUseCase` e
+  `IssueLoginSessionService` ya leen `accessTokenTtl`/
+  `refreshTokenTtlDays`/`loginLockoutThreshold`/
+  `loginLockoutWindowMinutes`/`twoFactorChallengeTtlMinutes` desde acá
+  (antes constantes hardcodeadas). Se agregaron dos valores nuevos:
+  `rememberMeTtlDays` y `strictSessionValidation` — ver
+  `JWT_CONFIGURATION.md`.
+
+Funcionalidad nueva de Parte 02 que NO estaba prevista en Parte 2.1
+(protección de session-hijacking, verificación de empresa/sucursal
+activa, "recordar sesión", `GET /auth/me`, `GET /auth/session`,
+`POST /auth/revoke`) — ver `AUTH_REPORT.md` para el detalle completo.
 
 ## 4. Providers ya existentes (Common Utilities) — no se tocaron
 

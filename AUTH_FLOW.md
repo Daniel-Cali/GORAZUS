@@ -1,26 +1,30 @@
 # Auth — Flujos reales
 
-> Fase 2, Parte 2.1. Flujos tal como el código los implementa hoy — no
-> el diseño original especulativo (ver
+> Actualizado FASE 03, Parte 02 (Autenticación Enterprise). Flujos tal
+> como el código los implementa hoy — no el diseño original especulativo
+> (ver
 > [docs/architecture/13-modulo-auth.md](./docs/architecture/13-modulo-auth.md),
 > que diverge en algunos nombres/status codes, nota agregada esta sesión
-> en su cabecera). Ver `docs/api/API.md` para la referencia de cada
-> endpoint.
+> en su cabecera). Ver `OPENAPI_AUTH.md` para el contrato completo de
+> cada endpoint (request/response/errores) y `docs/api/API.md`.
 
 ## 1. Login sin 2FA
 
 ```
-Cliente → POST /auth/login { tenantSlug, email, password }
+Cliente → POST /auth/login { tenantSlug, email, password, rememberMe? }
   LoginUseCase:
     1. Resuelve tenant por slug — no existe → 401 CREDENCIALES_INVALIDAS
-    2. Cuenta fallos recientes (15 min) para (tenant, email)
-       → >=5 → 429 CUENTA_BLOQUEADA (sin llegar a buscar el usuario)
+    2. Cuenta fallos recientes (ventana configurable, default 15 min) para
+       (tenant, email) → >=umbral (default 5) → 429 CUENTA_BLOQUEADA (sin
+       llegar a buscar el usuario)
     3. Busca el usuario — no existe / inactivo / password incorrecta
        → registra el intento como fallido → 401 CREDENCIALES_INVALIDAS
        (mismo código en los 3 casos — anti-enumeración)
     4. Password correcta → registra el intento como exitoso
     5. ¿Tiene 2FA confirmado? NO → IssueLoginSessionService.issue()
-       → crea sesión (core.sessions) + firma access token (15m)
+       → crea sesión (core.sessions, con ip_address/user_agent del
+       request) + firma access token. Refresh token con TTL largo
+       (JWT_REMEMBER_ME_TTL_DAYS) si rememberMe=true, TTL estándar si no.
 ← 200 { data: { accessToken, user, activeCompanyId, activeBranchId } }
   + cookie httpOnly `refreshToken` (SameSite=Strict, path=/api/v1/auth)
 ```
@@ -58,8 +62,43 @@ Cliente → POST /auth/refresh (cookie httpOnly, sin body)
   RefreshTokenUseCase:
     2. Hash del refresh token → busca la sesión — no existe/vencida/revocada
        → 401 SESION_INVALIDA
-    3. Rota: nuevo refresh token (aleatorio 256 bits) + nuevo access token
+    3. IP/User-Agent del request vs. los guardados en la sesión:
+       distintos → siempre warning; además rechaza con 401 SESION_SOSPECHOSA
+       si AUTH_STRICT_SESSION_VALIDATION=true (default false)
+    4. company_id/branch_id de la sesión (si no son null) → ¿siguen
+       activos? NO → 403 EMPRESA_INACTIVA / 403 SUCURSAL_INACTIVA
+    5. Rota: nuevo refresh token (aleatorio 256 bits, TTL preservado si
+       la sesión original era "recordar sesión" — heurística de
+       duración, JWT_CONFIGURATION.md §3) + nuevo access token
 ← 200 { data: { accessToken } } + cookie de refresh rotada
+```
+
+## 3.1. Usuario actual / validar sesión / revocar
+
+```
+Cliente → GET /auth/me (Authorization: Bearer)
+  GetCurrentUserUseCase: busca el usuario por context.userId
+    → no existe → 404 USUARIO_NO_ENCONTRADO
+← 200 { data: { id, email, fullName, isActive, lastLoginAt, tenantId,
+  activeCompanyId, activeBranchId } }
+
+Cliente → GET /auth/session (Authorization: Bearer)
+  ValidateTokenUseCase: usuario inactivo/inexistente → 403 USUARIO_INACTIVO
+    empresa/sucursal activa inactiva → 403 EMPRESA_INACTIVA/SUCURSAL_INACTIVA
+← 200 { data: { valid: true, userId, tenantId, sessionId,
+  activeCompanyId, activeBranchId } }
+
+Cliente → POST /auth/revoke { sessionId? } (Authorization: Bearer)
+  RevokeTokenUseCase:
+    - Con sessionId: busca la sesión, verifica que sea del usuario
+      autenticado → no es suya/no existe → 404 SESION_NO_ENCONTRADA
+      (mismo mensaje en ambos casos). Revoca solo esa.
+    - Sin sessionId: revoca TODAS las sesiones activas del usuario
+      ("cerrar sesión en todos los dispositivos")
+    - En ambos casos: además de core.sessions.revoked_at, marca cada
+      sessionId afectado en la blacklist de Redis — el/los access
+      token(s) ya emitidos dejan de servir de inmediato
+← 200 { data: { revokedSessions: number } }
 ```
 
 ## 4. Logout
@@ -97,12 +136,14 @@ Cliente → POST /auth/reset-password { tenantSlug, token, newPassword }
 ← 200 { data: { message: "Contraseña actualizada correctamente." } }
 ```
 
-## 6. Qué NO existe todavía (Parte 2.2 en adelante)
+## 6. Qué NO existe todavía
 
 - Detección de reuso de refresh token (revocar toda la familia de
   sesiones ante un token ya rotado reutilizado) — `RefreshTokenUseCase`
   ya documenta esto como gap conocido en su propio comentario de cabecera.
-- Publicación real de los Domain Events preparados esta sesión
+- Login por username — `core.users` no tiene esa columna, gap
+  deliberadamente documentado en vez de implementado (`AUTH_REPORT.md §4`).
+- Publicación real de los Domain Events preparados en Parte 2.1
   (`modules/auth/backend/events/`) — nadie los instancia ni los publica
   todavía.
 - OAuth2, API Keys — diseñados en `docs/architecture/13-modulo-auth.md`

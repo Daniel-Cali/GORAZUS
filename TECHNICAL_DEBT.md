@@ -1,10 +1,11 @@
 # Technical Debt — GORAZUS ERP
 
-> Fase 03 — Backend Core Enterprise, Parte 01 (auditoría). Sesión del
-> 2026-07-23, versión **0.3.1**, rama `gorazus2`. Consolida deuda técnica
-> ya dispersa en `CHANGELOG.md` ("Pendiente conocido") y en los reportes
-> de sesiones previas, más lo detectado en esta auditoría — no repite el
-> detalle completo de cada item, referencia la fuente.
+> Actualizado FASE 03 — Backend Core Enterprise, Parte 02 (Autenticación
+> Enterprise). Sesión del 2026-07-22, versión **0.4.0**, rama `gorazus2`.
+> Consolida deuda técnica ya dispersa en `CHANGELOG.md` ("Pendiente
+> conocido") y en los reportes de sesiones previas, más lo detectado esta
+> sesión — no repite el detalle completo de cada item, referencia la
+> fuente.
 
 ## Cómo leer esto
 
@@ -31,6 +32,23 @@ de gravedad 🔴 sin documentar ya.
   reusar un token rotado, pero no distingue "reuso detectado" de "nunca
   existió" para registrar el incidente como señal de posible robo de
   token.
+- 🟠 **(nuevo) `POST /seguridad/sesiones/:id/revocar` (admin, `modules/
+seguridad`) no marca el `sessionId` en la blacklist de Redis** —
+  detectado en FASE 03 Parte 02 al construir el equivalente de
+  autoservicio (`POST /auth/revoke`, que sí lo hace). Un access token ya
+  emitido de una sesión revocada por un administrador sigue sirviendo
+  hasta que expira solo (~15 min) en vez de invalidarse de inmediato.
+  Mismo fix que ya tiene `LogoutUseCase`/`RevokeTokenUseCase` en `auth`
+  (`cacheService.set(revokedSessionCacheKey(id), true, ttl)`), sin
+  aplicar todavía en `seguridad` — fuera de alcance de Parte 02 (módulo
+  distinto). Ver `AUTH_REPORT.md §5.1`.
+- 🟡 **"Recordar sesión" se infiere por heurística de duración
+  (`expires_at - created_at`), sin columna propia** — funciona
+  (`RefreshTokenUseCase`, ver `JWT_CONFIGURATION.md §3`) pero es un
+  proxy, no un flag explícito. Aceptable mientras el margen de 1.5x no
+  produzca falsos positivos/negativos observados en uso real; si eso
+  pasara, la solución correcta es agregar la columna (fuera de alcance
+  mientras el modelo de datos esté congelado sin necesidad probada).
 - 🟡 **Rate limiter global es por IP, sin diferenciar por usuario ni
   endpoint** (salvo `/auth/login`/`/auth/login/2fa`, que ya tienen su
   propio límite más estricto) — un grupo de usuarios reales detrás de un
@@ -79,6 +97,13 @@ de gravedad 🔴 sin documentar ya.
 - 🟡 **Catálogo de países/jurisdicciones fiscales sin CRUD/UI** — solo
   script de seed mínimo (`seed-tax-jurisdictions.ts`) que desbloquea
   Impuestos.
+- 🟡 **(nuevo) Login por username no implementado** — `core.users` no
+  tiene columna `username` (solo `email`, único por tenant), y el modelo
+  de datos está congelado (`Enterprise v1.0.0`, `VERSION.md`). Agregar la
+  columna requiere una migración versionada + una decisión de producto
+  (¿obligatorio, único, editable, alias del email?) que no correspondía
+  tomar dentro de FASE 03 Parte 02 — login por email ya cubre el caso de
+  uso real actual. Ver `AUTH_REPORT.md §4`.
 
 ## 4. Calidad de código y CI
 
@@ -108,15 +133,17 @@ de gravedad 🔴 sin documentar ya.
 
 - Kubernetes (`infra/kubernetes/`) — manifiestos validados con `kubectl
 kustomize` en su momento, sin cluster real de prueba todavía.
-- 🟡 **Docker Desktop no disponible durante gran parte de esta sesión y
-  la anterior** (`failed to connect to the docker API` — nivel host de
-  Windows, fuera del control de este entorno de agente). No es deuda del
-  proyecto — es una nota operativa: los 33+ tests e2e reales de `auth`/
-  `seguridad`/`configuracion` no se pudieron re-correr en el momento de
-  escribir varios reportes recientes. Ver `TEST_REPORT.md` y
-  `BACKEND_HEALTH_REPORT.md` para el detalle de qué sí se verificó sin
-  infraestructura (build/lint/unitarios) y qué queda pendiente de
-  re-confirmar la próxima vez que Docker esté arriba.
+- 🟡 **Docker Desktop no disponible durante FASE 03 completa (Parte 01 y
+  Parte 02) y la sesión de Backend Core anterior** (`failed to connect to
+the docker API` — nivel host de Windows, fuera del control de este
+  entorno de agente). No es deuda del proyecto — es una nota operativa:
+  los tests e2e reales de `auth`/`seguridad`/`configuracion`, incluidos
+  los que ejercitarían la funcionalidad nueva de Parte 02 contra Postgres/
+  Redis real, no se pudieron correr. Ver `TEST_REPORT.md`/
+  `AUTH_TEST_REPORT.md`/`BACKEND_HEALTH_REPORT.md` para el detalle de qué
+  sí se verificó sin infraestructura (build/lint/unitarios con fakes) y
+  qué queda pendiente de re-confirmar la próxima vez que Docker esté
+  arriba.
 
 ## 6. Explícitamente NO es deuda (decisiones ya tomadas, no revisitar)
 

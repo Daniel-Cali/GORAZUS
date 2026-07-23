@@ -1,25 +1,30 @@
 # Security Report — GORAZUS ERP
 
-> FASE 03 — Backend Core Enterprise, Parte 01 (auditoría). Sesión del
-> 2026-07-23, versión **0.3.1**. Estado ACTUAL completo de seguridad —
-> no solo lo nuevo de una sesión puntual (para eso ver `CHANGELOG.md`).
-> Reemplaza como fuente de verdad al `SECURITY_REPORT.md` anterior
-> (sesión "Backend Core", 2026-07-22).
+> Actualizado FASE 03 — Backend Core Enterprise, Parte 02 (Autenticación
+> Enterprise). Sesión del 2026-07-22, versión **0.4.0**. Estado ACTUAL
+> completo de seguridad — no solo lo nuevo de una sesión puntual (para
+> eso ver `CHANGELOG.md`/`AUTH_REPORT.md`). Reemplaza como fuente de
+> verdad al `SECURITY_REPORT.md` anterior (sesión de auditoría Parte 01,
+> 2026-07-23).
 
 ## 1. Autenticación
 
-| Control                               | Estado | Detalle                                                                               |
-| ------------------------------------- | :----: | ------------------------------------------------------------------------------------- |
-| Hashing de contraseña                 |   ✅   | Argon2id (`packages/tooling/utils/hash.ts`)                                           |
-| JWT de acceso                         |   ✅   | 15 min, firmado con `JWT_ACCESS_SECRET`, sin roles/permisos embebidos                 |
-| Refresh token                         |   ✅   | Aleatorio 256 bits (no JWT), hash SHA-256 en `core.sessions`, rotación en cada uso    |
-| Revocación inmediata al logout        |   ✅   | `sessionId` marcado revocado en Redis, consultado por `JwtStrategy` en cada request   |
-| Bloqueo por intentos fallidos         |   ✅   | 5 fallos / 15 min por (tenant, email), `security.login_attempts`                      |
-| Rate limit propio en login            |   ✅   | 5 req/60s en `/auth/login` y `/auth/login/2fa` (global: 100/60s)                      |
-| 2FA (TOTP)                            |   ✅   | RFC 6238, exigido en login si está confirmado, secreto cifrado AES-256-GCM en reposo  |
-| CSRF                                  |   ✅   | `/auth/refresh` (único endpoint cookie-only): `SameSite=Strict` + chequeo de `Origin` |
-| Detección de reuso de refresh token   |   ❌   | Gap conocido, documentado en el propio código — ver `TECHNICAL_DEBT.md §1`            |
-| MFA más allá de TOTP (WebAuthn, etc.) |   ❌   | Sin diseño ni pedido todavía                                                          |
+| Control                                 | Estado | Detalle                                                                                                                                          |
+| --------------------------------------- | :----: | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Hashing de contraseña                   |   ✅   | Argon2id (`packages/tooling/utils/hash.ts`)                                                                                                      |
+| JWT de acceso                           |   ✅   | TTL configurable (`JWT_ACCESS_TTL`, default 15 min), firmado con `JWT_ACCESS_SECRET`, sin roles/permisos embebidos                               |
+| Refresh token                           |   ✅   | Aleatorio 256 bits (no JWT), hash SHA-256 en `core.sessions`, rotación en cada uso, TTL largo opcional ("recordar sesión")                       |
+| Revocación inmediata al logout          |   ✅   | `sessionId` marcado revocado en Redis, consultado por `JwtStrategy` en cada request                                                              |
+| Revocación puntual/masiva bajo demanda  |   ✅   | `POST /auth/revoke` (nuevo, Parte 02) — una sesión con `sessionId`, o todas ("cerrar sesión en todos los dispositivos")                          |
+| Bloqueo por intentos fallidos           |   ✅   | Umbral/ventana configurables (`LOGIN_LOCKOUT_THRESHOLD`/`_WINDOW_MINUTES`, default 5/15min) por (tenant, email), `security.login_attempts`       |
+| Rate limit propio en login              |   ✅   | 5 req/60s en `/auth/login` y `/auth/login/2fa` (global: 100/60s)                                                                                 |
+| 2FA (TOTP)                              |   ✅   | RFC 6238, exigido en login si está confirmado, secreto cifrado AES-256-GCM en reposo                                                             |
+| CSRF                                    |   ✅   | `/auth/refresh` (único endpoint cookie-only): `SameSite=Strict` + chequeo de `Origin`                                                            |
+| Protección de session-hijacking (IP/UA) |   ✅   | Nuevo, Parte 02 — warning siempre; rechazo opcional vía `AUTH_STRICT_SESSION_VALIDATION` (default `false`), ver `JWT_CONFIGURATION.md §4`        |
+| Verificación de empresa/sucursal activa |   ✅   | Nuevo, Parte 02 — `POST /auth/refresh` y `GET /auth/session`, ver `JWT_CONFIGURATION.md §5`                                                      |
+| Login por username                      |   ❌   | `core.users` no tiene columna `username` (modelo de datos congelado) — gap documentado deliberadamente, no implementado. Ver `AUTH_REPORT.md §4` |
+| Detección de reuso de refresh token     |   ❌   | Gap conocido, documentado en el propio código — ver `TECHNICAL_DEBT.md §1`                                                                       |
+| MFA más allá de TOTP (WebAuthn, etc.)   |   ❌   | Sin diseño ni pedido todavía                                                                                                                     |
 
 ## 2. Autorización (RBAC)
 
@@ -92,7 +97,14 @@ documentado antes de esta sesión).
 
 ## 8. No evaluado esta sesión
 
-- Pentesting real / escaneo activo contra la API corriendo — Docker no
-  disponible, ver `BACKEND_HEALTH_REPORT.md §4`.
+- Pentesting real / escaneo activo contra la API corriendo, incluidos los
+  3 endpoints nuevos de Parte 02 (`GET /auth/me`, `GET /auth/session`,
+  `POST /auth/revoke`) — Docker no disponible durante toda la sesión, ver
+  `AUTH_TEST_REPORT.md §3`.
 - Auditoría de código de terceros más allá de `pnpm audit` (ej. análisis
-  estático de la cadena de suministro).
+  estático de la cadena de suministro) — sin dependencias nuevas esta
+  parte, conteo de `pnpm audit` sin cambios.
+- Tasa real de falsos positivos de la protección de session-hijacking
+  (IP/User-Agent) en tráfico real — es la razón por la que
+  `AUTH_STRICT_SESSION_VALIDATION` queda en `false` por default, ver
+  `JWT_CONFIGURATION.md §4`.

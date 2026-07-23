@@ -2,8 +2,10 @@
 
 > Fase 2, Parte 2.1. Dependencias reales de `modules/auth/backend`
 > (`package.json`, pnpm workspace) — mapeadas contra la lista pedida por
-> esta parte (JWT/UUID/Carbon/PSR Logger/Validation/OpenAPI, en términos
-> genéricos) a lo que este stack realmente usa.
+> esa parte (JWT/UUID/Carbon/PSR Logger/Validation/OpenAPI, en términos
+> genéricos) a lo que este stack realmente usa. Sin dependencias nuevas
+> en FASE 03 Parte 02 (Autenticación Enterprise) — toda la funcionalidad
+> nueva se construyó sobre lo ya mapeado acá.
 
 ## 1. Mapeo pedido → real
 
