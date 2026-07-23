@@ -13,6 +13,12 @@ aditivo (Value Object, Domain Events preparados, JWT Provider, `GuestGuard`, con
 cambiar el comportamiento real de ningún endpoint. Ver `CHANGELOG.md` para el detalle completo y
 `AUTH_ARCHITECTURE.md`/`AUTH_MODULE_REPORT.md` para el resumen de arquitectura.
 
+> **Nota (2026-07-23)** — FASE 03, Parte 01 fue una auditoría completa del
+> proyecto (backend, base de datos, API, deuda técnica) sin ningún cambio
+> de código de negocio, así que no incrementa la versión — sigue siendo
+> `0.3.1`. Ver `PROJECT_STATUS.md`/`TECHNICAL_DEBT.md`/`BACKEND_HEALTH_REPORT.md`
+> (todos actualizados esa fecha) para el resultado de esa auditoría.
+
 ## 0.3.0 (2026-07-22)
 
 FASE 2 — Backend Core (endurecimiento de `auth` + capacidades nuevas de infraestructura). Ver

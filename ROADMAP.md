@@ -7,47 +7,53 @@ trabajo en [CHANGELOG.md](CHANGELOG.md).
 
 ## Estado del backend por módulo de negocio (código real, no solo diseño)
 
-| Módulo                                                                                                                                                                                                                                                             | Backend                                                                                       | Frontend                                                                  |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `auth`                                                                                                                                                                                                                                                             | ✅ Login, refresh, logout, recuperación de contraseña                                         | ✅ Login                                                                  |
-| `seguridad`                                                                                                                                                                                                                                                        | ✅ Roles/permisos (RBAC), usuarios (CRUD + perfil propio), auditoría, sesiones, 2FA preparado | ✅ Listado/alta de usuarios                                               |
-| `configuracion`                                                                                                                                                                                                                                                    | ✅ Empresas, Sucursales, Parámetros, Monedas, Impuestos (alcance mínimo)                      | ❌ Sin construir                                                          |
-| Resto (24 módulos: ventas, pos, inventario, compras, productos, clientes, proveedores, caja, bancos, contabilidad, crm, rrhh, nómina, producción, servicios, activos-fijos, proyectos, reportes, bi, impuestos*, tesorería, dashboard, administracion, documentos) | ❌ Sin backend                                                                                | 🟡 Placeholder `ComingSoonPage` (25 módulos ya registrados en el sidebar) |
+| Módulo                                                                                                                                                                                                                                                             | Backend                                                                                                                                                                    | Frontend                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `auth`                                                                                                                                                                                                                                                             | ✅ Login (con bloqueo por intentos + 2FA exigido si está confirmado), refresh, logout (con revocación inmediata), recuperación de contraseña (email real), CSRF en refresh | ✅ Login                                                                  |
+| `seguridad`                                                                                                                                                                                                                                                        | ✅ Roles/permisos (RBAC), usuarios (CRUD + perfil propio), auditoría, sesiones, 2FA (setup real, exigido en login desde `auth`)                                            | ✅ Listado/alta de usuarios                                               |
+| `configuracion`                                                                                                                                                                                                                                                    | ✅ Empresas, Sucursales, Parámetros, Monedas, Impuestos (alcance mínimo)                                                                                                   | ❌ Sin construir                                                          |
+| Resto (24 módulos: ventas, pos, inventario, compras, productos, clientes, proveedores, caja, bancos, contabilidad, crm, rrhh, nómina, producción, servicios, activos-fijos, proyectos, reportes, bi, impuestos*, tesorería, dashboard, administracion, documentos) | ❌ Sin backend                                                                                                                                                             | 🟡 Placeholder `ComingSoonPage` (25 módulos ya registrados en el sidebar) |
 
 \* El módulo de negocio `modules/impuestos` (motor de reglas/cálculo/percepciones/retenciones,
 `docs/architecture/46-modulo-taxes.md`) es distinto del catálogo mínimo de perfiles/tasas ya
 construido dentro de `modules/configuracion/backend` — ver `CHANGELOG.md`, entrada FASE 02.
 
-## Fase actual: FASE 02 — Backend Core + Gestión de Versiones (✅ completa, 2026-07-21)
+## Fase actual: FASE 03 — Backend Core Enterprise, Parte 01 (auditoría, 2026-07-23)
 
-Objetivo: Backend Enterprise listo como base de ERP — Core (catálogos), Seguridad y Usuarios
-completos, documentados, probados y versionados. Ver `CHANGELOG.md` para el detalle completo
-(qué se construyó, qué bugs reales se encontraron y corrigieron, conteo de tests).
+`v0.3.1` cerró el endurecimiento de `auth` + infraestructura preparada (ver `CHANGELOG.md`). Esta
+parte es explícitamente de auditoría, sin desarrollo nuevo — ver `PROJECT_STATUS.md` para el
+estado consolidado y `TECHNICAL_DEBT.md` para la deuda técnica detectada.
 
-Entregado:
+### Ya completo (no repetir en próximas fases)
 
 - **Core**: Empresas, Sucursales, Configuración General + Parámetros, Monedas, Impuestos (alcance mínimo).
-- **Seguridad**: Auditoría (lectura), Sesiones (listar/revocar), Recuperación de contraseña
-  (forgot/reset), 2FA preparado (TOTP real, no exigido en login todavía).
-- **Usuarios**: perfil propio (ver/editar), cambio de contraseña self-service, activación/bloqueo
-  (acción simétrica agregada), historial (reusa Auditoría).
-- Control de calidad: compilación limpia, 111 tests nuevos/verificados, lint limpio, sin
-  regresiones en los módulos ya existentes (`auth`, `seguridad` previos).
+- **Auth**: login (bloqueo por intentos, 2FA exigido si está confirmado), refresh (rotación + CSRF),
+  logout (revocación inmediata de sesión), recuperación de contraseña (email real por SMTP).
+- **Seguridad**: RBAC (roles/permisos), usuarios (CRUD + perfil propio + self-service), auditoría
+  (lectura), sesiones (listar/revocar), 2FA (setup/confirmar/deshabilitar, TOTP real).
+- **Archivos**: `core/storage` con endpoint genérico de subida/descarga/borrado (MinIO, bucket por
+  tenant) — infraestructura, no un módulo de negocio.
+- Control de calidad: 127 tests reales (no solo unitarios) verificados contra Postgres/Redis/MinIO/
+  MailHog reales en su momento — ver `TEST_REPORT.md` para el detalle y una nota sobre
+  disponibilidad de Docker al momento de esta auditoría.
 
-## Próxima fase: Inventario y Productos
+### Próxima fase: Almacenes, después Inventario y Productos
 
-Primer módulo de negocio con movimiento de stock real, después de que Core (Empresas/Sucursales/
-Monedas) ya existe como prerequisito de datos maestros. Sin diseño de detalle todavía — ver
-`docs/architecture/18-modulo-products.md` y `docs/architecture/19-modulo-inventory.md` para el
-modelo de datos ya documentado (arquitectura, no código).
+De la lista de prioridad "primero" de FASE 03 (Infraestructura/Auth/Usuarios/Roles/Permisos/
+Multiempresa/Sucursales/Almacenes/Configuración/API REST/OpenAPI), **todo ya existe excepto
+Almacenes** — `modules/inventario` sigue siendo una carpeta vacía (`backend/frontend/shared` sin un
+solo archivo). Es el único ítem real pendiente de esa lista. Sin diseño de detalle de código
+todavía — ver `docs/architecture/19-modulo-inventory.md` para el modelo de datos ya documentado.
 
-## Backlog conocido (no bloqueante para la fase actual)
+## Backlog conocido
 
-- 2FA no está integrado como paso obligatorio de `LoginUseCase` — el mecanismo (setup/confirmar/
-  deshabilitar) es real, falta la rama de login que lo exija cuando esté activo.
-- `PasswordResetNotifier` solo tiene una implementación de logging — falta un canal de email real
-  en Notification Center (`core/notifications` solo tiene WhatsApp, Fase 1).
+- Detección de reuso de refresh token (revocar toda la familia de sesiones ante un token ya
+  rotado reutilizado) — gap documentado en el propio código (`RefreshTokenUseCase`).
+- Patrón compartido de sort/filter/search para listados — cada controller lo resuelve ad hoc hoy.
+- Publicación real de los Domain Events de `auth` (preparados, sin publicar) y de cualquier
+  consumidor real de `EventBusService`/`SchedulerService` — ningún módulo de negocio los usa
+  todavía.
 - Catálogo de países/jurisdicciones fiscales (`configuration.countries`/`taxes.tax_jurisdictions`)
   no tiene CRUD ni UI — solo el script de seed mínimo que desbloquea Impuestos.
-- Ver `CHANGELOG.md` sección "Pendiente conocido" para el resto (rate limiting, vulnerabilidades de
-  dependencias transitivas, Kubernetes sin cluster real de prueba, etc. — heredado de fases previas).
+- Ver `CHANGELOG.md` sección "Pendiente conocido" y `TECHNICAL_DEBT.md` para el resto (39
+  vulnerabilidades de dependencias transitivas, Kubernetes sin cluster real de prueba, etc.).

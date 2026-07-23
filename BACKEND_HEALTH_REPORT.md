@@ -1,65 +1,75 @@
 # Backend Health Report — GORAZUS ERP
 
-> Fase 2 — Desarrollo del Backend Core. Sesión del 2026-07-22, rama `gorazus2`,
-> versión **0.3.0**. Estado real de la infraestructura verificado al cierre de
-> la sesión, no una foto de intención. Complementa a
-> [BACKEND_INFRASTRUCTURE_REPORT.md](./BACKEND_INFRASTRUCTURE_REPORT.md)
-> (sesión de infraestructura previa) sin repetirlo.
+> FASE 03 — Backend Core Enterprise, Parte 01 (auditoría). Sesión del
+> 2026-07-23, versión **0.3.1**, rama `gorazus2`. Snapshot de estado
+> ACTUAL del backend completo (no solo lo que cambió en una sesión
+> puntual — para eso ver `CHANGELOG.md`). Reemplaza como fuente de
+> verdad al `BACKEND_HEALTH_REPORT.md` anterior (sesión de
+> infraestructura, 2026-07-21), que quedaba desactualizado.
 
-## 1. Compila y arranca
+## 1. Compila y pasa lint — verificado esta sesión
 
-| Chequeo                                       | Resultado                                                                  |
-| --------------------------------------------- | -------------------------------------------------------------------------- |
-| `nx build api` (grafo completo, 17 tareas)    | ✅ compila                                                                 |
-| `nx lint` (todos los paquetes tocados)        | ✅ sin errores                                                             |
-| Arranque real (`ts-node` directo, sin Docker) | ✅ boot completo contra Postgres/Redis/RabbitMQ/MinIO/MailHog reales       |
-| `GET /health/live`                            | ✅ `{"status":"ok"}`                                                       |
-| `GET /health/ready`                           | ✅ agrega Postgres/Redis/RabbitMQ (`core/health`), sin cambios esta sesión |
+| Chequeo                                                                                                                                   |                 Resultado                 |
+| ----------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------: |
+| `nx build api` (grafo completo, 17+ tareas dependientes)                                                                                  |                ✅ compila                 |
+| `nx lint` — `api`, `auth-backend`, `seguridad-backend`, `configuracion-backend`, `core-http`, `core-config`, `core-storage`, `core-cache` |               ✅ 0 errores                |
+| `git status` / `git fetch` contra `origin/gorazus2`                                                                                       | ✅ limpio, sin cambios remotos pendientes |
 
-## 2. Servicios de infraestructura — estado real, no supuesto
+## 2. Servicios de infraestructura
 
-| Servicio   | Verificado cómo                                                                                                                                    | Estado         |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| PostgreSQL | 117+ tests de esta sesión corriendo contra él, incluyendo escritura real en `security.login_attempts`, `security.two_factor_credentials`.          | ✅ Sano        |
-| Redis      | `LoginAttemptRepository`/lockout, blacklist de sesión revocada, challenge de 2FA — los tres nuevos, los tres probados contra Redis real (no mock). | ✅ Sano        |
-| MinIO      | `StorageController` nuevo — subida/URL firmada/borrado probados contra MinIO real (`core/storage/storage.controller.spec.ts`).                     | ✅ Sano        |
-| MailHog    | `EmailPasswordResetNotifier` — correo real enviado y verificado leyendo la API de MailHog (`:8025/api/v2`).                                        | ✅ Sano        |
-| RabbitMQ   | Sin cambios esta sesión — sigue sin consumidor real (ver `BACKEND_INFRASTRUCTURE_REPORT.md` §6).                                                   | ⚪ Sin cambios |
+| Servicio   | Última verificación real                                                                           |                 Estado ahora                 |
+| ---------- | -------------------------------------------------------------------------------------------------- | :------------------------------------------: |
+| PostgreSQL | Sesión anterior (Parte 2.1) — 127 tests contra él, incl. `login_attempts`/`two_factor_credentials` | ⏳ Docker no disponible esta sesión, ver §4  |
+| Redis      | Sesión anterior — lockout, blacklist de sesión, challenge 2FA                                      |                   ⏳ ídem                    |
+| MinIO      | Sesión "Backend Core" — upload/URL firmada/borrado reales                                          |                   ⏳ ídem                    |
+| MailHog    | Sesión "Backend Core" — email real capturado y verificado                                          |                   ⏳ ídem                    |
+| RabbitMQ   | Container sano en sesiones previas, sin productor/consumidor real                                  | ⏳ ídem, sin cambio funcional de todos modos |
 
-## 3. Incidente encontrado y documentado (no un bug de código)
+## 3. Módulos de negocio — estado real de código
 
-`docker-api-1` (contenedor de 29+ horas de antigüedad) resultó estar corriendo
-**sin ningún volumen montado** (`docker inspect` → `"Binds": null`) — una
-imagen congelada de hace más de un día, no el contenedor de desarrollo con
-hot-reload que documentan `docker-compose.dev.yml`. Ningún cambio de esta
-sesión (ni de la sesión de infraestructura previa) se reflejaba ahí. No se
-tocó ese contenedor — toda la verificación real de esta sesión se hizo con
-dos vías independientes que sí reflejan el código actual:
+| Módulo             | Backend                                                                               | Tests reales (última corrida completa) |
+| ------------------ | ------------------------------------------------------------------------------------- | -------------------------------------- |
+| `auth`             | ✅ Login, 2FA exigido, refresh+CSRF, logout+revocación, reset de contraseña por email | 33                                     |
+| `seguridad`        | ✅ RBAC, usuarios, auditoría, sesiones, 2FA (setup)                                   | 46                                     |
+| `configuracion`    | ✅ Empresas, Sucursales, Parámetros, Monedas, Impuestos                               | 35                                     |
+| `core/storage`     | ✅ Infraestructura (no es un módulo de negocio)                                       | 3                                      |
+| Resto (24 módulos) | ❌ Carpetas escafoldadas, sin backend                                                 | 0                                      |
 
-1. `nx test`/`nx build` — Jest/tsc corriendo en el host, contra los mismos
-   Postgres/Redis/RabbitMQ/MinIO/MailHog expuestos por Docker (puertos
-   publicados, no el contenedor `api` en sí).
-2. `node_modules/.bin/ts-node --transpile-only apps/api/src/main.ts` corrido
-   directo en el host (mismo comando que usa la imagen de producción,
-   `apps/api/Dockerfile`) — boot real, usado para regenerar
-   `docs/api/openapi.json` con las rutas nuevas (ver
-   [OPENAPI_REPORT.md](./OPENAPI_REPORT.md)).
+**127 tests totales** en los 4 paquetes con código real — 31 de ellos
+(unitarios puros, sin infraestructura) re-verificados en esta misma
+sesión. El resto (e2e/integración contra Postgres/Redis/MinIO/MailHog
+reales) tiene su última corrida completa confirmada en la sesión previa
+(Parte 2.1, 2026-07-22) — ver §4 para por qué no se re-corrieron hoy.
 
-## 4. Memoria — limitación conocida de este sandbox, no del código
+## 4. Limitación de esta sesión: Docker Desktop no disponible
 
-Correr la suite completa de un paquete con `nx test <proyecto>` (sin
-`--runInBand`) satura la memoria de este entorno cuando hay 5+ archivos de
-test e2e reales corriendo en paralelo (cada uno levanta su propia app Nest +
-conexiones reales). **Cada archivo individual, y la suite completa corrida
-con `--runInBand`, pasa limpio** — confirmado para `auth-backend` (33/33),
-`seguridad-backend` (46/46), `configuracion-backend` (35/35), `core-storage`
-(3/3). Detalle en [TEST_REPORT.md](./TEST_REPORT.md). Mismo patrón ya
-documentado en la sesión de infraestructura previa — no es nuevo ni se
-originó en el código de esta sesión.
+Durante toda esta sesión, `docker ps` devuelve
+`failed to connect to the docker API at npipe:...` — el daemon de Docker
+Desktop no responde a nivel del host Windows, algo que este entorno de
+agente no puede reiniciar ni diagnosticar más allá de confirmar que el
+problema es del host, no del proyecto (mismo síntoma exacto que ya se
+documentó al cierre de la sesión anterior, sin resolverse entre
+sesiones).
 
-## 5. No verificado esta sesión
+**Qué se pudo verificar sin Docker** (todo ✅): compilación completa del
+grafo, lint de los 8 paquetes principales, los 31 tests unitarios puros
+de `auth-backend` (Value Object, eventos, JWT provider, entidades, casos
+de uso con fakes), auditoría de dependencias (`pnpm audit`, no necesita
+infraestructura).
+
+**Qué NO se pudo re-verificar hoy**: los ~96 tests restantes que
+requieren Postgres/Redis/MinIO/MailHog reales. No hay razón para creer
+que fallarían — ningún archivo de código de negocio cambió desde la
+última corrida completa exitosa (esta sesión fue de auditoría, sin
+desarrollo, ver `PROJECT_STATUS.md`) — pero tampoco se puede afirmar
+"127/127 verificados hoy" con honestidad. Recomendación operativa: correr
+`pnpm nx run-many -t test -- --runInBand` completo la próxima vez que
+Docker esté disponible, antes de empezar cualquier desarrollo nuevo
+(Almacenes, per `ROADMAP.md`).
+
+## 5. No verificado esta sesión (sin relación con Docker)
 
 - Kubernetes (`infra/kubernetes/`) — sin cambios, no re-verificado.
-- CI real (GitHub Actions) — los workflows se corrigieron la sesión anterior
-  (rama `main` inexistente → `gorazus2`), pero un run real en GitHub no se
-  disparó desde acá (fuera del alcance de un entorno de agente local).
+- Ejecución real de un workflow de GitHub Actions — corregidos en una
+  sesión previa (rama `main` → `gorazus2`), sin un run real disparado
+  desde este entorno.

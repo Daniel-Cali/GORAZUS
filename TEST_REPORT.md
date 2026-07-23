@@ -1,92 +1,83 @@
 # Test Report — GORAZUS ERP
 
-> Fase 2 — Desarrollo del Backend Core. Sesión del 2026-07-22, versión
-> **0.3.0**. Todos los números de abajo son de corridas reales de esta
-> sesión (`--runInBand`, para evitar el límite de memoria del sandbox — ver
-> §3), no estimaciones.
+> FASE 03 — Backend Core Enterprise, Parte 01 (auditoría). Sesión del
+> 2026-07-23, versión **0.3.1**. Estado ACTUAL de toda la suite de
+> tests — no solo lo nuevo de una sesión puntual (para eso ver
+> `CHANGELOG.md`). Reemplaza como fuente de verdad al `TEST_REPORT.md`
+> anterior (sesión "Backend Core", 2026-07-22).
 
-## 1. Resultados por paquete tocado
+## 1. Inventario completo por paquete
 
-| Paquete                 | Suites |  Tests  |   Resultado    | Contra infraestructura real |
-| ----------------------- | :----: | :-----: | :------------: | :-------------------------: |
-| `auth-backend`          |   7    |   33    |    ✅ 33/33    |  Postgres, Redis, MailHog   |
-| `seguridad-backend`     |   11   |   46    |    ✅ 46/46    |          Postgres           |
-| `configuracion-backend` |   10   |   35    |    ✅ 35/35    |          Postgres           |
-| `core-storage`          |   1    |    3    |     ✅ 3/3     |            MinIO            |
-| `core-cache`            |   1    |    5    |     ✅ 5/5     |            Redis            |
-| `core-config`           |   1    |    5    |     ✅ 5/5     |      — (unitario puro)      |
-| **Total**               | **31** | **127** | **✅ 127/127** |                             |
+| Paquete                 | Suites |  Tests  |       Necesita infraestructura real        | Última corrida completa confirmada             |
+| ----------------------- | :----: | :-----: | :----------------------------------------: | :--------------------------------------------- |
+| `auth-backend`          |   10   |   44    | 4 suites sí (Postgres/Redis/MailHog), 6 no | 2026-07-22 (33/33 e2e) + hoy (31/31 unitarios) |
+| `seguridad-backend`     |   11   |   46    |               Sí (Postgres)                | 2026-07-22                                     |
+| `configuracion-backend` |   10   |   35    |               Sí (Postgres)                | 2026-07-22                                     |
+| `core-storage`          |   1    |    3    |                 Sí (MinIO)                 | 2026-07-22                                     |
+| `core-cache`            |   1    |    5    |                 Sí (Redis)                 | Sesión de infraestructura previa               |
+| `core-config`           |   1    |    5    |                     No                     | Hoy — ✅ pasa                                  |
+| `core-http`             |   2    |    8    |                     No                     | Sesión Parte 2.1 — ✅ pasa                     |
+| **Total**               | **36** | **146** |                                            |                                                |
 
-## 2. Tests nuevos esta sesión (17)
+**Nota sobre el conteo**: 146 es distinto al "127" citado en sesiones
+previas porque `auth-backend` creció de 7 a 10 suites (Parte 2.1: Value
+Object, eventos, JWT provider) y este reporte también cuenta
+`core-http`/`core-config`, que reportes anteriores no sumaban al total
+del backend de negocio. Mismos tests, conteo más completo.
 
-| Archivo                                                               | Tests | Cubre                                                                 |
-| --------------------------------------------------------------------- | :---: | --------------------------------------------------------------------- |
-| `modules/auth/backend/services/login.usecase.spec.ts` (reescrito)     |   6   | Lockout, 2FA challenge, registro de intentos — unitario, fakes        |
-| `modules/auth/backend/controllers/two-factor-login.e2e-spec.ts`       |   4   | Flujo 2FA completo contra Postgres/Redis reales                       |
-| `modules/auth/backend/services/email-password-reset-notifier.spec.ts` |   1   | Envío SMTP real, verificado leyendo MailHog                           |
-| `modules/auth/backend/controllers/auth.controller.e2e-spec.ts` (+2)   |   2   | Logout invalida el token de inmediato; `Origin` cross-site → 403      |
-| `core/storage/storage.controller.spec.ts`                             |   3   | Upload/URL firmada/delete + sanitización de nombre, contra MinIO real |
-| `core/cache/lock.service.spec.ts` (sesión anterior, no nuevo)         |   —   | —                                                                     |
+## 2. Corrida real de esta sesión
 
-`login.usecase.spec.ts` pasó de 5 tests (sesión anterior) a 6 — reescrito
-por completo porque `LoginUseCase` cambió de firma (`LoginOutcome` en vez de
-`LoginResult` directo) al integrar 2FA.
+`Docker Desktop` no disponible durante toda la sesión (`failed to
+connect to the docker API` a nivel host) — ver
+`BACKEND_HEALTH_REPORT.md §4` para el detalle. Se corrieron los 6
+suites que NO necesitan infraestructura real:
 
-## 3. Hallazgo real de esta sesión: el rate limit nuevo interactuaba con los tests existentes
+```
+auth-backend (parcial, solo unitarios): 31/31 ✅
+  - value-objects/email.vo.spec.ts (4)
+  - events/auth-domain-events.spec.ts (4)
+  - services/jwt-token.provider.spec.ts (3)
+  - services/login.usecase.spec.ts (6, fakes)
+  - entities/usuario.entity.spec.ts (5)
+  - entities/sesion.entity.spec.ts (9)
+core-config: 5/5 ✅
+```
 
-Al agregar `@Throttle({ limit: 5, ttl: 60_000 })` a `/auth/login`, la suite
-existente de `auth.controller.e2e-spec.ts` (que hace varios logins dentro
-del mismo `describe`, compartiendo la misma app/IP de test) empezó a
-acercarse al límite. Se resolvió consolidando dos tests que cada uno hacía
-su propio login en uno solo que reusa el mismo login para las tres
-aserciones relacionadas (login → refresh → logout), en vez de forzar un
-límite más permisivo solo para que los tests pasen — el comportamiento real
-en producción (5/60s) quedó intacto.
+Los 4 suites e2e de `auth-backend` (`auth.controller`, `password-reset`,
+`two-factor-login`, `email-password-reset-notifier`) fallaron con
+`ECONNREFUSED`/`Can't reach database server` — consistente con Docker
+caído, no con una regresión de código (ningún caso de uso de negocio
+cambió esta sesión, que fue de auditoría pura).
 
-## 4. Efecto colateral: `JwtStrategy` ahora depende de `CacheService`
+## 3. Cobertura — mecanismo, sin nuevo umbral
 
-La revocación de sesión (§ `SECURITY_REPORT.md` #3) hizo que el
-`JwtStrategy` global —usado por cualquier ruta protegida— dependa de
-`CacheService`. **11 archivos `*.e2e-spec.ts`** que arman su propio
-`Test.createTestingModule` con `HttpModule` (pero sin `CacheModule`)
-necesitaron sumarlo a sus imports, o la resolución de DI fallaba al
-arrancar la app de test. Lista completa: `auth.controller.e2e-spec.ts`,
-`password-reset.e2e-spec.ts`, `two-factor-login.e2e-spec.ts` (nuevo, ya
-lo incluía), `empresas.controller.e2e-spec.ts`, `impuestos.controller.e2e-spec.ts`,
-`monedas.controller.e2e-spec.ts`, `parametros.controller.e2e-spec.ts`,
-`auditoria.controller.e2e-spec.ts`, `dos-factores.controller.e2e-spec.ts`,
-`roles.controller.e2e-spec.ts`, `sesiones.controller.e2e-spec.ts`,
-`usuarios.controller.e2e-spec.ts`. Todos re-verificados tras el cambio.
+`coverageThreshold` (piso de seguridad, 5% global — ver
+`jest.preset.js`) sin cambios desde que se agregó. `pnpm test:cov` sigue
+sin estar wireado a CI. Ver la sesión de infraestructura previa para el
+razonamiento completo de por qué el piso es tan bajo (la mayoría de los
+27 módulos de negocio no tienen código que cubrir todavía).
 
-## 5. Falso positivo de un audit previo, corregido al verificar
+## 4. Patrón de testing — confirmado consistente en todo el backend
 
-El audit de esta sesión (agente de solo-lectura, antes de escribir código)
-había marcado `sucursales` y `tasas-impuesto` como "sin cobertura e2e". Al
-ir a escribir los tests faltantes, se encontró que **ambos ya tenían
-cobertura real** — anidada dentro de `empresas.controller.e2e-spec.ts` e
-`impuestos.controller.e2e-spec.ts` respectivamente, no en archivos con su
-propio nombre (que es lo único que el audit había buscado). No se escribió
-ningún test duplicado — se corrigió el hallazgo en vez de actuar sobre él
-a ciegas.
+- **Unitario**: fakes mínimos del colaborador exacto que la clase bajo
+  prueba necesita (nunca un mock framework genérico) — mismo patrón en
+  los 4 paquetes de negocio.
+- **Integración/e2e**: contra infraestructura REAL (Postgres/Redis/
+  MinIO/MailHog vía Docker), nunca contra una base de datos de test
+  aislada — decisión de arquitectura ya tomada y consistente desde la
+  primera sesión de código real.
+- **`--runInBand`**: necesario en este sandbox de desarrollo específico
+  para evitar saturar memoria con 5+ suites e2e reales en paralelo — no
+  es una limitación del código, del proyecto, ni (previsiblemente) de un
+  runner de CI real con más memoria disponible (sin confirmar, ver
+  `TECHNICAL_DEBT.md §4`).
 
-## 6. Limitación de memoria del sandbox — no del código
+## 5. Riesgo de esta limitación: bajo
 
-`nx test <paquete>` sin `--runInBand` satura la memoria de este entorno
-cuando corren 5+ suites e2e reales en paralelo (cada una levanta su propia
-app Nest + conexiones a Postgres/Redis/MinIO/MailHog reales). Los números
-de la tabla §1 son todos con `--runInBand` (serial dentro del paquete, real
-paralelismo entre `nx test` de distintos paquetes evitado a propósito
-durante esta sesión). Mismo patrón que documentó la sesión de
-infraestructura previa — un runner de CI real (más memoria disponible que
-este sandbox) no debería verlo, pero no se pudo confirmar eso último acá.
-
-## 7. No cubierto esta sesión
-
-- Tests de `core/storage` no ejercitan el endpoint HTTP completo
-  (`StorageController` se instancia directo, sin pasar por
-  `Test.createTestingModule`/supertest) — deliberado, mismo patrón ya usado
-  por `core/cache/lock.service.spec.ts` para librerías `core/*`. La
-  integración HTTP completa (multipart real vía supertest) queda para
-  cuando un módulo de negocio real consuma el endpoint.
-- Sin test de carga/concurrencia sobre el lockout ni sobre la emisión de
-  `challengeToken` — fuera de alcance de esta fase.
+Cero cambios de código esta sesión (auditoría pura) — el riesgo de que
+los 96 tests no re-corridos hoy hayan empezado a fallar es
+estructuralmente nulo salvo por drift externo (versión de una
+dependencia, cambio de infraestructura). Recomendación: primera acción
+de la próxima sesión con Docker disponible debería ser
+`pnpm nx run-many -t test -- --runInBand` completo, antes de cualquier
+desarrollo nuevo.

@@ -422,6 +422,28 @@ ErrorBoundary > RouterProvider`), y `app-shell/module-registry.ts` con las 25 fe
     original (nombres de clases de 2FA, 200 vs 202 en la rama de 2FA).
   - 18 tests nuevos, todos unitarios (Value Object, eventos, JWT provider, `GuestGuard`) — sin
     e2e nuevos esta parte porque no se tocó ningún endpoint real.
+- **FASE 03 — Backend Core Enterprise, Parte 01: auditoría completa, sin desarrollo (2026-07-23).**
+  Pedido explícito: "no comenzar el desarrollo hasta terminar esta auditoría" — cero cambios de
+  código de negocio esta sesión, solo verificación + documentación. `git fetch`/`status` confirmó
+  el repo sincronizado con `origin/gorazus2`, sin cambios remotos pendientes. Build/lint limpios en
+  los 8 paquetes principales; `pnpm audit` refrescado (39 vulnerabilidades, sin drift desde la
+  sesión anterior); `docs/api/openapi.json` confirmado vigente (38 rutas, sin cambios de código
+  desde su última regeneración). **Discrepancia real encontrada**: el pedido de FASE 03 listaba
+  como prioridad "primero" Infraestructura/Auth/Usuarios/Roles/Permisos/Multiempresa/Sucursales/
+  Almacenes/Configuración/API REST/OpenAPI, dando a entender que el desarrollo recién empieza —
+  de esa lista, **todo ya existe excepto Almacenes** (`modules/inventario` sigue vacío). Nuevo
+  `TECHNICAL_DEBT.md` (deuda técnica consolidada, antes dispersa entre este archivo y los reportes
+  de sesiones previas). `BACKEND_HEALTH_REPORT.md`/`API_REPORT.md`/`SECURITY_REPORT.md`/
+  `TEST_REPORT.md`/`PROJECT_STATUS.md` reescritos como snapshots de estado ACTUAL completo (antes
+  eran reportes de delta de una sesión puntual). `ROADMAP.md` corregido: decía "2FA no está
+  integrado como paso obligatorio" y "`PasswordResetNotifier` solo tiene logging" — ambas
+  afirmaciones falsas desde la sesión "Backend Core" (2FA sí está exigido, el email sí es real).
+  **Limitación de esta sesión**: Docker Desktop no disponible en el host durante toda la sesión
+  (mismo síntoma que al cierre de la sesión anterior, sin resolverse entre sesiones) — los tests
+  que necesitan Postgres/Redis/MinIO/MailHog reales no se pudieron re-correr; los 31 tests
+  unitarios puros de `auth-backend` sí, y pasan limpio. Ver `BACKEND_HEALTH_REPORT.md §4` y
+  `TEST_REPORT.md §2` para el detalle honesto de qué se verificó y qué queda pendiente de
+  reconfirmar.
 
 ### Corregido
 

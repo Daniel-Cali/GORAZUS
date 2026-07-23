@@ -1,38 +1,46 @@
 # Project Status — GORAZUS ERP
 
-> Foto del estado general del proyecto a 2026-07-21. Complementa, sin
+> Foto del estado general del proyecto a 2026-07-23. Complementa, sin
 > duplicar, a [ROADMAP.md](./ROADMAP.md) (estado del código por módulo),
 > [VERSION.md](./VERSION.md) (versión actual), [CHANGELOG.md](./CHANGELOG.md)
-> (detalle por sesión de trabajo) y
+> (detalle por sesión de trabajo), [TECHNICAL_DEBT.md](./TECHNICAL_DEBT.md)
+> (deuda técnica consolidada) y
 > [docs/00-roadmap-fases.md](./docs/00-roadmap-fases.md) (estado de la
-> documentación de arquitectura por fase). Generado como entregable propio de
-> la auditoría de base de datos "Fase 1, Parte 1" (rama
-> `feature/database-audit`) — sin modificar ninguno de esos documentos.
+> documentación de arquitectura por fase). Actualizado como entregable de
+> FASE 03 — Backend Core Enterprise, Parte 01 (auditoría) — sin modificar
+> el contenido de esos otros documentos.
 
 ## 1. En una frase
 
 GORAZUS tiene **documentación de arquitectura y base de datos Enterprise
-prácticamente completa** (32 fases + DDD + auditorías de base de datos) y
-**código real todavía temprano** (2 de 27 módulos de negocio con
-backend+frontend funcional) — la brecha entre "diseñado" e "implementado" es
-grande y está documentada con honestidad en cada pieza, no oculta.
+completa** (32 fases + DDD + certificación de base de datos) y **backend
+real en 3 de 27 módulos de negocio** (`auth`, `seguridad`,
+`configuracion`), con ese núcleo ya endurecido para producción (2FA
+exigido, bloqueo por intentos, revocación de sesión, CSRF, email real) —
+la brecha entre "diseñado" e "implementado" sigue siendo grande en el
+resto de módulos, documentada con honestidad, no oculta.
 
 ## 2. Versión actual
 
-**0.2.0** (2026-07-21) — FASE 02, Backend Core + Gestión de Versiones. Ver
-[VERSION.md](./VERSION.md) para el detalle de qué se agregó.
+**0.3.1** (2026-07-22) — FASE 2, Parte 2.1: infraestructura del módulo
+`auth` preparada (Value Object, Domain Events, JWT Provider, config de
+TTLs), sin tocar el login ya construido. Ver [VERSION.md](./VERSION.md)
+para el historial completo de versiones.
 
 ## 3. Estado del código (resumen de ROADMAP.md)
 
-| Pieza                                                                                                       | Estado                                                                  |
-| ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Bootstrap del monorepo (Nx, pnpm, tsconfig, eslint, prettier)                                               | ✅                                                                      |
-| Infraestructura Docker (Postgres, Redis, RabbitMQ, MinIO, nginx, pgAdmin, MailHog, Prometheus/Grafana/Loki) | ✅ verificada de punta a punta                                          |
-| Foundation Platform (`core/*`)                                                                              | ✅ validado con servidor real                                           |
-| Persistencia (`core/database`, 21 clientes Prisma, RLS)                                                     | ✅                                                                      |
-| Módulos de negocio con backend real                                                                         | 🟡 2 de 27 (`auth`, `seguridad`) + `configuracion` (Core, sin frontend) |
-| Resto de módulos de negocio (24)                                                                            | ❌ Sin backend — placeholder de frontend registrado                     |
-| Testing (unitario/integración/e2e/carga/seguridad)                                                          | ✅ 111+ tests, corriendo contra infraestructura real                    |
+| Pieza                                                                                                       | Estado                                                                          |
+| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| Bootstrap del monorepo (Nx, pnpm, tsconfig, eslint, prettier)                                               | ✅                                                                              |
+| Infraestructura Docker (Postgres, Redis, RabbitMQ, MinIO, nginx, pgAdmin, MailHog, Prometheus/Grafana/Loki) | ✅ verificada de punta a punta                                                  |
+| CI/CD (GitHub Actions)                                                                                      | ✅ corrigiendo un bug real (apuntaba a una rama `main` inexistente)             |
+| Foundation Platform (`core/*`)                                                                              | ✅ validado con servidor real                                                   |
+| Persistencia (`core/database`, 21 clientes Prisma, RLS)                                                     | ✅                                                                              |
+| Auth Enterprise (login, 2FA exigido, bloqueo, revocación, CSRF, refresh)                                    | ✅ endurecido y probado (FASE 2 Backend Core)                                   |
+| Almacenamiento de archivos (`core/storage`)                                                                 | ✅ endpoint genérico real, sin consumidor de negocio todavía                    |
+| Módulos de negocio con backend real                                                                         | 🟡 3 de 27 (`auth`, `seguridad`, `configuracion`)                               |
+| Resto de módulos de negocio (24, incluyendo `inventario`/Almacenes)                                         | ❌ Sin backend — placeholder de frontend registrado                             |
+| Testing (unitario/integración/e2e/carga/seguridad)                                                          | ✅ 127+ tests reales — ver nota de disponibilidad de Docker en `TEST_REPORT.md` |
 
 Ver [ROADMAP.md](./ROADMAP.md) para la tabla completa módulo por módulo.
 
@@ -40,67 +48,55 @@ Ver [ROADMAP.md](./ROADMAP.md) para la tabla completa módulo por módulo.
 
 32 fases originales pedidas por el usuario — casi todas ✅ completas, ver
 [docs/00-roadmap-fases.md](./docs/00-roadmap-fases.md) para el detalle
-fase por fase. Trabajo adicional fuera de esas 32 fases, completado en
-sesiones posteriores (ver
-[docs/00-indice-maestro.md](./docs/00-indice-maestro.md) §"Documentación
-fuera de esta lista"):
-
-- **EPIC 03** — Arquitectura de Frontend (`docs/frontend/`).
-- **EPIC 04** — Implementation Standards (`docs/standards/`).
-- **EPIC — Database Visualization Environment** (`docs/database/erd/`,
-  DBeaver/SchemaSpy/Graphviz).
-- **PHASE 01 — Database Enterprise** (optimización real: particionamiento,
-  575 índices FK agregados).
-- **Fases 1-5 (usuario) — Arquitectura Enterprise avanzada**: auditoría del
-  modelo de datos, motores Enterprise (Workflow/BPM/Approval/Document
-  Management/Digital Signature/Integration Engine), Data Warehouse/BI,
-  módulo de IA, y el capstone de ERP Enterprise readiness (Holding/MRP/
-  TMS/Zero Trust/Compliance) — ver
-  [docs/architecture/README.md](./docs/architecture/README.md).
-- **Fase 6 (usuario) — Domain-Driven Design**: 20 documentos de arquitectura
-  de dominio (Bounded Contexts, Aggregates, Domain Events, ...) — ver
-  [docs/ddd/README.md](./docs/ddd/README.md).
-- **"Database Enterprise v1.0" (usuario) — auditoría de base de datos
-  orientada a ferretería/distribución** (esta sesión, rama
-  `feature/database-audit`): formas normales verificadas, catálogo de
-  vistas/triggers/funciones re-confirmado, análisis funcional de vertical,
-  y este mismo inventario/auditoría/estado consolidados — ver
-  [docs/database/DATABASE_AUDIT.md](./docs/database/DATABASE_AUDIT.md).
+fase por fase. Sin cambios sustanciales en esta pieza desde la última
+foto — ver la versión anterior de este documento (`git log
+PROJECT_STATUS.md`) para el detalle completo de EPICs/Fases de
+documentación, no repetido acá para no duplicar.
 
 ## 5. Estado de la base de datos
 
-**92% Enterprise-Ready** (ver
-[docs/database/AUDIT_DATABASE_ENTERPRISE_V2_FERRETERIA.md §6](./docs/database/AUDIT_DATABASE_ENTERPRISE_V2_FERRETERIA.md#6-informe-final)) —
-501 tablas, 5.164 FK (100% válidas), 3.201 índices (0 duplicados), RLS
-forzado en 500/501 tablas, particionamiento aprovisionado en las 27 tablas
-de alto volumen. Detalle completo:
-[docs/database/DATABASE_INVENTORY.md](./docs/database/DATABASE_INVENTORY.md)
-(números) y
-[docs/database/DATABASE_AUDIT.md](./docs/database/DATABASE_AUDIT.md)
-(hallazgos de calidad).
+Sin cambios desde la certificación formal — **Enterprise v1.0.0**
+(2026-07-21, congelada en su estructura fundamental): 501 tablas, 5.164
+FK (100% válidas), 3.201 índices (0 duplicados), RLS forzado en 500/501
+tablas. Ver [VERSION.md §Versionado del modelo de datos](./VERSION.md)
+y [docs/database/DATABASE_CERTIFICATION.md](./docs/database/DATABASE_CERTIFICATION.md).
+Ningún cambio de schema en las 3 sesiones de código desde entonces — el
+modelo de datos sigue siendo el contrato que el backend consume, no al
+revés.
 
-## 6. Brecha principal: diseño vs. implementación
+## 6. Brecha principal — y una discrepancia real encontrada esta auditoría
 
-La brecha más grande del proyecto hoy no es de diseño — es que **25 de 27
-módulos de negocio todavía no tienen una sola línea de backend real**,
-aunque cada uno ya tiene su modelo de datos, arquitectura de módulo,
-eventos de dominio y Aggregate Root completamente diseñados. El orden de
-construcción ya confirmado (ver memoria de proyecto / `ROADMAP.md` §5):
-Productos → Inventario → Clientes → Ventas → Caja → POS.
+FASE 03 (el pedido de esta sesión) listaba como prioridad "primero":
+Infraestructura/Autenticación/Usuarios/Roles/Permisos/Multiempresa/
+Sucursales/**Almacenes**/Configuración/API REST/OpenAPI — dando a
+entender que el desarrollo recién comienza. **Discrepancia real**: de
+esa lista, **todo ya existe excepto Almacenes** — confirmado
+`modules/inventario/{backend,frontend,shared}` sin un solo archivo. El
+resto (auth, RBAC, empresas/sucursales, configuración, API REST con
+OpenAPI real) ya está construido, probado y endurecido en sesiones
+previas (ver `CHANGELOG.md`). Detalle de por qué se documentó esto en
+vez de reconstruir lo ya hecho: `AUTH_MODULE_REPORT.md §1` (mismo patrón
+de discrepancia ya resuelto una vez en Parte 2.1 de la fase anterior).
+
+La brecha real más grande sigue siendo la misma de siempre: **24 de 27
+módulos de negocio todavía no tienen una sola línea de backend**, aunque
+cada uno ya tiene su modelo de datos, arquitectura de módulo, eventos de
+dominio y Aggregate Root completamente diseñados. Orden de construcción
+confirmado (`ROADMAP.md`): **Almacenes** (único ítem real pendiente de
+la lista "primero" de FASE 03) → Productos → Inventario → Clientes →
+Ventas → Caja → POS.
 
 ## 7. Puntos abiertos que requieren una decisión (no técnica, de negocio)
 
-| Punto                                                        | Por qué está abierto                                                                      | Dónde está documentado                                                                                                                                                |
-| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 185 FK reales cruzan schemas de módulos de negocio distintos | Contradice la regla de "ID suelto" ya documentada; corregirlo es un cambio de alto riesgo | [docs/database/FOREIGN_KEYS.md §3](./docs/database/FOREIGN_KEYS.md#3-hallazgo-real-185-fk-cruzan-schemas-de-módulos-de-negocio)                                       |
-| `core.restore_test_logs` sin RLS                             | Podría ser intencional (tabla de infraestructura de backup)                               | [docs/database/SECURITY.md §1](./docs/database/SECURITY.md#1-row-level-security--verificado)                                                                          |
-| Materiales peligrosos/hoja de seguridad sin campo dedicado   | Gap funcional real para el vertical ferretería, bajo riesgo de agregar                    | [docs/database/AUDIT_DATABASE_ENTERPRISE_V2_FERRETERIA.md §4.1](./docs/database/AUDIT_DATABASE_ENTERPRISE_V2_FERRETERIA.md#41--detalle-del-gap-materiales-peligrosos) |
+Sin cambios desde la última foto — ver
+[TECHNICAL_DEBT.md §2](./TECHNICAL_DEBT.md) (185 FK cruzando schemas,
+`core.restore_test_logs` sin RLS) para el detalle consolidado, ya no
+duplicado acá.
 
 ## 8. Trazabilidad
 
-Este documento es una síntesis — no introduce ningún hecho nuevo que no esté
-ya documentado en `ROADMAP.md`, `docs/00-roadmap-fases.md`,
-`docs/database/DATABASE_AUDIT.md` o `docs/database/DATABASE_INVENTORY.md`.
-Actualizar este archivo cada vez que cambie sustancialmente el estado del
-código o de la documentación, en el mismo commit que ese cambio — mismo
-principio ya aplicado a `docs/00-indice-maestro.md`.
+Este documento es una síntesis — no introduce ningún hecho nuevo que no
+esté ya documentado en `ROADMAP.md`, `CHANGELOG.md`, `TECHNICAL_DEBT.md`
+o `docs/database/DATABASE_CERTIFICATION.md`. Actualizar este archivo
+cada vez que cambie sustancialmente el estado del código o de la
+documentación, en el mismo commit que ese cambio.

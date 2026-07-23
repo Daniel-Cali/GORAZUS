@@ -1,95 +1,98 @@
 # Security Report — GORAZUS ERP
 
-> Fase 2 — Desarrollo del Backend Core. Sesión del 2026-07-22, versión
-> **0.3.0**. Cubre exactamente lo que cambió esta sesión — no repite el
-> checklist de seguridad genérico ya cubierto en sesiones previas
-> (Argon2id, RLS, SQL injection vía Prisma parametrizado, helmet, CORS con
-> origen exacto — todos ya reales antes de esta sesión, confirmado por
-> auditoría, sin cambios acá).
+> FASE 03 — Backend Core Enterprise, Parte 01 (auditoría). Sesión del
+> 2026-07-23, versión **0.3.1**. Estado ACTUAL completo de seguridad —
+> no solo lo nuevo de una sesión puntual (para eso ver `CHANGELOG.md`).
+> Reemplaza como fuente de verdad al `SECURITY_REPORT.md` anterior
+> (sesión "Backend Core", 2026-07-22).
 
-## 1. Los 4 gaps reales cerrados (auditoría → fix → verificación)
+## 1. Autenticación
 
-| #   | Gap encontrado                                                            | Fix                                                                                                  | Verificado cómo                                                                                  |
-| --- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| 1   | `security.login_attempts` sin escritor — sin bloqueo por fuerza bruta     | `LoginAttemptRepository` + `CuentaBloqueadaException` (429) tras 5 fallos/15min, por (tenant, email) | 5 tests unitarios (fakes) + e2e real                                                             |
-| 2   | `/auth/login` sin rate limit propio (compartía el global 100/60s)         | `@Throttle({ default: { limit: 5, ttl: 60_000 } })`                                                  | Confirmado indirectamente: los propios e2e tuvieron que reordenarse para no chocar con el límite |
-| 3   | Access token sin revocación — válido ~15 min pase lo que pase tras logout | `LogoutUseCase` marca el `sessionId` revocado en Redis; `JwtStrategy` lo consulta                    | e2e real: login → logout → reusar el mismo token → 401                                           |
-| 4   | `/auth/refresh` (único endpoint cookie-only) sin defensa CSRF explícita   | `SameSite: 'lax'` → `'strict'` + chequeo de `Origin` contra `CORS_ORIGIN`                            | e2e real: `Origin` cross-site → 403                                                              |
+| Control                               | Estado | Detalle                                                                               |
+| ------------------------------------- | :----: | ------------------------------------------------------------------------------------- |
+| Hashing de contraseña                 |   ✅   | Argon2id (`packages/tooling/utils/hash.ts`)                                           |
+| JWT de acceso                         |   ✅   | 15 min, firmado con `JWT_ACCESS_SECRET`, sin roles/permisos embebidos                 |
+| Refresh token                         |   ✅   | Aleatorio 256 bits (no JWT), hash SHA-256 en `core.sessions`, rotación en cada uso    |
+| Revocación inmediata al logout        |   ✅   | `sessionId` marcado revocado en Redis, consultado por `JwtStrategy` en cada request   |
+| Bloqueo por intentos fallidos         |   ✅   | 5 fallos / 15 min por (tenant, email), `security.login_attempts`                      |
+| Rate limit propio en login            |   ✅   | 5 req/60s en `/auth/login` y `/auth/login/2fa` (global: 100/60s)                      |
+| 2FA (TOTP)                            |   ✅   | RFC 6238, exigido en login si está confirmado, secreto cifrado AES-256-GCM en reposo  |
+| CSRF                                  |   ✅   | `/auth/refresh` (único endpoint cookie-only): `SameSite=Strict` + chequeo de `Origin` |
+| Detección de reuso de refresh token   |   ❌   | Gap conocido, documentado en el propio código — ver `TECHNICAL_DEBT.md §1`            |
+| MFA más allá de TOTP (WebAuthn, etc.) |   ❌   | Sin diseño ni pedido todavía                                                          |
 
-Detalle técnico completo de cada uno en `CHANGELOG.md` § "Corregido" (misma
-fecha). Trade-off aceptado y documentado inline en el código: el bloqueo
-por intentos (#1) cuenta por email sin confirmar que exista, lo que en
-teoría permite que alguien fuerce el bloqueo de una cuenta ajena fallando
-5 veces a propósito — cerrar eso del todo pide límite por IP o CAPTCHA,
-fuera de esta fase.
+## 2. Autorización (RBAC)
 
-## 2. 2FA — de "preparado" a exigido
+`PermissionsGuard` global, **fail-closed** por diseño: sin resolver
+registrado, deniega todo. `seguridad` registra el resolver real
+(`PermissionsResolverService`) que resuelve rol→permiso contra la base de
+datos (sin cache Redis todavía — cada request hace la consulta). Roles y
+permisos administrables vía API (`/seguridad/roles`, con asignación de
+permisos y de roles a usuarios).
 
-`security.two_factor_credentials` y su flujo de setup/confirmar/deshabilitar
-ya eran reales desde la sesión anterior, pero `LoginUseCase` nunca los
-consultaba — un atacante con la contraseña de un usuario con 2FA activo
-igual entraba. Ahora `POST /auth/login` retiene los tokens y exige un
-segundo paso (`POST /auth/login/2fa`) con el código TOTP real cuando hay una
-credencial confirmada. El `challengeToken` es de un solo uso (se borra de
-Redis al leerlo, importe o no el resultado del código) — verificado que
-reintentar con el mismo token, exitoso o no el primer intento, siempre da
-401 en el segundo.
+## 3. Multiempresa / aislamiento de datos
 
-## 3. Superficie nueva: `core/storage` expuesto por primera vez
+- **RLS forzado** en 500/501 tablas (`core.restore_test_logs` es la única
+  excepción, plausiblemente intencional — tabla de infraestructura de
+  backup).
+- `app.current_tenant_id`/`app.current_company_ids` seteados vía
+  `withTenantScope` en cada operación de repositorio — nunca un `WHERE
+tenant_id = ...` manual en código de aplicación (estructuralmente
+  imposible de "olvidar").
+- **Archivos** (`core/storage`): aislamiento a nivel de bucket
+  (`archivos-<tenantId>`), no de fila — MinIO no tiene RLS, este es el
+  equivalente funcional.
+- 🟡 185 FK reales cruzan schemas de módulos de negocio distintos — ver
+  `TECHNICAL_DEBT.md §2`, requiere decisión de negocio, no es una fuga de
+  datos (las FK son válidas, solo contradicen la regla de diseño de "ID
+  suelto").
 
-`POST/GET/DELETE /files` es la primera vez que el backend acepta contenido
-binario arbitrario subido por un usuario. Mitigaciones aplicadas:
+## 4. Superficie HTTP
 
-- Límite de tamaño (25MB, `multer` `limits.fileSize`) — rechaza antes de
-  llenar memoria/disco.
-- Nombre de archivo sanitizado antes de convertirse en parte de la object
-  key (`sanitizeFileName`) — sin esto, un nombre como `../../etc/passwd`
-  quedaría literal en la key (no explotable como path traversal real en
-  MinIO, que no tiene filesystem jerárquico, pero sanitizado de todos
-  modos por higiene y legibilidad).
-- Aislamiento multi-tenant a nivel de bucket (`archivos-<tenantId>`) — un
-  usuario autenticado de un tenant no puede alcanzar objetos de otro
-  tenant sin importar qué `key` intente adivinar, porque su JWT solo
-  autoriza contra el bucket de su propio tenant.
-- Protegido por el `JwtAuthGuard` global — sin `@Public()`, requiere
-  autenticación como cualquier otro endpoint de negocio.
+- `helmet()` — headers de seguridad estándar.
+- CORS con origen exacto (`CORS_ORIGIN`), nunca `*` — necesario porque la
+  cookie de refresh viaja con `credentials: true`.
+- `trust proxy` configurado (`app.set('trust proxy', 1)`) — `req.ip`
+  refleja al cliente real detrás de nginx, no la IP interna del proxy
+  (afecta directamente la precisión del rate limiting).
+- Validación de entrada: Zod en el 100% de los endpoints que reciben
+  body — nunca `class-validator`.
+- SQL injection: Prisma parametrizado en toda la capa de aplicación, sin
+  SQL crudo con interpolación de strings.
 
-## 4. Dependencias — dos CVEs reales introducidos y cerrados en la misma sesión
+## 5. Archivos subidos (`core/storage`)
 
-Agregar `nodemailer` y elevar `multer` a dependencia directa (antes
-transitiva y sin usar) subió `pnpm audit` de 35 a 47 vulnerabilidades —
-a diferencia del resto de la deuda ya documentada (heredada, deferida por
-riesgo de regresión en código ya verificado), estas las introdujo esta
-misma sesión, así que se resolvieron acá:
+- Límite de tamaño: 25MB (`multer`).
+- Sanitización de nombre de archivo antes de convertirse en object key
+  (colapsa secuencias de `..`, quita `/` y caracteres fuera de
+  alfanumérico/`.`/`-`/`_`).
+- URLs de descarga siempre firmadas de corta duración (~5 min) — nunca
+  credenciales de MinIO expuestas al cliente.
+- Protegido por `JwtAuthGuard` global (sin `@Public()`).
 
-| Paquete      | Antes  | Después | Cierra                                                                                                                        |
-| ------------ | ------ | ------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `nodemailer` | 6.10.1 | 9.0.3   | 8 advisories, incluyendo validación de certificado TLS y CRLF injection en headers — relevante porque ahora manda correo real |
-| `multer`     | 2.0.2  | 2.2.0   | DoS por nested field names / cleanup incompleto — relevante porque ahora hay un endpoint de upload real                       |
+## 6. Dependencias — `pnpm audit`, refrescado esta sesión
 
-**39 vulnerabilidades restantes** (era 35 antes de esta sesión, +4 neto tras
-los dos fixes de arriba) — todas la misma deuda de tooling/observabilidad ya
-rastreada en `CHANGELOG.md` "Pendiente conocido" (Vitest UI crítica sin
-superficie real, minimatch/picomatch ReDoS en tooling de build, exporters de
-OpenTelemetry). `security.yml` sigue con `pnpm audit || true` (no bloqueante)
-— decisión ya tomada, no revisitada acá.
+**39 vulnerabilidades** (1 crítica, 19 altas, 18 moderadas, 1 baja) —
+mismo número que al cierre de la sesión anterior (sin drift). Todas en
+dependencias transitivas de tooling/observabilidad (Vitest UI server,
+minimatch/picomatch ReDoS en build tooling, exporters de OpenTelemetry,
+js-yaml vía `@nestjs/swagger`) — **ninguna en una dependencia directa de
+runtime de negocio**. `security.yml` corre `pnpm audit` sin bloquear el
+merge (`|| true`) hasta que se resuelva con tiempo dedicado de
+regresión. Detalle completo y por qué no se tocan ahora:
+`TECHNICAL_DEBT.md §1`.
 
-## 5. Efecto colateral de seguridad: `trust proxy`
+## 7. Secretos
 
-`app.set('trust proxy', 1)` en `core/kernel/bootstrap.ts` — sin esto,
-`req.ip` (usado ahora por el rate limiter Y por el registro de intentos de
-login) siempre resolvía a la IP interna de nginx, no la del cliente real.
-Esto no es solo un bug de logging: sin la IP real, el rate limiting global
-(`ThrottlerGuard`) tampoco distinguía clientes reales detrás de nginx —
-cualquier IP falsa en `X-Forwarded-For` sin este flag habría sido ignorada
-de todos modos (Express no confía en el header sin `trust proxy` seteado),
-así que el fix no abre una superficie de IP-spoofing nueva, cierra un
-bug de "todo el tráfico se ve igual" que ya existía.
+`.env` gitignored y confirmado no trackeado por git. `.env.example` sin
+valores reales. Claves de cifrado (`SEGURIDAD_ENCRYPTION_KEY`,
+`NOTIFICATIONS_ENCRYPTION_KEY`) — una por feature, sin rotación
+automática todavía (rotación es trabajo de una fase futura, ya
+documentado antes de esta sesión).
 
-## 6. No evaluado esta sesión
+## 8. No evaluado esta sesión
 
-- Pentesting real / escaneo de vulnerabilidades activo contra la API
-  corriendo — fuera de alcance de este entorno de agente.
-- Rotación de `JWT_ACCESS_SECRET`/`SEGURIDAD_ENCRYPTION_KEY`/`NOTIFICATIONS_ENCRYPTION_KEY`
-  — sin cambios, siguen siendo claves únicas sin mecanismo de rotación
-  (documentado como Fase 2 futura desde antes de esta sesión).
+- Pentesting real / escaneo activo contra la API corriendo — Docker no
+  disponible, ver `BACKEND_HEALTH_REPORT.md §4`.
+- Auditoría de código de terceros más allá de `pnpm audit` (ej. análisis
+  estático de la cadena de suministro).
