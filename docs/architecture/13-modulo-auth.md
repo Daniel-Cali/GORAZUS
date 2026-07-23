@@ -9,6 +9,19 @@
 > (login, refresh, 2FA, OAuth2, API Keys, resolución de autorización)
 > y la **arquitectura del módulo backend** que los implementa. Sin
 > código — diagramas de secuencia (mermaid) y prosa únicamente.
+>
+> **Nota de implementación real (agregada 2026-07-22, sin reescribir el
+> resto del documento):** login/refresh/logout/reset de contraseña/2FA ya
+> están implementados y en producción real, con algunos nombres/detalles
+> distintos a este diseño original — `Setup2FAUseCase`/`Verify2FAUseCase`
+> de §5 se llaman `DosFactoresService` (`modules/seguridad/backend`) y
+> `CompleteTwoFactorLoginUseCase` (`modules/auth/backend`) en el código
+> real; el "202 REQUIERE_2FA" de §2 es un 200 con
+> `{ requiresTwoFactor: true, challengeToken }` en la implementación real.
+> Fuente de verdad de lo que existe hoy: `CHANGELOG.md` (búsqueda por
+> fecha) y [AUTH_ARCHITECTURE.md](../../AUTH_ARCHITECTURE.md) (raíz del
+> repo, resumen corto). OAuth2 (§3) y API Keys (§10) de este documento
+> siguen sin implementar — ver "Pendiente conocido" en `CHANGELOG.md`.
 
 ## 0. Alcance y propiedad de datos — por qué "Auth" no es un schema propio
 
