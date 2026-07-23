@@ -18,6 +18,8 @@ import { SeguridadModule } from '../../../../modules/seguridad/backend/seguridad
 import { ConfiguracionModule } from '../../../../modules/configuracion/backend/configuracion.module';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- mismo motivo que arriba
 import { InventarioModule } from '../../../../modules/inventario/backend/inventario.module';
+// eslint-disable-next-line @nx/enforce-module-boundaries -- mismo motivo que arriba
+import { ProductosModule } from '../../../../modules/productos/backend/productos.module';
 
 /**
  * Composition root — ver docs/architecture/01-estructura-monorepo.md §3:
@@ -47,6 +49,7 @@ import { InventarioModule } from '../../../../modules/inventario/backend/inventa
     SeguridadModule,
     ConfiguracionModule,
     InventarioModule,
+    ProductosModule,
   ],
 })
 export class AppModule {}

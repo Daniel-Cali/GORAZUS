@@ -922,6 +922,82 @@ importers:
         specifier: ^7.0.0
         version: 7.2.2
 
+  modules/productos/backend:
+    dependencies:
+      '@gorazus/contracts':
+        specifier: workspace:*
+        version: link:../../../packages/contracts
+      '@gorazus/core-database':
+        specifier: workspace:*
+        version: link:../../../core/database
+      '@gorazus/core-http':
+        specifier: workspace:*
+        version: link:../../../core/http
+      '@nestjs/common':
+        specifier: ^10.4.0
+        version: 10.4.22(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core':
+        specifier: ^10.4.0
+        version: 10.4.22(@nestjs/common@10.4.22(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@10.4.22)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/swagger':
+        specifier: ^7.4.0
+        version: 7.4.2(@nestjs/common@10.4.22(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(reflect-metadata@0.2.2)
+      reflect-metadata:
+        specifier: ^0.2.0
+        version: 0.2.2
+      rxjs:
+        specifier: ^7.8.0
+        version: 7.8.2
+      zod:
+        specifier: ^3.24.0
+        version: 3.25.76
+    devDependencies:
+      '@gorazus/core-cache':
+        specifier: workspace:*
+        version: link:../../../core/cache
+      '@gorazus/core-config':
+        specifier: workspace:*
+        version: link:../../../core/config
+      '@gorazus/core-logging':
+        specifier: workspace:*
+        version: link:../../../core/logging
+      '@gorazus/core-observability':
+        specifier: workspace:*
+        version: link:../../../core/observability
+      '@nestjs/platform-express':
+        specifier: ^10.4.0
+        version: 10.4.22(@nestjs/common@10.4.22(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)
+      '@nestjs/testing':
+        specifier: ^10.4.0
+        version: 10.4.22(@nestjs/common@10.4.22(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@10.4.22)(@nestjs/platform-express@10.4.22)
+      '@types/cookie-parser':
+        specifier: ^1.4.7
+        version: 1.4.10(@types/express@4.17.25)
+      '@types/express':
+        specifier: ^4.17.0
+        version: 4.17.25
+      '@types/jsonwebtoken':
+        specifier: ^9.0.7
+        version: 9.0.10
+      '@types/multer':
+        specifier: ^1.4.12
+        version: 1.4.13
+      '@types/node':
+        specifier: ^20.19.43
+        version: 20.19.43
+      '@types/supertest':
+        specifier: ^6.0.2
+        version: 6.0.3
+      cookie-parser:
+        specifier: ^1.4.7
+        version: 1.4.7
+      jsonwebtoken:
+        specifier: ^9.0.2
+        version: 9.0.3
+      supertest:
+        specifier: ^7.0.0
+        version: 7.2.2
+
   modules/seguridad/backend:
     dependencies:
       '@gorazus/contracts':

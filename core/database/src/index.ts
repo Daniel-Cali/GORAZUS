@@ -99,6 +99,27 @@ export type {
   warehouse_zones,
   warehouse_locations,
 } from '../prisma/schemas/inventory/generated';
+/**
+ * Cliente Prisma del schema `products` — sexto cliente independiente
+ * (`PRISMA_PRODUCTS`), mismo criterio que los anteriores. Primer
+ * consumidor: `modules/productos/backend` (FASE 04: Unidades de Medida,
+ * Categorías, Marcas, Modelos, Productos — 5 de las 35 tablas del
+ * schema, el resto — variantes vía `product_variant_attribute_values`,
+ * atributos, combos, kits, BOM/recetas, imágenes, códigos de barra,
+ * historial de precios, reseñas, proveedores, perfiles fiscales — sin
+ * código todavía, ver `docs/architecture/18-modulo-products.md`).
+ */
+export type {
+  PrismaClient as ProductsPrismaClient,
+  Prisma as ProductsPrisma,
+} from '../prisma/schemas/products/generated';
+export type {
+  units_of_measure,
+  product_categories,
+  brands,
+  product_models,
+  products,
+} from '../prisma/schemas/products/generated';
 // prisma.service.ts (cliente único monolítico) queda superado por el
 // enfoque de 21 clientes por schema en database.module.ts — ver el
 // comentario de cabecera de ese archivo. No se elimina el archivo
