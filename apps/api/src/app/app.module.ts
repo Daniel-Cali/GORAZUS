@@ -16,6 +16,8 @@ import { AuthModule } from '../../../../modules/auth/backend/auth.module';
 import { SeguridadModule } from '../../../../modules/seguridad/backend/seguridad.module';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- mismo motivo que arriba
 import { ConfiguracionModule } from '../../../../modules/configuracion/backend/configuracion.module';
+// eslint-disable-next-line @nx/enforce-module-boundaries -- mismo motivo que arriba
+import { InventarioModule } from '../../../../modules/inventario/backend/inventario.module';
 
 /**
  * Composition root — ver docs/architecture/01-estructura-monorepo.md §3:
@@ -44,6 +46,7 @@ import { ConfiguracionModule } from '../../../../modules/configuracion/backend/c
     AuthModule,
     SeguridadModule,
     ConfiguracionModule,
+    InventarioModule,
   ],
 })
 export class AppModule {}

@@ -81,6 +81,24 @@ export type {
   Prisma as SecurityPrisma,
 } from '../prisma/schemas/security/generated';
 export type { two_factor_credentials } from '../prisma/schemas/security/generated';
+/**
+ * Cliente Prisma del schema `inventory` — quinto cliente independiente
+ * (`PRISMA_INVENTORY`), mismo criterio que los anteriores. Primer
+ * consumidor: `modules/inventario/backend` (Almacenes — FASE 03,
+ * continuidad: `warehouses`/`warehouse_zones`/`warehouse_locations`
+ * únicamente, el resto de las 32 tablas del schema `inventory` — stock,
+ * movimientos, costeo, conteos, producción — es la fase "Inventario"
+ * siguiente, sin código todavía, ver `docs/architecture/19-modulo-inventory.md`).
+ */
+export type {
+  PrismaClient as InventoryPrismaClient,
+  Prisma as InventoryPrisma,
+} from '../prisma/schemas/inventory/generated';
+export type {
+  warehouses,
+  warehouse_zones,
+  warehouse_locations,
+} from '../prisma/schemas/inventory/generated';
 // prisma.service.ts (cliente único monolítico) queda superado por el
 // enfoque de 21 clientes por schema en database.module.ts — ver el
 // comentario de cabecera de ese archivo. No se elimina el archivo

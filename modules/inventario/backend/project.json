@@ -1,0 +1,26 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "inventario-backend",
+  "sourceRoot": "modules/inventario/backend",
+  "projectType": "library",
+  "tags": ["type:backend"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/modules/inventario/backend"],
+      "options": {
+        "command": "tsc -p modules/inventario/backend/tsconfig.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/modules/inventario/backend"],
+      "options": {
+        "jestConfig": "modules/inventario/backend/jest.config.ts"
+      }
+    }
+  }
+}
