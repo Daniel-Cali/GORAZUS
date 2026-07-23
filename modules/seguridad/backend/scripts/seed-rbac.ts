@@ -41,6 +41,7 @@ const PERMISSIONS: Array<{ moduleCode: string; actionCode: string }> = [
   { moduleCode: 'configuracion', actionCode: 'gestionar_monedas' },
   { moduleCode: 'configuracion', actionCode: 'gestionar_impuestos' },
   { moduleCode: 'inventario', actionCode: 'gestionar_almacenes' },
+  { moduleCode: 'inventario', actionCode: 'gestionar_stock' },
   { moduleCode: 'productos', actionCode: 'gestionar_productos' },
 ];
 

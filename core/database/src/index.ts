@@ -85,10 +85,12 @@ export type { two_factor_credentials } from '../prisma/schemas/security/generate
  * Cliente Prisma del schema `inventory` — quinto cliente independiente
  * (`PRISMA_INVENTORY`), mismo criterio que los anteriores. Primer
  * consumidor: `modules/inventario/backend` (Almacenes — FASE 03,
- * continuidad: `warehouses`/`warehouse_zones`/`warehouse_locations`
- * únicamente, el resto de las 32 tablas del schema `inventory` — stock,
- * movimientos, costeo, conteos, producción — es la fase "Inventario"
- * siguiente, sin código todavía, ver `docs/architecture/19-modulo-inventory.md`).
+ * continuidad: `warehouses`/`warehouse_zones`/`warehouse_locations`).
+ * FASE 05 Parte 02 (Motor de stock y movimientos) agrega `stock`/
+ * `stock_movement_types`/`stock_movements` — el resto de las 34 tablas
+ * del schema (reservas, transferencias, ajustes, conteos, recepciones,
+ * salidas, costeo, series, lotes, producción) sigue sin código, ver
+ * `INVENTORY_NEXT_PHASE.md`.
  */
 export type {
   PrismaClient as InventoryPrismaClient,
@@ -98,6 +100,9 @@ export type {
   warehouses,
   warehouse_zones,
   warehouse_locations,
+  stock,
+  stock_movement_types,
+  stock_movements,
 } from '../prisma/schemas/inventory/generated';
 /**
  * Cliente Prisma del schema `products` — sexto cliente independiente
