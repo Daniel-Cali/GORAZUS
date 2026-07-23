@@ -31,6 +31,23 @@ export const envSchema = z.object({
   JWT_ACCESS_SECRET: z.string().min(1),
   JWT_REFRESH_SECRET: z.string().min(1),
 
+  /**
+   * Parte 2.1 (infraestructura del módulo `auth`) — los valores reales
+   * (TTL de 15m/7 días, umbral de bloqueo 5/15min, TTL de desafío 2FA
+   * 5min) siguen hardcodeados como constantes en `LoginUseCase`/
+   * `RefreshTokenUseCase`/`CompleteTwoFactorLoginUseCase` (Parte 2 —
+   * Backend Core), sin leer todavía estas variables. Quedan acá,
+   * validadas y con default idéntico al valor hardcodeado actual, listas
+   * para que Parte 2.2 las conecte sin cambiar comportamiento por
+   * default. Fail-fast igual que el resto del schema si alguien pone un
+   * valor inválido, aunque nada las lea todavía.
+   */
+  JWT_ACCESS_TTL: z.string().min(1).default('15m'),
+  JWT_REFRESH_TTL_DAYS: z.coerce.number().int().positive().default(7),
+  LOGIN_LOCKOUT_THRESHOLD: z.coerce.number().int().positive().default(5),
+  LOGIN_LOCKOUT_WINDOW_MINUTES: z.coerce.number().int().positive().default(15),
+  TWO_FACTOR_CHALLENGE_TTL_MINUTES: z.coerce.number().int().positive().default(5),
+
   API_PORT: z.coerce.number().int().positive().default(3000),
 
   /** Origen exacto del frontend — CORS con `credentials: true` (cookie httpOnly de refresh token, docs/architecture/13-modulo-auth.md §2) exige un origen explícito, nunca `*`. */

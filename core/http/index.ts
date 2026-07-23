@@ -9,6 +9,7 @@ export * from './middlewares/correlation-id.middleware';
 export * from './pipes/zod-validation.pipe';
 export * from './interceptors/tenant.interceptor';
 export * from './guards/jwt-auth.guard';
+export * from './guards/guest.guard';
 export * from './guards/permissions.guard';
 export * from './guards/permissions-resolver.interface';
 export * from './strategies/jwt.strategy';
