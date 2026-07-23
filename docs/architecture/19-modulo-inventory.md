@@ -241,3 +241,18 @@ en el momento de salir.
 | Reservas         | Ídem                                                                   | Relación con `quantity_reserved` y con la salida real (§9)                           |
 | FIFO             | Ídem                                                                   | Algoritmo completo de consumo de capas, con trazabilidad a la recepción origen (§10) |
 | Promedio         | Ídem                                                                   | Fórmula de recálculo + por qué no hay capas, a diferencia de FIFO (§11)              |
+
+## 13. Addendum — Fase 05, Parte 01 (2026-07-23): arquitectura de código
+
+Este documento (v1.0) verifica el **schema**, no propone arquitectura de
+aplicación. La arquitectura de código para construir las 31 tablas de acá
+sin código todavía (todo excepto Almacén/Zona/Ubicación, `v0.6.0`) vive en
+`INVENTORY_ARCHITECTURE.md` (raíz del repo) — incluye el mapeo del pedido
+original de "Inventario Enterprise" contra estas mismas tablas, los gaps
+reales de schema (QR/RFID, fecha de fabricación, peso/volumen/dimensiones,
+obsolescencia, garantías, caja — ninguno tiene columna hoy) y la decisión
+de usar `warehouse_locations.metadata.locationType` como convención de
+aplicación (no columna nueva) para distinguir pasillo/estante/nivel/
+posición dentro de la misma cadena auto-referenciada de §2. Ver también
+`INVENTORY_NEXT_PHASE.md` para la secuencia de partes de implementación
+recomendada.
