@@ -1,3 +1,4 @@
+import type { ConfigService } from '@nestjs/config';
 import type { CacheService } from '@gorazus/core-cache';
 import type { tenants, users } from '@gorazus/core-database';
 import { TenantRepository } from '../repositories/tenant.repository';
@@ -58,6 +59,7 @@ describe('LoginUseCase', () => {
   let twoFactorCredentialRepository: TwoFactorCredentialRepository;
   let issueLoginSessionService: IssueLoginSessionService;
   let cacheService: CacheService;
+  let configService: ConfigService;
   let recordedAttempts: LoginAttemptRecord[];
   let recentFailures: number;
   let twoFactorCredential: TwoFactorCredential | null;
@@ -99,6 +101,15 @@ describe('LoginUseCase', () => {
         cacheSetCalls.push({ key, value, ttlSeconds });
       }),
     } as unknown as CacheService;
+
+    const configValues: Record<string, number> = {
+      'auth.loginLockoutThreshold': 5,
+      'auth.loginLockoutWindowMinutes': 15,
+      'auth.twoFactorChallengeTtlMinutes': 5,
+    };
+    configService = {
+      getOrThrow: jest.fn((key: string) => configValues[key]),
+    } as unknown as ConfigService;
   });
 
   function buildUseCase(): LoginUseCase {
@@ -109,6 +120,7 @@ describe('LoginUseCase', () => {
       twoFactorCredentialRepository,
       issueLoginSessionService,
       cacheService,
+      configService,
     );
   }
 
@@ -121,7 +133,11 @@ describe('LoginUseCase', () => {
     if (!outcome.requiresTwoFactor) {
       expect(outcome.result).toBe(FAKE_LOGIN_RESULT);
     }
-    expect(issueLoginSessionService.issue).toHaveBeenCalledWith(USER);
+    expect(issueLoginSessionService.issue).toHaveBeenCalledWith(USER, {
+      ipAddress: '203.0.113.5',
+      userAgent: null,
+      rememberMe: false,
+    });
     expect(recordedAttempts).toEqual([
       expect.objectContaining({
         tenantId: 'tenant-1',
@@ -150,6 +166,9 @@ describe('LoginUseCase', () => {
       userId: USER.id,
       tenantId: 'tenant-1',
       email: USER.email,
+      ipAddress: null,
+      userAgent: null,
+      rememberMe: false,
     });
   });
 

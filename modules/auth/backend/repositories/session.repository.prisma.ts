@@ -31,4 +31,14 @@ export class SessionRepositoryPrisma extends SessionRepository {
       }),
     );
   }
+
+  async findActiveIdsForUser(context: UserContext, userId: string): Promise<string[]> {
+    const rows = await withTenantScope(this.client, context, (tx) =>
+      tx.sessions.findMany({
+        where: { user_id: userId, revoked_at: null, expires_at: { gt: new Date() } },
+        select: { id: true },
+      }),
+    );
+    return rows.map((row) => row.id);
+  }
 }

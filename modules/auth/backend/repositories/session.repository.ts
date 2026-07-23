@@ -25,4 +25,6 @@ export abstract class SessionRepository extends BaseRepository<
   abstract findByRefreshTokenHash(refreshTokenHash: string): Promise<sessions | null>;
   /** Revoca TODA la familia de sesiones de un usuario — detección de reuso (§4) y "cerrar sesión en todos los dispositivos" (§9). */
   abstract revokeAllForUser(context: UserContext, userId: string): Promise<void>;
+  /** IDs de sesiones activas (no revocadas, no expiradas) de un usuario — `RevokeTokenUseCase` los necesita ANTES de revocar en bloque, para invalidar también el access token vigente de cada una en Redis (§9, FASE 03 Parte 02). */
+  abstract findActiveIdsForUser(context: UserContext, userId: string): Promise<string[]>;
 }

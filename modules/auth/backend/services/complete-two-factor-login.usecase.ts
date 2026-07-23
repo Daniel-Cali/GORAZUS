@@ -76,7 +76,11 @@ export class CompleteTwoFactorLoginUseCase {
       throw new DesafioDosFactoresInvalidoException();
     }
 
-    return this.issueLoginSessionService.issue(record);
+    return this.issueLoginSessionService.issue(record, {
+      ipAddress: challenge.ipAddress,
+      userAgent: challenge.userAgent,
+      rememberMe: challenge.rememberMe,
+    });
   }
 
   /** `SEGURIDAD_ENCRYPTION_KEY` es hex de 64 caracteres (32 bytes) — mismo criterio que `dos-factores.service.ts`. */

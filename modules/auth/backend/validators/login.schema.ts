@@ -12,6 +12,8 @@ export const loginSchema = z.object({
   tenantSlug: z.string().min(1, 'Falta el identificador de la organización'),
   email: z.string().min(1, 'El correo es obligatorio').email('Ingresá un correo válido'),
   password: z.string().min(1, 'La contraseña es obligatoria'),
+  /** "Recordar sesión" (FASE 03 Parte 02) — refresh token de larga duración (`auth.rememberMeTtlDays`) en vez del TTL estándar. */
+  rememberMe: z.boolean().optional().default(false),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;

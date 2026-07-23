@@ -48,6 +48,25 @@ export const envSchema = z.object({
   LOGIN_LOCKOUT_WINDOW_MINUTES: z.coerce.number().int().positive().default(15),
   TWO_FACTOR_CHALLENGE_TTL_MINUTES: z.coerce.number().int().positive().default(5),
 
+  /** FASE 03 Parte 02 — TTL largo de refresh token para "recordar sesión" (`rememberMe` en `POST /auth/login`). */
+  JWT_REMEMBER_ME_TTL_DAYS: z.coerce.number().int().positive().default(30),
+  /**
+   * Protección de session-hijacking en `POST /auth/refresh`: `false`
+   * (default) solo registra un warning si la IP/User-Agent no coinciden
+   * con los guardados al emitir la sesión; `true` además rechaza el
+   * refresh. Apagado por default porque IP/UA cambian legítimamente
+   * (redes móviles, actualizaciones de navegador) y activar el rechazo
+   * sin datos reales de falsos positivos podría bloquear usuarios
+   * legítimos — decisión de producto, no técnica.
+   */
+  // z.coerce.boolean() NO sirve acá — coerciona cualquier string no vacío
+  // (incluido literalmente "false") a `true`. `z.enum` + `transform` es el
+  // primer booleano de env.schema.ts, sin precedente previo que seguir.
+  AUTH_STRICT_SESSION_VALIDATION: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
+
   API_PORT: z.coerce.number().int().positive().default(3000),
 
   /** Origen exacto del frontend — CORS con `credentials: true` (cookie httpOnly de refresh token, docs/architecture/13-modulo-auth.md §2) exige un origen explícito, nunca `*`. */

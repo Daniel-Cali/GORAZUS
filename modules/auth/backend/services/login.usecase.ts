@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- packages/tooling no tiene project.json propio, ver comentario abajo
 import { generateUuid, verifyPassword } from '../../../../packages/tooling/utils';
 import { DomainException } from '@gorazus/core-http';
@@ -9,23 +10,19 @@ import { LoginAttemptRepository } from '../repositories/login-attempt.repository
 import { TwoFactorCredentialRepository } from '../repositories/two-factor-credential.repository';
 import { Usuario } from '../entities/usuario.entity';
 import { IssueLoginSessionService, LoginResult } from './issue-login-session.service';
-import {
-  twoFactorChallengeCacheKey,
-  TWO_FACTOR_CHALLENGE_TTL_SECONDS,
-  TwoFactorChallenge,
-} from './two-factor-challenge';
+import { twoFactorChallengeCacheKey, TwoFactorChallenge } from './two-factor-challenge';
 
-// Ventana + umbral de bloqueo por intentos fallidos (security.login_attempts,
-// docs/database/sql/02_security.sql — tabla ya existía, sin nada que la
-// escribiera hasta esta sesión). Auto-expira: no hay "desbloqueo" explícito,
-// simplemente deja de haber >=5 fallos en la ventana de 15 minutos.
+// Umbral/ventana de bloqueo (`security.login_attempts`) y TTL del desafío
+// 2FA ahora vienen de `auth.config.ts` (`LOGIN_LOCKOUT_THRESHOLD`/
+// `LOGIN_LOCKOUT_WINDOW_MINUTES`/`TWO_FACTOR_CHALLENGE_TTL_MINUTES`,
+// FASE 03 Parte 02) — antes hardcodeados acá, mismo valor por default.
+// Auto-expira: no hay "desbloqueo" explícito, simplemente deja de haber
+// >=umbral fallos en la ventana configurada.
 // Trade-off conocido y aceptado: como el bloqueo cuenta por (tenant, email)
 // sin importar si el usuario existe, un atacante puede forzar el bloqueo de
-// la cuenta de una víctima real fallando 5 veces a propósito (self-DoS) —
-// mitigarlo del todo requeriría CAPTCHA o límite también por IP, fuera de
-// alcance de esta fase.
-const LOGIN_LOCKOUT_THRESHOLD = 5;
-const LOGIN_LOCKOUT_WINDOW_MS = 15 * 60 * 1000;
+// la cuenta de una víctima real fallando el umbral de veces a propósito
+// (self-DoS) — mitigarlo del todo requeriría CAPTCHA o límite también por
+// IP, fuera de alcance de esta fase.
 
 export class CredencialesInvalidasException extends DomainException {
   constructor() {
@@ -66,6 +63,7 @@ export class LoginUseCase {
     private readonly twoFactorCredentialRepository: TwoFactorCredentialRepository,
     private readonly issueLoginSessionService: IssueLoginSessionService,
     private readonly cacheService: CacheService,
+    private readonly configService: ConfigService,
   ) {}
 
   async execute(
@@ -73,19 +71,25 @@ export class LoginUseCase {
     email: string,
     password: string,
     ipAddress: string | null = null,
+    userAgent: string | null = null,
+    rememberMe = false,
   ): Promise<LoginOutcome> {
     const tenant = await this.tenantRepository.findBySlug(tenantSlug);
     if (!tenant) {
       throw new CredencialesInvalidasException();
     }
 
-    const since = new Date(Date.now() - LOGIN_LOCKOUT_WINDOW_MS);
+    const lockoutThreshold = this.configService.getOrThrow<number>('auth.loginLockoutThreshold');
+    const lockoutWindowMinutes = this.configService.getOrThrow<number>(
+      'auth.loginLockoutWindowMinutes',
+    );
+    const since = new Date(Date.now() - lockoutWindowMinutes * 60 * 1000);
     const recentFailures = await this.loginAttemptRepository.countRecentFailures(
       tenant.id,
       email,
       since,
     );
-    if (recentFailures >= LOGIN_LOCKOUT_THRESHOLD) {
+    if (recentFailures >= lockoutThreshold) {
       throw new CuentaBloqueadaException();
     }
 
@@ -122,16 +126,30 @@ export class LoginUseCase {
     );
     if (credencialDosFactores) {
       const challengeToken = generateUuid();
-      const challenge: TwoFactorChallenge = { userId: usuario.id, tenantId: tenant.id, email };
+      const challenge: TwoFactorChallenge = {
+        userId: usuario.id,
+        tenantId: tenant.id,
+        email,
+        ipAddress,
+        userAgent,
+        rememberMe,
+      };
+      const challengeTtlMinutes = this.configService.getOrThrow<number>(
+        'auth.twoFactorChallengeTtlMinutes',
+      );
       await this.cacheService.set(
         twoFactorChallengeCacheKey(challengeToken),
         challenge,
-        TWO_FACTOR_CHALLENGE_TTL_SECONDS,
+        challengeTtlMinutes * 60,
       );
       return { requiresTwoFactor: true, challengeToken };
     }
 
-    const result = await this.issueLoginSessionService.issue(record);
+    const result = await this.issueLoginSessionService.issue(record, {
+      ipAddress,
+      userAgent,
+      rememberMe,
+    });
     return { requiresTwoFactor: false, result };
   }
 

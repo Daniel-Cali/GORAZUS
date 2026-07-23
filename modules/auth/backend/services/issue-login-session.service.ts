@@ -1,14 +1,11 @@
 import { randomBytes, createHash } from 'node:crypto';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import jwt from 'jsonwebtoken';
 import type { AccessTokenPayload } from '@gorazus/contracts';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- packages/tooling no tiene project.json propio, ver login.usecase.ts
 import { generateUuid } from '../../../../packages/tooling/utils';
 import { SessionRepository } from '../repositories/session.repository';
-
-const ACCESS_TOKEN_TTL = '15m';
-const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 días — docs/architecture/09 §1
+import { signAccessToken } from './jwt-token.provider';
 
 export interface LoginResult {
   accessToken: string;
@@ -28,6 +25,13 @@ export interface AuthenticatedUserRecord {
   branch_id: string | null;
 }
 
+export interface IssueLoginSessionOptions {
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  /** "Recordar sesión" (FASE 03 Parte 02) — usa `auth.rememberMeTtlDays` en vez de `auth.refreshTokenTtlDays`. */
+  rememberMe?: boolean;
+}
+
 /**
  * Extraído de `LoginUseCase` — crea la sesión (`core.sessions`) y firma el
  * access token para un usuario YA autenticado (contraseña, y 2FA si
@@ -42,11 +46,17 @@ export class IssueLoginSessionService {
     private readonly configService: ConfigService,
   ) {}
 
-  async issue(record: AuthenticatedUserRecord): Promise<LoginResult> {
+  async issue(
+    record: AuthenticatedUserRecord,
+    options: IssueLoginSessionOptions = {},
+  ): Promise<LoginResult> {
     const sessionId = generateUuid();
     const refreshToken = randomBytes(32).toString('hex');
     const refreshTokenHash = createHash('sha256').update(refreshToken).digest('hex');
-    const refreshTokenExpiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS);
+    const refreshTokenTtlDays = options.rememberMe
+      ? this.configService.getOrThrow<number>('auth.rememberMeTtlDays')
+      : this.configService.getOrThrow<number>('auth.refreshTokenTtlDays');
+    const refreshTokenExpiresAt = new Date(Date.now() + refreshTokenTtlDays * 24 * 60 * 60 * 1000);
 
     const context = {
       userId: record.id,
@@ -64,6 +74,8 @@ export class IssueLoginSessionService {
       user_id: record.id,
       refresh_token_hash: refreshTokenHash,
       expires_at: refreshTokenExpiresAt,
+      ip_address: options.ipAddress ?? null,
+      user_agent: options.userAgent ?? null,
     });
 
     const payload: Omit<AccessTokenPayload, 'iat' | 'exp'> = {
@@ -73,10 +85,10 @@ export class IssueLoginSessionService {
       branchId: record.branch_id,
       sessionId,
     };
-    const accessToken = jwt.sign(
+    const accessToken = signAccessToken(
       payload,
       this.configService.getOrThrow<string>('auth.jwtAccessSecret'),
-      { expiresIn: ACCESS_TOKEN_TTL },
+      this.configService.getOrThrow<string>('auth.accessTokenTtl'),
     );
 
     return {

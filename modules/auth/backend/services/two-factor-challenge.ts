@@ -8,11 +8,13 @@ export function twoFactorChallengeCacheKey(challengeToken: string): string {
   return `2fa-challenge:${challengeToken}`;
 }
 
-/** Ventana para completar el segundo paso (código TOTP) tras pasar la contraseña. */
-export const TWO_FACTOR_CHALLENGE_TTL_SECONDS = 5 * 60;
-
 export interface TwoFactorChallenge {
   userId: string;
   tenantId: string;
   email: string;
+  /** IP/User-Agent del primer paso (contraseña) — se propagan al segundo paso para que la sesión emitida los guarde igual que un login sin 2FA. */
+  ipAddress: string | null;
+  userAgent: string | null;
+  /** "Recordar sesión" pedido en el primer paso — se aplica recién al emitir la sesión, en el segundo paso. */
+  rememberMe: boolean;
 }
