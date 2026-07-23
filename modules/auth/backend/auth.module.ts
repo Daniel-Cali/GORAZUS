@@ -22,6 +22,11 @@ import { LoginAttemptRepository } from './repositories/login-attempt.repository'
 import { LoginAttemptRepositoryPrisma } from './repositories/login-attempt.repository.prisma';
 import { TwoFactorCredentialRepository } from './repositories/two-factor-credential.repository';
 import { TwoFactorCredentialRepositoryPrisma } from './repositories/two-factor-credential.repository.prisma';
+import { OrganizationStatusRepository } from './repositories/organization-status.repository';
+import { OrganizationStatusRepositoryPrisma } from './repositories/organization-status.repository.prisma';
+import { GetCurrentUserUseCase } from './services/get-current-user.usecase';
+import { ValidateTokenUseCase } from './services/validate-token.usecase';
+import { RevokeTokenUseCase } from './services/revoke-token.usecase';
 
 /**
  * Wiring de Nest (docs/architecture/02 §5) — `auth` no exporta ningún
@@ -41,12 +46,16 @@ import { TwoFactorCredentialRepositoryPrisma } from './repositories/two-factor-c
     LogoutUseCase,
     ForgotPasswordUseCase,
     ResetPasswordUseCase,
+    GetCurrentUserUseCase,
+    ValidateTokenUseCase,
+    RevokeTokenUseCase,
     { provide: TenantRepository, useClass: TenantRepositoryPrisma },
     { provide: UserRepository, useClass: UserRepositoryPrisma },
     { provide: SessionRepository, useClass: SessionRepositoryPrisma },
     { provide: TokenRepository, useClass: TokenRepositoryPrisma },
     { provide: LoginAttemptRepository, useClass: LoginAttemptRepositoryPrisma },
     { provide: TwoFactorCredentialRepository, useClass: TwoFactorCredentialRepositoryPrisma },
+    { provide: OrganizationStatusRepository, useClass: OrganizationStatusRepositoryPrisma },
     { provide: PasswordResetNotifier, useClass: EmailPasswordResetNotifier },
   ],
 })

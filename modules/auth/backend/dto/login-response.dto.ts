@@ -38,3 +38,40 @@ export class RefreshResponseDto {
 export class RefreshResponseEnvelopeDto {
   @ApiProperty({ type: RefreshResponseDto }) data!: RefreshResponseDto;
 }
+
+export class CurrentUserResponseDto {
+  @ApiProperty() id!: string;
+  @ApiProperty() email!: string;
+  @ApiProperty() fullName!: string;
+  @ApiProperty() isActive!: boolean;
+  @ApiProperty({ nullable: true, type: String }) lastLoginAt!: Date | null;
+  @ApiProperty() tenantId!: string;
+  @ApiProperty({ nullable: true }) activeCompanyId!: string | null;
+  @ApiProperty({ nullable: true }) activeBranchId!: string | null;
+}
+
+export class CurrentUserEnvelopeDto {
+  @ApiProperty({ type: CurrentUserResponseDto }) data!: CurrentUserResponseDto;
+}
+
+export class SessionValidationResponseDto {
+  @ApiProperty() valid!: true;
+  @ApiProperty() userId!: string;
+  @ApiProperty() tenantId!: string;
+  @ApiProperty() sessionId!: string;
+  @ApiProperty({ nullable: true }) activeCompanyId!: string | null;
+  @ApiProperty({ nullable: true }) activeBranchId!: string | null;
+}
+
+export class SessionValidationEnvelopeDto {
+  @ApiProperty({ type: SessionValidationResponseDto }) data!: SessionValidationResponseDto;
+}
+
+export class RevokeTokenResponseDto {
+  @ApiProperty({ description: 'Cantidad de sesiones revocadas (0, 1, o todas las activas).' })
+  revokedSessions!: number;
+}
+
+export class RevokeTokenEnvelopeDto {
+  @ApiProperty({ type: RevokeTokenResponseDto }) data!: RevokeTokenResponseDto;
+}

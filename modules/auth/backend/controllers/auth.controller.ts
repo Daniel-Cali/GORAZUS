@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   ForbiddenException,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -25,16 +26,23 @@ import {
   type ForgotPasswordInput,
   type ResetPasswordInput,
 } from '../validators/password-reset.schema';
+import { revokeTokenSchema, type RevokeTokenInput } from '../validators/revoke-token.schema';
 import { LoginUseCase } from '../services/login.usecase';
 import { CompleteTwoFactorLoginUseCase } from '../services/complete-two-factor-login.usecase';
 import { RefreshTokenUseCase } from '../services/refresh-token.usecase';
 import { LogoutUseCase } from '../services/logout.usecase';
 import { ForgotPasswordUseCase } from '../services/forgot-password.usecase';
 import { ResetPasswordUseCase } from '../services/reset-password.usecase';
+import { GetCurrentUserUseCase } from '../services/get-current-user.usecase';
+import { ValidateTokenUseCase } from '../services/validate-token.usecase';
+import { RevokeTokenUseCase } from '../services/revoke-token.usecase';
 import {
   LoginResponseEnvelopeDto,
   RefreshResponseEnvelopeDto,
   TwoFactorRequiredEnvelopeDto,
+  CurrentUserEnvelopeDto,
+  SessionValidationEnvelopeDto,
+  RevokeTokenEnvelopeDto,
 } from '../dto/login-response.dto';
 
 const REFRESH_COOKIE = 'refreshToken';
@@ -50,6 +58,9 @@ export class AuthController {
     private readonly logoutUseCase: LogoutUseCase,
     private readonly forgotPasswordUseCase: ForgotPasswordUseCase,
     private readonly resetPasswordUseCase: ResetPasswordUseCase,
+    private readonly getCurrentUserUseCase: GetCurrentUserUseCase,
+    private readonly validateTokenUseCase: ValidateTokenUseCase,
+    private readonly revokeTokenUseCase: RevokeTokenUseCase,
     private readonly configService: ConfigService,
   ) {}
 
@@ -90,6 +101,8 @@ export class AuthController {
       body.email,
       body.password,
       request.ip ?? null,
+      request.headers['user-agent'] ?? null,
+      body.rememberMe,
     );
     if (outcome.requiresTwoFactor) {
       return { data: { requiresTwoFactor: true, challengeToken: outcome.challengeToken } };
@@ -175,7 +188,11 @@ export class AuthController {
       response.status(HttpStatus.UNAUTHORIZED);
       return { error: { code: 'SESION_INVALIDA', message: 'No hay sesión activa.', details: [] } };
     }
-    const result = await this.refreshTokenUseCase.execute(refreshToken);
+    const result = await this.refreshTokenUseCase.execute(
+      refreshToken,
+      request.ip ?? null,
+      request.headers['user-agent'] ?? null,
+    );
     setRefreshCookie(response, result.refreshToken, result.refreshTokenExpiresAt);
     return { data: { accessToken: result.accessToken } };
   }
@@ -194,6 +211,58 @@ export class AuthController {
   ): Promise<void> {
     await this.logoutUseCase.execute(user);
     response.clearCookie(REFRESH_COOKIE);
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Usuario actual',
+    description:
+      'Identidad del usuario autenticado — mínimo (sin roles/permisos ni perfil editable, eso es /seguridad/usuarios/me).',
+  })
+  @ApiResponse({ status: 200, type: CurrentUserEnvelopeDto })
+  @ApiResponse({ status: 404, description: 'El usuario de la sesión ya no existe.' })
+  @Get('me')
+  async me(@CurrentUser() user: UserContext) {
+    const result = await this.getCurrentUserUseCase.execute(user);
+    return { data: result };
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Validar sesión',
+    description:
+      'Verifica, más allá de la firma/expiración del JWT, que el usuario y la empresa/sucursal activas de la sesión sigan activos.',
+  })
+  @ApiResponse({ status: 200, type: SessionValidationEnvelopeDto })
+  @ApiResponse({
+    status: 403,
+    description: 'Usuario, empresa o sucursal activa ya no está activo.',
+  })
+  @Get('session')
+  async session(@CurrentUser() user: UserContext) {
+    const result = await this.validateTokenUseCase.execute(user);
+    return { data: result };
+  }
+
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Revocar sesión(es)',
+    description:
+      'Con sessionId: revoca solo esa sesión (requiere que sea del usuario autenticado). Sin sessionId: revoca todas las sesiones activas del usuario ("cerrar sesión en todos los dispositivos").',
+  })
+  @ApiResponse({ status: 200, type: RevokeTokenEnvelopeDto })
+  @ApiResponse({
+    status: 404,
+    description: 'sessionId indicado no existe o pertenece a otro usuario.',
+  })
+  @Post('revoke')
+  @HttpCode(HttpStatus.OK)
+  async revoke(
+    @CurrentUser() user: UserContext,
+    @Body(new ZodValidationPipe(revokeTokenSchema)) body: RevokeTokenInput,
+  ) {
+    const result = await this.revokeTokenUseCase.execute(user, body.sessionId);
+    return { data: result };
   }
 
   @ApiOperation({
