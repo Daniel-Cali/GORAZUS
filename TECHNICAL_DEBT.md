@@ -1,11 +1,10 @@
 # Technical Debt — GORAZUS ERP
 
-> Actualizado FASE 03 — Backend Core Enterprise, sesión de continuidad
-> (diagnóstico + Almacenes). Sesión del 2026-07-23, versión **0.6.0**,
-> rama `gorazus2`. Consolida deuda técnica ya dispersa en `CHANGELOG.md`
-> ("Pendiente conocido") y en los reportes de sesiones previas, más lo
-> detectado esta sesión — no repite el detalle completo de cada item,
-> referencia la fuente.
+> Actualizado FASE 04 — Productos. Sesión del 2026-07-23, versión
+> **0.7.0**, rama `gorazus2`. Consolida deuda técnica ya dispersa en
+> `CHANGELOG.md` ("Pendiente conocido") y en los reportes de sesiones
+> previas, más lo detectado esta sesión — no repite el detalle completo
+> de cada item, referencia la fuente.
 
 ## Cómo leer esto
 
@@ -88,18 +87,24 @@ seguridad`) no marca el `sessionId` en la blacklist de Redis** —
 
 ## 3. Cobertura funcional (esperado, no "roto")
 
-- 🔴→🟡 **23 de 27 módulos de negocio sin una sola línea de backend**
+- 🔴→🟡 **22 de 27 módulos de negocio sin una sola línea de backend**
   (placeholders `ComingSoonPage` en frontend) — es el estado esperado de
   un ERP en construcción incremental, marcado 🟡 (no 🔴) porque está
   documentado con honestidad en `ROADMAP.md`, no oculto ni presentado
-  como completo. Con Almacenes (esta parte), la lista de prioridad
-  "primero" de FASE 03 queda 100% cubierta — ver `PROJECT_STATUS.md §6`.
+  como completo.
 - 🟡 **`modules/inventario` solo tiene Almacenes, no Inventario
   completo** — 29 de las 32 tablas de `core/database/prisma/schemas/inventory/`
   (stock, movimientos, costeo FIFO/LIFO/promedio, reservas, conteos,
   producción, reglas de reposición/putaway/picking) siguen sin backend.
-  Es el estado esperado del alcance de esta parte, no un gap oculto —
+  Es el estado esperado del alcance de esa parte, no un gap oculto —
   ver `ALMACENES_REPORT.md §1` para el detalle de por qué se acotó así.
+- 🟡 **`modules/productos` solo tiene el producto base, no el catálogo
+  completo** — 30 de las 35 tablas de `core/database/prisma/schemas/products/`
+  (variantes, atributos, combos, kits, BOM/recetas, imágenes/videos,
+  códigos de barra, historial de precios, reseñas, proveedores, perfiles
+  fiscales, líneas/familias/colecciones) siguen sin backend. Es el
+  estado esperado del alcance de esta parte, no un gap oculto — ver
+  `PRODUCTOS_REPORT.md §4` para el detalle de por qué se acotó así.
 - 🟡 **Catálogo de países/jurisdicciones fiscales sin CRUD/UI** — solo
   script de seed mínimo (`seed-tax-jurisdictions.ts`) que desbloquea
   Impuestos.

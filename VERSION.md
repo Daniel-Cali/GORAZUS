@@ -5,7 +5,14 @@ completa y estable (no un release público), `PATCH` una corrección puntual. `0
 el proyecto arrancó en `0.1.0` (bootstrap del monorepo + FASE 01-05). Sin releases públicos
 todavía, así que no hay compromiso de compatibilidad entre versiones `0.x`.
 
-## Versión actual: **0.6.0** (2026-07-23)
+## Versión actual: **0.7.0** (2026-07-23)
+
+FASE 04 — Productos. `MINOR`: primer código real de `modules/productos/backend` — CRUD de las 5
+tablas núcleo del catálogo (Unidades de Medida, Categorías, Marcas, Modelos, Productos), sobre las
+35 tablas totales del schema `products`. Ver `PRODUCTOS_REPORT.md` para el detalle completo,
+`PRODUCTOS_TEST_REPORT.md` para testing, `PRODUCTOS_API.md` para referencia de endpoints.
+
+## 0.6.0 (2026-07-23)
 
 FASE 03, continuidad — Almacenes. `MINOR`: primer código real de `modules/inventario/backend`
 (vacío desde su creación, confirmado en 3 auditorías previas) — CRUD de Almacén → Zona → Ubicación
@@ -71,6 +78,7 @@ FASE 2 — Backend Core (endurecimiento de `auth` + capacidades nuevas de infrae
 
 | Versión | Fecha      | Resumen                                                                                                                                                                                                                                                                                                                      |
 | ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0.7.0   | 2026-07-23 | FASE 04 — Productos: primer código real de `modules/productos/backend` (Unidades de Medida, Categorías, Marcas, Modelos, Productos), 5 de 35 tablas del schema `products`.                                                                                                                                                   |
 | 0.6.0   | 2026-07-23 | FASE 03, continuidad — Almacenes: primer código real de `modules/inventario/backend` (Almacén→Zona→Ubicación), cierra la lista de prioridad "primero" de FASE 03.                                                                                                                                                            |
 | 0.5.0   | 2026-07-22 | FASE 03, Parte 03 — Gestión de Usuarios Enterprise: CRUD admin completo (editar/eliminar/restaurar/estado agregado/reseteo de contraseña), multiempresa (`user_companies`), preferencias/avatar (`user_profiles`), corrección de fuga de `password_hash`.                                                                    |
 | 0.4.0   | 2026-07-22 | FASE 03, Parte 02 — Autenticación Enterprise: "recordar sesión", protección de session-hijacking (IP/UA), verificación de empresa/sucursal activa, `GET /auth/me`, `GET /auth/session`, `POST /auth/revoke`, adopción de config/JWT Provider preparados en 0.3.1.                                                            |
@@ -81,8 +89,9 @@ FASE 2 — Backend Core (endurecimiento de `auth` + capacidades nuevas de infrae
 
 ## Próxima versión prevista
 
-`0.7.0` — Productos, después Inventario (stock/movimientos reales sobre la base de Almacenes ya
-construida en `0.6.0`). Sin fecha comprometida.
+`0.8.0` — Inventario (stock/movimientos/costeo reales, sobre la base de Almacenes en `0.6.0` y
+Productos en `0.7.0` — el stock siempre referencia un `product_id` y un `warehouse_id`, ambos ya
+existen). Sin fecha comprometida.
 
 ## Versionado del modelo de datos (track independiente)
 

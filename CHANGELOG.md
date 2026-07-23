@@ -528,6 +528,39 @@ DELETE /:id/empresas`, wirea `core.user_companies`, existente en el modelo certi
   Entregables nuevos: `ALMACENES_REPORT.md`, `ALMACENES_API.md`, `ALMACENES_TEST_REPORT.md`.
   `0.5.0` → `0.6.0` (`MINOR`).
 
+- **FASE 04 — Productos (2026-07-23).**
+  Primer código real de `modules/productos/backend` — proyecto Nx nuevo (`productos-backend`).
+  Alcance acotado deliberadamente a las 5 tablas núcleo del catálogo que
+  `docs/architecture/18-modulo-products.md §1-4` documenta como base física del módulo
+  (`products.units_of_measure`/`product_categories`/`brands`/`product_models`/`products`), no las 30
+  tablas restantes de variantes/atributos/combos/kits/BOM/imágenes/códigos de barra/historial de
+  precios/reseñas/proveedores/perfiles fiscales (fuera de alcance, documentado en
+  `PRODUCTOS_REPORT.md §4`). Nuevo: `UnidadesMedidaController`/`CategoriasProductoController`
+  (jerárquica vía `parentCategoryId`)/`MarcasController`/`ModelosProductoController`/
+  `ProductosController`, todos bajo el permiso único `productos.gestionar_productos`.
+  `EmpresaLookupRepository` (valida `companyId` real antes de crear cualquier fila — las 5 tablas de
+  `products` tienen `company_id UUID NOT NULL`, a diferencia de un catálogo tenant-wide con
+  `company_id` nullable, así que cada schema "crear" exige el campo explícito en vez de inferirlo del
+  contexto), sexto cliente Prisma expuesto en `@gorazus/core-database` (`ProductsPrismaClient`/
+  `PRISMA_PRODUCTS`, ya wireado en `database.module.ts` sin consumidor hasta ahora). Dos invariantes
+  de dominio que el modelo de datos certificado señala como "no reforzadas por `CHECK` cruzado, a
+  nivel de aplicación" (`docs/architecture/18-modulo-products.md §1/§12`), implementadas: (1) un
+  producto de tipo `service` no puede tener `tracksSerial`/`tracksLot` en `true` — no tiene existencia
+  física que rastrear, validado en la entidad `Producto`; (2) si un producto referencia `modelId` y
+  `brandId` a la vez, el modelo debe pertenecer efectivamente a esa marca — validado en
+  `ProductosService.validarModelo()`, tanto en `crear()` como en `actualizar()` (resolviendo la marca
+  actual del producto cuando `actualizar()` cambia solo el modelo sin tocar la marca). Mismo problema
+  de resolución de tipos de `multer` que Almacenes (`SeguridadModule` importado transitivamente por el
+  e2e arrastra el tipo `Express.Multer.File` de `usuarios.controller.ts`, que no resuelve bajo el
+  `tsconfig.spec.json` propio del paquete nuevo) — corregido de forma idéntica: `"multer"` en el
+  arreglo `types` de `tsconfig.json`/`tsconfig.spec.json` + `@types/multer` como devDependency. 53
+  tests unitarios nuevos (10 suites, incluyendo un `it.each` sobre los 5 `productType` en
+  `producto.entity.spec.ts`) + 1 e2e nuevo (`productos.controller.e2e-spec.ts`, flujo completo unidad→
+  categoría→subcategoría→marca→modelo→producto, más los dos casos negativos de las invariantes de
+  dominio) — Docker no disponible durante toda la sesión (6ª sesión consecutiva), e2e reales
+  pendientes de reconfirmar (`PRODUCTOS_TEST_REPORT.md`). Entregables nuevos: `PRODUCTOS_REPORT.md`,
+  `PRODUCTOS_API.md`, `PRODUCTOS_TEST_REPORT.md`. `0.6.0` → `0.7.0` (`MINOR`).
+
 ### Corregido
 
 - **FASE 2 Backend Core — 4 gaps reales de seguridad en el login, encontrados al auditar el módulo

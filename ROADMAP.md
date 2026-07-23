@@ -7,23 +7,24 @@ trabajo en [CHANGELOG.md](CHANGELOG.md).
 
 ## Estado del backend por módulo de negocio (código real, no solo diseño)
 
-| Módulo                                                                                                                                                                                                                                                 | Backend                                                                                                                                                                                                                                                                                                       | Frontend                                                                  |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `auth`                                                                                                                                                                                                                                                 | ✅ Login (con bloqueo por intentos + 2FA exigido si está confirmado + "recordar sesión"), refresh (con protección de session-hijacking + verificación de empresa/sucursal activa), logout, `GET /auth/me`, `GET /auth/session`, `POST /auth/revoke`, recuperación de contraseña (email real), CSRF en refresh | ✅ Login                                                                  |
-| `seguridad`                                                                                                                                                                                                                                            | ✅ Roles/permisos (RBAC), usuarios (CRUD completo + soft delete/restore + estado agregado + multiempresa + preferencias + avatar), auditoría, sesiones, 2FA (setup real, exigido en login desde `auth`)                                                                                                       | ✅ Listado/alta de usuarios                                               |
-| `configuracion`                                                                                                                                                                                                                                        | ✅ Empresas, Sucursales, Parámetros, Monedas, Impuestos (alcance mínimo)                                                                                                                                                                                                                                      | ❌ Sin construir                                                          |
-| `inventario`                                                                                                                                                                                                                                           | 🟡 Almacenes (Almacén→Zona→Ubicación) — CRUD real. Stock/movimientos/costeo/conteos/producción (29 tablas restantes) sin backend todavía, fase "Inventario" siguiente                                                                                                                                         | ❌ Sin construir                                                          |
-| Resto (23 módulos: ventas, pos, compras, productos, clientes, proveedores, caja, bancos, contabilidad, crm, rrhh, nómina, producción, servicios, activos-fijos, proyectos, reportes, bi, impuestos*, tesorería, dashboard, administracion, documentos) | ❌ Sin backend                                                                                                                                                                                                                                                                                                | 🟡 Placeholder `ComingSoonPage` (25 módulos ya registrados en el sidebar) |
+| Módulo                                                                                                                                                                                                                                      | Backend                                                                                                                                                                                                                                                                                                       | Frontend                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `auth`                                                                                                                                                                                                                                      | ✅ Login (con bloqueo por intentos + 2FA exigido si está confirmado + "recordar sesión"), refresh (con protección de session-hijacking + verificación de empresa/sucursal activa), logout, `GET /auth/me`, `GET /auth/session`, `POST /auth/revoke`, recuperación de contraseña (email real), CSRF en refresh | ✅ Login                                                                  |
+| `seguridad`                                                                                                                                                                                                                                 | ✅ Roles/permisos (RBAC), usuarios (CRUD completo + soft delete/restore + estado agregado + multiempresa + preferencias + avatar), auditoría, sesiones, 2FA (setup real, exigido en login desde `auth`)                                                                                                       | ✅ Listado/alta de usuarios                                               |
+| `configuracion`                                                                                                                                                                                                                             | ✅ Empresas, Sucursales, Parámetros, Monedas, Impuestos (alcance mínimo)                                                                                                                                                                                                                                      | ❌ Sin construir                                                          |
+| `inventario`                                                                                                                                                                                                                                | 🟡 Almacenes (Almacén→Zona→Ubicación) — CRUD real. Stock/movimientos/costeo/conteos/producción (29 tablas restantes) sin backend todavía, fase "Inventario" siguiente                                                                                                                                         | ❌ Sin construir                                                          |
+| `productos`                                                                                                                                                                                                                                 | 🟡 Unidades de Medida, Categorías, Marcas, Modelos, Productos (5 tablas núcleo) — CRUD real. Variantes/atributos/combos/kits/BOM/imágenes (30 tablas restantes) sin backend todavía                                                                                                                           | ❌ Sin construir                                                          |
+| Resto (22 módulos: ventas, pos, compras, clientes, proveedores, caja, bancos, contabilidad, crm, rrhh, nómina, producción, servicios, activos-fijos, proyectos, reportes, bi, impuestos*, tesorería, dashboard, administracion, documentos) | ❌ Sin backend                                                                                                                                                                                                                                                                                                | 🟡 Placeholder `ComingSoonPage` (25 módulos ya registrados en el sidebar) |
 
 \* El módulo de negocio `modules/impuestos` (motor de reglas/cálculo/percepciones/retenciones,
 `docs/architecture/46-modulo-taxes.md`) es distinto del catálogo mínimo de perfiles/tasas ya
 construido dentro de `modules/configuracion/backend` — ver `CHANGELOG.md`, entrada FASE 02.
 
-## Fase actual: FASE 03 — Backend Core Enterprise, continuidad (Almacenes, 2026-07-23)
+## Fase actual: FASE 04 — Productos (2026-07-23)
 
-`v0.6.0` agregó `modules/inventario/backend`: CRUD de Almacén→Zona→Ubicación
-(`inventory.warehouses`/`warehouse_zones`/`warehouse_locations`) — ver `ALMACENES_REPORT.md` para
-el detalle completo, `PROJECT_STATUS.md` para el estado consolidado y `TECHNICAL_DEBT.md` para la
+`v0.7.0` agregó `modules/productos/backend`: CRUD de Unidades de Medida, Categorías, Marcas,
+Modelos y Productos (5 de 35 tablas del schema `products`) — ver `PRODUCTOS_REPORT.md` para el
+detalle completo, `PROJECT_STATUS.md` para el estado consolidado y `TECHNICAL_DEBT.md` para la
 deuda técnica detectada.
 
 ### Ya completo (no repetir en próximas fases)
@@ -40,18 +41,21 @@ deuda técnica detectada.
 - **Inventario — Almacenes**: CRUD de Almacén→Zona→Ubicación, con validación real de empresa/
   sucursal/almacén/zona padre. Stock/movimientos/costeo/conteos/producción siguen sin construir
   (fase "Inventario" siguiente, no esta).
+- **Productos**: CRUD de Unidades de Medida, Categorías (jerárquica), Marcas, Modelos y Productos
+  (`good`/`service`/`kit`/`combo`/`composite`), con validación cruzada marca↔modelo y el invariante
+  de que un `service` no rastrea serie/lote. Variantes/atributos/combos/kits/BOM/imágenes siguen sin
+  construir.
 - **Archivos**: `core/storage` con endpoint genérico de subida/descarga/borrado (MinIO, bucket por
   tenant) — infraestructura, no un módulo de negocio.
-- Control de calidad: 178+ tests reales (no solo unitarios) verificados contra Postgres/Redis/MinIO/
+- Control de calidad: 231+ tests reales (no solo unitarios) verificados contra Postgres/Redis/MinIO/
   MailHog reales cuando la infraestructura estuvo disponible — ver `TEST_REPORT.md`/
-  `ALMACENES_TEST_REPORT.md` para el detalle y una nota sobre disponibilidad de Docker.
+  `PRODUCTOS_TEST_REPORT.md` para el detalle y una nota sobre disponibilidad de Docker.
 
-### Próxima fase: Productos, después Inventario
+### Próxima fase: Inventario
 
-Con Almacenes completo, la lista de prioridad "primero" de FASE 03 queda **100% cubierta**
-(Infraestructura/Auth/Usuarios/Roles/Permisos/Multiempresa/Sucursales/Almacenes/Configuración/API
-REST/OpenAPI). Orden confirmado (`NEXT_STEPS.md`): Productos → Inventario (stock/movimientos reales,
-sobre la base de Almacenes ya construida) → Clientes → Ventas → Caja → POS.
+Con Productos completo, la Fase 04 del orden de desarrollo queda cerrada. Orden confirmado
+(`NEXT_STEPS.md`): **Inventario** (stock/movimientos/costeo reales, sobre la base de Almacenes en
+`0.6.0` y Productos en `0.7.0`) → Clientes → Ventas → Caja → POS.
 
 ## Backlog conocido
 
