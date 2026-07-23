@@ -1,11 +1,11 @@
 # Technical Debt — GORAZUS ERP
 
-> Actualizado FASE 03 — Backend Core Enterprise, Parte 03 (Gestión de
-> Usuarios Enterprise). Sesión del 2026-07-22, versión **0.5.0**, rama
-> `gorazus2`. Consolida deuda técnica ya dispersa en `CHANGELOG.md`
-> ("Pendiente conocido") y en los reportes de sesiones previas, más lo
-> detectado esta sesión — no repite el detalle completo de cada item,
-> referencia la fuente.
+> Actualizado FASE 03 — Backend Core Enterprise, sesión de continuidad
+> (diagnóstico previo a Almacenes). Sesión del 2026-07-23, versión
+> **0.5.0**, rama `gorazus2`. Consolida deuda técnica ya dispersa en
+> `CHANGELOG.md` ("Pendiente conocido") y en los reportes de sesiones
+> previas, más lo detectado esta sesión — no repite el detalle completo
+> de cada item, referencia la fuente.
 
 ## Cómo leer esto
 
@@ -123,6 +123,15 @@ seguridad`) no marca el `sessionId` en la blacklist de Redis** —
 
 ## 4. Calidad de código y CI
 
+- 🟠 **(nuevo) `nx run web:test` no arranca — `vite-tsconfig-paths`
+  resuelve como ESM, algo en la cadena de Vitest lo carga con `require`**
+  — detectado en el diagnóstico de FASE 03 Parte 03.1 (continuidad):
+  `web:build` (mismo `vite.config.ts`, vía `vite build`) compila
+  perfecto, así que no es un problema de la app — es una discrepancia de
+  resolución de módulos específica del executor de test. Nunca se había
+  corrido `web:test` explícitamente en una sesión anterior, por eso no
+  estaba detectado. Cero tests de frontend corren hasta que se arregle.
+  Ver `PROJECT_HEALTH_REPORT.md §4`.
 - 🟡 **ESLint type-aware/strict (`recommendedTypeChecked`) evaluado y
   revertido** — causó `heap out of memory` corriendo sobre el monorepo
   completo en el sandbox de desarrollo usado hasta ahora, incluso
