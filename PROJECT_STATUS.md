@@ -6,47 +6,48 @@
 > (detalle por sesión de trabajo), [TECHNICAL_DEBT.md](./TECHNICAL_DEBT.md)
 > (deuda técnica consolidada), [PROJECT_HEALTH_REPORT.md](./PROJECT_HEALTH_REPORT.md)
 > (build/lint/test verificado esta sesión) y
-> [NEXT_STEPS.md](./NEXT_STEPS.md) (qué sigue). Refrescado como
-> diagnóstico inicial de una nueva sesión de continuidad — sin desarrollo
-> de código en este documento puntual, ver `CHANGELOG.md` para el próximo
-> commit con código real (Almacenes).
+> [NEXT_STEPS.md](./NEXT_STEPS.md) (qué sigue). Actualizado tras cerrar
+> Almacenes — primer código real de `modules/inventario/backend`.
 
 ## 1. En una frase
 
 GORAZUS tiene **documentación de arquitectura y base de datos Enterprise
 completa** (32 fases + DDD + certificación de base de datos) y **backend
-real en 3 de 27 módulos de negocio (11%)** (`auth`, `seguridad`,
-`configuracion`), con ese núcleo ya endurecido para producción (2FA
-exigido, bloqueo por intentos, revocación de sesión — inmediata o bajo
-demanda —, session-hijacking, verificación de empresa/sucursal activa,
-CSRF, email real, gestión de usuarios completa con multiempresa) — la
-brecha entre "diseñado" e "implementado" sigue siendo grande en el resto
-de módulos, documentada con honestidad, no oculta.
+real en 4 de 27 módulos de negocio (15%)** (`auth`, `seguridad`,
+`configuracion`, `inventario` — este último solo Almacenes, no el
+Inventario completo), con el núcleo de identidad/administración ya
+endurecido para producción (2FA exigido, bloqueo por intentos,
+revocación de sesión, session-hijacking, verificación de empresa/
+sucursal activa, CSRF, email real, gestión de usuarios completa con
+multiempresa) — la lista de prioridad "primero" de FASE 03 queda 100%
+cubierta con esta parte.
 
 ## 2. Versión actual
 
-**0.5.0** (2026-07-22) — FASE 03, Parte 03: Gestión de Usuarios
-Enterprise — CRUD administrativo completo, multiempresa
-(`core.user_companies`), preferencias/avatar (`core.user_profiles`), y
-corrección de una fuga real de `password_hash` en 5 endpoints
-preexistentes. Ver [VERSION.md](./VERSION.md) para el historial completo
-de versiones y [USERS_REPORT.md](./USERS_REPORT.md) para el detalle de
-esta parte.
+**0.6.0** (2026-07-23) — FASE 03, continuidad: Almacenes — CRUD de
+Almacén→Zona→Ubicación (`inventory.warehouses`/`warehouse_zones`/
+`warehouse_locations`), primer código real de `modules/inventario/backend`
+(vacío desde su creación, confirmado en 3 auditorías previas). Ver
+[VERSION.md](./VERSION.md) para el historial completo de versiones y
+[ALMACENES_REPORT.md](./ALMACENES_REPORT.md) para el detalle de esta
+parte.
 
 ## 3. Estado del código (resumen de ROADMAP.md)
 
 | Pieza                                                                                                        | Estado                                                                          |
 | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
 | Bootstrap del monorepo (Nx, pnpm, tsconfig, eslint, prettier)                                                | ✅                                                                              |
-| Infraestructura Docker (Postgres, Redis, RabbitMQ, MinIO, nginx, pgAdmin, MailHog, Prometheus/Grafana/Loki)  | ✅ verificada de punta a punta                                                  |
+| Infraestructura Docker (Postgres, Redis, RabbitMQ, MinIO, nginx, pgAdmin, MailHog, Prometheus/Grafana/Loki)  | ✅ verificada de punta a punta en su momento — Docker caído 5 sesiones seguidas |
 | CI/CD (GitHub Actions)                                                                                       | ✅ corrigiendo un bug real (apuntaba a una rama `main` inexistente)             |
 | Foundation Platform (`core/*`)                                                                               | ✅ validado con servidor real                                                   |
-| Persistencia (`core/database`, 21 clientes Prisma, RLS)                                                      | ✅                                                                              |
+| Persistencia (`core/database`, ahora 5 clientes Prisma con consumidor real, 21 expuestos, RLS)               | ✅                                                                              |
 | Auth Enterprise (login, 2FA exigido, bloqueo, revocación, CSRF, refresh, hijacking, empresa/sucursal activa) | ✅ endurecido y probado (FASE 2 + FASE 03 Parte 02)                             |
-| Almacenamiento de archivos (`core/storage`)                                                                  | ✅ endpoint genérico real, sin consumidor de negocio todavía                    |
-| Módulos de negocio con backend real                                                                          | 🟡 3 de 27 (`auth`, `seguridad`, `configuracion`)                               |
-| Resto de módulos de negocio (24, incluyendo `inventario`/Almacenes)                                          | ❌ Sin backend — placeholder de frontend registrado                             |
-| Testing (unitario/integración/e2e/carga/seguridad)                                                           | ✅ 127+ tests reales — ver nota de disponibilidad de Docker en `TEST_REPORT.md` |
+| Gestión de Usuarios (CRUD completo, multiempresa, preferencias, avatar)                                      | ✅ FASE 03 Parte 03                                                             |
+| Almacenes (Almacén→Zona→Ubicación)                                                                           | ✅ FASE 03 continuidad — CRUD real                                              |
+| Almacenamiento de archivos (`core/storage`)                                                                  | ✅ endpoint genérico real, consumido por avatares de usuario                    |
+| Módulos de negocio con backend real                                                                          | 🟡 4 de 27 (`auth`, `seguridad`, `configuracion`, `inventario`)                 |
+| Resto de módulos de negocio (23)                                                                             | ❌ Sin backend — placeholder de frontend registrado                             |
+| Testing (unitario/integración/e2e/carga/seguridad)                                                           | ✅ 178+ tests reales — ver nota de disponibilidad de Docker en `TEST_REPORT.md` |
 
 Ver [ROADMAP.md](./ROADMAP.md) para la tabla completa módulo por módulo.
 
@@ -66,36 +67,28 @@ Sin cambios desde la certificación formal — **Enterprise v1.0.0**
 FK (100% válidas), 3.201 índices (0 duplicados), RLS forzado en 500/501
 tablas. Ver [VERSION.md §Versionado del modelo de datos](./VERSION.md)
 y [docs/database/DATABASE_CERTIFICATION.md](./docs/database/DATABASE_CERTIFICATION.md).
-Ningún cambio de schema en las 3 sesiones de código desde entonces — el
-modelo de datos sigue siendo el contrato que el backend consume, no al
-revés.
+Ningún cambio de schema desde entonces — el modelo de datos sigue siendo
+el contrato que el backend consume, no al revés. Esta parte sí sumó el
+**primer consumidor de aplicación** para 3 de las 32 tablas del schema
+`inventory` (`warehouses`/`warehouse_zones`/`warehouse_locations`) — sin
+tocar el schema en sí.
 
-## 6. Brecha principal — y la discrepancia real de origen, ya resuelta 3 veces
+## 6. Lista de prioridad "primero" de FASE 03 — completa
 
-FASE 03 listaba como prioridad "primero": Infraestructura/Autenticación/
-Usuarios/Roles/Permisos/Multiempresa/Sucursales/**Almacenes**/
-Configuración/API REST/OpenAPI — dando a entender que el desarrollo
-recién comienza. Esa discrepancia (spec asumía un estado anterior al
-real) ya se documentó y resolvió en Parte 01 (auditoría), Parte 02
-(Auth Enterprise) y Parte 03 (Usuarios Enterprise) — cada vez llegando a
-la misma conclusión: **de esa lista, todo ya existe excepto Almacenes**
-— confirmado de nuevo esta sesión, `modules/inventario/{backend,
-frontend,shared}` sigue sin un solo archivo. El resto (auth con
-hardening completo, RBAC, gestión de usuarios con multiempresa,
-empresas/sucursales, configuración, API REST con OpenAPI real) ya está
-construido, probado y endurecido.
+Infraestructura/Autenticación/Usuarios/Roles/Permisos/Multiempresa/
+Sucursales/Almacenes/Configuración/API REST/OpenAPI — **los 10 ítems ya
+existen**, confirmado por última vez en Parte 01/02/03 y esta parte
+(Almacenes, el único que faltaba). Detalle histórico de la discrepancia
+original (el pedido de FASE 03 daba a entender que el desarrollo recién
+empezaba, cuando la mayoría ya existía): `CHANGELOG.md`, entradas Parte
+01-03.
 
-La brecha real más grande sigue siendo la misma de siempre: **24 de 27
-módulos de negocio (89%) todavía no tienen una sola línea de backend**,
+La brecha real más grande sigue siendo la misma de siempre: **23 de 27
+módulos de negocio (85%) todavía no tienen una sola línea de backend**,
 aunque cada uno ya tiene su modelo de datos, arquitectura de módulo,
 eventos de dominio y Aggregate Root completamente diseñados. Orden de
-construcción confirmado (`ROADMAP.md`): **Almacenes** (único ítem real
-pendiente de la lista "primero" de FASE 03 — el modelo de datos ya
-existe completo en `core/database/prisma/schemas/inventory/schema.prisma`,
-32 tablas, de las cuales `warehouses`/`warehouse_zones`/
-`warehouse_locations` son el alcance real de "Almacenes"; el resto —
-stock, movimientos, costeo FIFO/LIFO, conteos, órdenes de producción —
-es la fase "Inventario" siguiente, no esta) → Productos → Inventario →
+construcción confirmado (`NEXT_STEPS.md`): **Productos** → Inventario
+(stock/movimientos reales, sobre la base de Almacenes ya construida) →
 Clientes → Ventas → Caja → POS.
 
 ## 7. Puntos abiertos que requieren una decisión (no técnica, de negocio)

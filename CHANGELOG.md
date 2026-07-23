@@ -502,6 +502,32 @@ DELETE /:id/empresas`, wirea `core.user_companies`, existente en el modelo certi
   `USERS_REPORT.md`, `USERS_SECURITY_REPORT.md`, `USERS_API.md`, `USERS_API_REPORT.md`,
   `USERS_TEST_REPORT.md`, `USERS_README.md`. `0.4.0` → `0.5.0` (`MINOR`).
 
+- **FASE 03 — Backend Core Enterprise, continuidad: Almacenes (2026-07-23).**
+  Sesión de continuidad iniciada con un diagnóstico completo del repo (lint 23/23, build 19/19, 157/165
+  tests unitarios — los 8 restantes atribuibles a Docker caído; hallazgo nuevo: `nx run web:test` no
+  arranca por una discrepancia ESM/CJS al cargar `vite.config.ts`, sin corregir esta sesión) más 4
+  entregables nuevos (`PROJECT_HEALTH_REPORT.md`, `NEXT_STEPS.md`, refresco de `PROJECT_STATUS.md`/
+  `TECHNICAL_DEBT.md`). Primer código real de `modules/inventario/backend` — proyecto Nx nuevo
+  (`inventario-backend`), vacío desde su creación, confirmado sin un solo archivo en tres auditorías
+  consecutivas (Parte 01/02/03). Alcance acotado deliberadamente a la estructura física de
+  `docs/architecture/19-modulo-inventory.md §1-2` (Almacén→Zona→Ubicación,
+  `inventory.warehouses`/`warehouse_zones`/`warehouse_locations`), no las 29 tablas restantes de
+  stock/movimientos/costeo/conteos/producción (fase "Inventario" siguiente, no esta). Nuevo:
+  `AlmacenesController`/`ZonasAlmacenController`/`UbicacionesAlmacenController` (CRUD, sin eliminar a
+  propósito — mismo alcance que `SucursalesController`), `EmpresaSucursalLookupRepository` (valida
+  `companyId`/`branchId` reales antes de crear un almacén, mismo patrón que `OrganizationStatusRepository`
+  de `auth` Parte 02 — cada módulo de negocio adapta las tablas compartidas que necesita, nunca importa
+  el repositorio de otro), quinto cliente Prisma expuesto en `@gorazus/core-database`
+  (`InventoryPrismaClient`/`PRISMA_INVENTORY`, ya wireado en `database.module.ts` desde el bootstrap del
+  monorepo sin consumidor hasta ahora), permiso `inventario.gestionar_almacenes` (`seed-rbac.ts`).
+  Validaciones reales: `zoneFunction` contra el `CHECK` real (`receiving`/`storage`/`picking`/
+  `shipping`), jerarquía de ubicaciones (`parentLocationId`) exige pertenecer a la MISMA zona. 32 tests
+  unitarios nuevos (6 suites) + 1 e2e nuevo (`almacenes.controller.e2e-spec.ts`, flujo completo
+  almacén→zona→ubicación con jerarquía de 2 niveles) — Docker no disponible durante toda la sesión
+  (5ª sesión consecutiva), e2e reales pendientes de reconfirmar (`ALMACENES_TEST_REPORT.md`).
+  Entregables nuevos: `ALMACENES_REPORT.md`, `ALMACENES_API.md`, `ALMACENES_TEST_REPORT.md`.
+  `0.5.0` → `0.6.0` (`MINOR`).
+
 ### Corregido
 
 - **FASE 2 Backend Core — 4 gaps reales de seguridad en el login, encontrados al auditar el módulo

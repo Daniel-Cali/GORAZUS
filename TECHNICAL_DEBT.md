@@ -1,11 +1,11 @@
 # Technical Debt — GORAZUS ERP
 
 > Actualizado FASE 03 — Backend Core Enterprise, sesión de continuidad
-> (diagnóstico previo a Almacenes). Sesión del 2026-07-23, versión
-> **0.5.0**, rama `gorazus2`. Consolida deuda técnica ya dispersa en
-> `CHANGELOG.md` ("Pendiente conocido") y en los reportes de sesiones
-> previas, más lo detectado esta sesión — no repite el detalle completo
-> de cada item, referencia la fuente.
+> (diagnóstico + Almacenes). Sesión del 2026-07-23, versión **0.6.0**,
+> rama `gorazus2`. Consolida deuda técnica ya dispersa en `CHANGELOG.md`
+> ("Pendiente conocido") y en los reportes de sesiones previas, más lo
+> detectado esta sesión — no repite el detalle completo de cada item,
+> referencia la fuente.
 
 ## Cómo leer esto
 
@@ -88,18 +88,18 @@ seguridad`) no marca el `sessionId` en la blacklist de Redis** —
 
 ## 3. Cobertura funcional (esperado, no "roto")
 
-- 🔴→🟡 **24 de 27 módulos de negocio sin una sola línea de backend**
+- 🔴→🟡 **23 de 27 módulos de negocio sin una sola línea de backend**
   (placeholders `ComingSoonPage` en frontend) — es el estado esperado de
   un ERP en construcción incremental, marcado 🟡 (no 🔴) porque está
   documentado con honestidad en `ROADMAP.md`, no oculto ni presentado
-  como completo.
-- 🟠 **`modules/inventario` (Almacenes) completamente vacío** —
-  `backend/frontend/shared` sin un solo archivo. Es el único ítem de la
-  lista de prioridad "primero" de FASE 03 que todavía no existe (el
-  resto — Auth/Usuarios/Roles/Permisos/Multiempresa/Sucursales/
-  Configuración/API REST/OpenAPI — ya está construido). Ver
-  `PROJECT_STATUS.md` §6 para el detalle de esta discrepancia entre el
-  pedido de FASE 03 y el estado real.
+  como completo. Con Almacenes (esta parte), la lista de prioridad
+  "primero" de FASE 03 queda 100% cubierta — ver `PROJECT_STATUS.md §6`.
+- 🟡 **`modules/inventario` solo tiene Almacenes, no Inventario
+  completo** — 29 de las 32 tablas de `core/database/prisma/schemas/inventory/`
+  (stock, movimientos, costeo FIFO/LIFO/promedio, reservas, conteos,
+  producción, reglas de reposición/putaway/picking) siguen sin backend.
+  Es el estado esperado del alcance de esta parte, no un gap oculto —
+  ver `ALMACENES_REPORT.md §1` para el detalle de por qué se acotó así.
 - 🟡 **Catálogo de países/jurisdicciones fiscales sin CRUD/UI** — solo
   script de seed mínimo (`seed-tax-jurisdictions.ts`) que desbloquea
   Impuestos.

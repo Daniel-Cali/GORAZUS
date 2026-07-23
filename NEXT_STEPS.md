@@ -1,82 +1,81 @@
 # Next Steps — GORAZUS ERP
 
-> Diagnóstico inicial de sesión, 2026-07-23, versión **0.5.0**.
+> Actualizado 2026-07-23 tras cerrar Almacenes, versión **0.6.0**.
 > Complementa a [PROJECT_STATUS.md](./PROJECT_STATUS.md) (estado
 > actual) y [ROADMAP.md](./ROADMAP.md) (estado por módulo) — este
 > documento responde específicamente "¿qué sigue, y por qué en ese
 > orden?".
 
-## 1. Próximo paso inmediato: Almacenes
+## 1. Lista de prioridad "primero" de FASE 03 — completa
 
-Único ítem real pendiente de la lista de prioridad "primero" de FASE 03
-(Infraestructura/Auth/Usuarios/Roles/Permisos/Multiempresa/Sucursales/
-**Almacenes**/Configuración/API REST/OpenAPI — el resto ya existe,
-confirmado de nuevo en el diagnóstico de esta sesión,
-`PROJECT_STATUS.md §6`).
+Los 10 ítems (Infraestructura/Auth/Usuarios/Roles/Permisos/Multiempresa/
+Sucursales/Almacenes/Configuración/API REST/OpenAPI) ya existen —
+Almacenes (CRUD de Almacén→Zona→Ubicación,
+`inventory.warehouses`/`warehouse_zones`/`warehouse_locations`) era el
+único pendiente, cerrado esta parte. Ver `ALMACENES_REPORT.md` para el
+detalle completo.
 
-**Alcance real** (no todo `core/database/prisma/schemas/inventory/`,
-que tiene 32 tablas): "Almacenes" es la estructura física —
-`warehouses` (almacén), `warehouse_zones` (zona dentro de un almacén),
-`warehouse_locations` (ubicación dentro de una zona) — mismo patrón
-jerárquico que `configuracion` ya construyó para Empresas→Sucursales.
-Las 29 tablas restantes (stock, movimientos, reservas, costeo FIFO/LIFO/
-promedio, lotes/series, conteos físicos/cíclicos, órdenes de
-producción, reglas de reposición/putaway/picking) son la fase
-**Inventario**, siguiente en el orden, no esta.
+## 2. Próximo paso inmediato: Productos
 
-Ver `docs/architecture/19-modulo-inventory.md` para el modelo de datos
-ya documentado (diseño existente, sin una sola línea de código de
-`modules/inventario/backend` todavía).
+Orden confirmado (`ROADMAP.md`): **Productos** → Inventario (stock/
+movimientos reales, sobre la base de Almacenes ya construida) →
+Clientes → Ventas → Caja → POS.
 
-## 2. Orden completo restante (confirmado, `ROADMAP.md`)
+**Por qué Productos antes que Inventario (aunque Inventario ya tiene
+la estructura de Almacenes lista)**: el stock real
+(`inventory.stock`, `stock_movements`, etc.) siempre referencia un
+`product_id` — no tiene sentido modelar existencias de productos que
+no existen todavía. Ver `docs/architecture/18-modulo-products.md` para
+el modelo de datos ya documentado (sin código todavía).
 
-1. **Almacenes** ← siguiente
-2. Productos
-3. Inventario (stock/movimientos, sobre la base de Almacenes)
-4. Clientes
-5. Ventas
-6. Caja
-7. POS
-8. (resto de los 27 módulos de negocio, sin re-priorizar todavía)
+## 3. Orden completo restante (confirmado, `ROADMAP.md`)
 
-## 3. Deuda técnica que bloquea o condiciona lo de arriba
+1. **Productos** ← siguiente
+2. Inventario (stock/movimientos/costeo/conteos/producción — las 29
+   tablas de `inventory` que Almacenes no cubrió)
+3. Clientes
+4. Ventas
+5. Caja
+6. POS
+7. (resto de los 27 módulos de negocio, sin re-priorizar todavía)
 
-Ninguna deuda actual **bloquea** empezar Almacenes — es un módulo nuevo,
-aislado, sin dependencias de los gaps conocidos. Dos ítems sí conviene
-tener presentes por si el diseño de Almacenes los toca de pasada:
+## 4. Deuda técnica que bloquea o condiciona lo de arriba
 
-- `core/messaging`/`core/scheduler` siguen sin un solo productor/consumidor
-  real (`TECHNICAL_DEBT.md §2`) — si Almacenes necesitara eventos de
-  dominio publicados de verdad (ej. "almacén creado" disparando algo en
-  otro módulo), sería el primer consumidor real de esa infraestructura,
-  decisión a tomar explícitamente, no asumida.
-- 185 FK reales cruzan schemas de módulos de negocio distintos
-  (`TECHNICAL_DEBT.md §2`) — confirmar si alguna involucra
-  `warehouses`/`warehouse_zones`/`warehouse_locations` antes de asumir
-  aislamiento total del módulo.
+Ninguna deuda actual **bloquea** empezar Productos. Un ítem a tener
+presente:
 
-## 4. No bloqueante, pero recomendado antes de seguir sumando módulos
+- `modules/inventario` ya tiene el patrón Clean Architecture establecido
+  (entidad → repositorio puerto/adaptador → servicio → controller →
+  validators Zod) sobre el quinto cliente Prisma (`PRISMA_INVENTORY`) —
+  Inventario (paso 2 de esta lista) puede reusar exactamente esa
+  estructura de proyecto, agregando controllers/servicios nuevos al
+  mismo `InventarioModule` en vez de crear un sexto módulo Nx.
 
-- `nx run web:test` roto (`PROJECT_HEALTH_REPORT.md §4`, detectado esta
-  sesión) — no bloquea backend, pero cuanto más se tarde en arreglarlo
-  más frontend nuevo se construye sin cobertura de test real.
-- Docker Desktop caído (4ª sesión consecutiva) — Almacenes se puede
-  construir igual (mismo patrón que Auth Enterprise/Usuarios Enterprise:
-  build/lint/unitarios con fakes, e2e reales pendientes de confirmar),
-  pero en algún momento hace falta una sesión con Docker arriba para
-  correr la suite completa de una vez.
+## 5. No bloqueante, pero recomendado antes de seguir sumando módulos
 
-## 5. Progreso — porcentajes reales
+- `nx run web:test` sigue roto (`PROJECT_HEALTH_REPORT.md §4`, `TECHNICAL_DEBT.md §4`)
+  — no bloquea backend, pero cuanto más se tarde en arreglarlo más
+  frontend nuevo se construye sin cobertura de test real.
+- Docker Desktop caído (5ª sesión consecutiva) — Productos se puede
+  construir igual (mismo patrón que las 3 partes anteriores: build/lint/
+  unitarios con fakes, e2e reales pendientes de confirmar), pero en
+  algún momento hace falta una sesión con Docker arriba para correr la
+  suite completa de una vez — la lista de e2e pendientes de reconfirmar
+  sigue creciendo (ahora incluye también `almacenes.controller.e2e-spec.ts`).
 
-| Dimensión                                                      |                      Real                      |
-| -------------------------------------------------------------- | :--------------------------------------------: |
-| Módulos de negocio con backend real                            |                3 / 27 (**11%**)                |
-| Ítems de la lista "primero" de FASE 03 completos               |    9 / 10 (**90%** — falta solo Almacenes)     |
-| Proyectos del monorepo que compilan sin error                  |               19 / 19 (**100%**)               |
-| Proyectos del monorepo que lintean sin error                   |               23 / 23 (**100%**)               |
-| Tests unitarios backend pasando (sin infraestructura real)     |              157 / 165 (**95%**)               |
-| Vulnerabilidades de dependencias en runtime de negocio directo | 0 / 39 (**0%** — todas transitivas de tooling) |
+## 6. Progreso — porcentajes reales
+
+| Dimensión                                                      |                          Real                          |
+| -------------------------------------------------------------- | :----------------------------------------------------: |
+| Módulos de negocio con backend real                            |                    4 / 27 (**15%**)                    |
+| Ítems de la lista "primero" de FASE 03 completos               |                   10 / 10 (**100%**)                   |
+| Proyectos del monorepo que compilan sin error                  | 20 / 20 (**100%**, incluye `inventario-backend` nuevo) |
+| Proyectos del monorepo que lintean sin error                   |                   24 / 24 (**100%**)                   |
+| Vulnerabilidades de dependencias en runtime de negocio directo |     0 / 39 (**0%** — todas transitivas de tooling)     |
 
 No se incluye un % de "cobertura de código" real — `coverageThreshold`
 sigue en el piso de seguridad (5%, `TECHNICAL_DEBT.md`), no una medida
-representativa de cobertura real todavía.
+representativa de cobertura real todavía. Tampoco un % de tests
+unitarios pasando consolidado — ver `ALMACENES_TEST_REPORT.md §2` y
+`PROJECT_HEALTH_REPORT.md §3` para los números por paquete de esta
+sesión (todas las fallas atribuibles a Docker caído, sin excepción).
