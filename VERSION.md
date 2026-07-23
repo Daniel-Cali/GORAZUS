@@ -5,7 +5,15 @@ completa y estable (no un release público), `PATCH` una corrección puntual. `0
 el proyecto arrancó en `0.1.0` (bootstrap del monorepo + FASE 01-05). Sin releases públicos
 todavía, así que no hay compromiso de compatibilidad entre versiones `0.x`.
 
-## Versión actual: **0.3.0** (2026-07-22)
+## Versión actual: **0.3.1** (2026-07-22)
+
+FASE 2, Parte 2.1 — Infraestructura del módulo `auth`, preparación sin tocar login. `PATCH`, no
+`MINOR`: pedido explícito de esta parte era "no desarrollar aún el login" — todo lo agregado es
+aditivo (Value Object, Domain Events preparados, JWT Provider, `GuestGuard`, config de TTLs), sin
+cambiar el comportamiento real de ningún endpoint. Ver `CHANGELOG.md` para el detalle completo y
+`AUTH_ARCHITECTURE.md`/`AUTH_MODULE_REPORT.md` para el resumen de arquitectura.
+
+## 0.3.0 (2026-07-22)
 
 FASE 2 — Backend Core (endurecimiento de `auth` + capacidades nuevas de infraestructura). Ver
 `CHANGELOG.md` para el detalle completo. Resumen:
@@ -30,6 +38,7 @@ FASE 2 — Backend Core (endurecimiento de `auth` + capacidades nuevas de infrae
 
 | Versión | Fecha      | Resumen                                                                                                                                                                                                                                                                                                                      |
 | ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0.3.1   | 2026-07-22 | FASE 2, Parte 2.1 — Infraestructura de `auth` preparada sin tocar login: Value Object `Email`, Domain Events preparados (sin publicar), JWT Provider, `GuestGuard`, config de TTLs/umbrales (sin consumidor todavía).                                                                                                        |
 | 0.3.0   | 2026-07-22 | FASE 2 Backend Core — 4 gaps de seguridad de `auth` cerrados (bloqueo por intentos, rate limit propio, revocación de token, CSRF), 2FA exigido en login, `core/storage` con consumidor real, email real de reset de contraseña.                                                                                              |
 | 0.2.0   | 2026-07-21 | FASE 02 — Backend Core (Empresas/Sucursales/Config/Monedas/Impuestos) + extensión de Seguridad (Auditoría/Sesiones/Reset de contraseña/2FA) + Usuarios (perfil/self-service/historial).                                                                                                                                      |
 | 0.1.0   | 2026-07-20 | Bootstrap del monorepo + FASE 01-05: Foundation Platform (`core/*`), persistencia (21 clientes Prisma, RLS forzado), primeros módulos de negocio reales (`auth`, `seguridad`), frontend (`apps/web`, `ui-kit`), Notification Center (WhatsApp), Ollama, Kubernetes/monitoreo/HTTPS/backup, testing (Playwright, k6, CodeQL). |

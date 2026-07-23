@@ -389,6 +389,39 @@ ErrorBoundary > RouterProvider`), y `app-shell/module-registry.ts` con las 25 fe
     `PasswordResetNotifier` — en dev entrega contra MailHog (`http://localhost:8025`), verificado
     leyendo el correo real capturado vía su API. Nuevo namespace de config `mail`
     (`core/config/namespaces/mail.config.ts`).
+- **FASE 2, Parte 2.1 — Infraestructura del módulo `auth`, preparación sin tocar login (2026-07-22).**
+  Pedido explícitamente como "no desarrollar aún el login" — todo lo de abajo es aditivo, ningún
+  caso de uso de login/refresh/2FA (Parte 2 — Backend Core) se modificó:
+  - **Value Object `Email`** (`modules/auth/backend/value-objects/email.vo.ts`) +
+    `EmailInvalidoException` — preparado, `Usuario` sigue con su validación inline (adopción es
+    Parte 2.2).
+  - **Domain Events preparados** (`modules/auth/backend/events/`): `UsuarioAutenticadoEvent`,
+    `LoginFallidoEvent`, `CuentaBloqueadaEvent`, `SesionRevocadaEvent` — routing keys siguiendo la
+    convención `<modulo>.<entidad>.<evento>` ya documentada (`08-infraestructura-y-despliegue.md §4`).
+    Ninguno se publica todavía — `EventBusService` (`core/messaging`) sigue sin productores reales.
+  - **JWT Provider** (`modules/auth/backend/services/jwt-token.provider.ts`, `signAccessToken()`) —
+    extraído de la firma inline ya duplicada en `IssueLoginSessionService`/`RefreshTokenUseCase`.
+    Vive en el módulo `auth`, no en `packages/tooling/utils`: ese paquete resuelve dependencias
+    desde la raíz del monorepo (sin `package.json` propio) y `jsonwebtoken` no es una dependencia
+    de raíz (a diferencia de `argon2`, confirmado con un fallo real de resolución de tipos al
+    intentar ponerlo ahí primero).
+  - **`GuestGuard`** (`core/http/guards/guest.guard.ts`) — inverso de `JwtAuthGuard`, verifica el
+    JWT por su cuenta (no depende de que Passport ya haya corrido, que no pasa en rutas
+    `@Public()`). Preparado, ningún controller lo usa todavía.
+  - **Config de TTLs/umbrales** (`core/config/namespaces/auth.config.ts` extendido):
+    `JWT_ACCESS_TTL`/`JWT_REFRESH_TTL_DAYS`/`LOGIN_LOCKOUT_THRESHOLD`/
+    `LOGIN_LOCKOUT_WINDOW_MINUTES`/`TWO_FACTOR_CHALLENGE_TTL_MINUTES` — todas opcionales, default
+    idéntico al valor hardcodeado real en los use cases, validadas en `env.schema.ts` pero sin
+    consumidor todavía (conectarlas es Parte 2.2, sin cambiar el comportamiento por default).
+  - **Documentación**: `AUTH_ARCHITECTURE.md`/`AUTH_README.md`/`AUTH_FLOW.md` nuevos (raíz del
+    repo) — flujos reales, mapeo de la convención de carpetas propia del proyecto a los conceptos
+    Application/Domain/Infrastructure/Presentation del pedido (sin crear carpetas literales con
+    esos nombres — ver `AUTH_ARCHITECTURE.md §1` para el porqué). `modules/auth/README.md`
+    corregido (decía "backend/ todavía no implementado", falso desde Parte 2). Nota agregada a
+    `docs/architecture/13-modulo-auth.md` señalando dónde el código real diverge del diseño
+    original (nombres de clases de 2FA, 200 vs 202 en la rama de 2FA).
+  - 18 tests nuevos, todos unitarios (Value Object, eventos, JWT provider, `GuestGuard`) — sin
+    e2e nuevos esta parte porque no se tocó ningún endpoint real.
 
 ### Corregido
 
