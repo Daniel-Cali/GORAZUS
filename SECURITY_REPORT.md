@@ -1,11 +1,12 @@
 # Security Report — GORAZUS ERP
 
-> Actualizado FASE 03 — Backend Core Enterprise, Parte 02 (Autenticación
-> Enterprise). Sesión del 2026-07-22, versión **0.4.0**. Estado ACTUAL
-> completo de seguridad — no solo lo nuevo de una sesión puntual (para
-> eso ver `CHANGELOG.md`/`AUTH_REPORT.md`). Reemplaza como fuente de
-> verdad al `SECURITY_REPORT.md` anterior (sesión de auditoría Parte 01,
-> 2026-07-23).
+> Actualizado FASE 03 — Backend Core Enterprise, Parte 03 (Gestión de
+> Usuarios Enterprise). Sesión del 2026-07-22, versión **0.5.0**. Estado
+> ACTUAL completo de seguridad — no solo lo nuevo de una sesión puntual
+> (para eso ver `CHANGELOG.md`/`AUTH_REPORT.md`/`USERS_REPORT.md`/
+> `USERS_SECURITY_REPORT.md`). Reemplaza como fuente de verdad al
+> `SECURITY_REPORT.md` anterior (sesión Parte 02, Autenticación
+> Enterprise).
 
 ## 1. Autenticación
 
@@ -26,14 +27,27 @@
 | Detección de reuso de refresh token     |   ❌   | Gap conocido, documentado en el propio código — ver `TECHNICAL_DEBT.md §1`                                                                       |
 | MFA más allá de TOTP (WebAuthn, etc.)   |   ❌   | Sin diseño ni pedido todavía                                                                                                                     |
 
+## 1.1. Gestión de usuarios (`seguridad`, Parte 03)
+
+| Control                                     | Estado | Detalle                                                                                                                              |
+| ------------------------------------------- | :----: | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `password_hash` nunca en una respuesta HTTP |   ✅   | Corregido esta parte — fuga real en 5 endpoints preexistentes. Ver `USERS_SECURITY_REPORT.md §1`                                     |
+| Autorización administrativa                 |   ✅   | Todo endpoint de administración (`PUT/PATCH/DELETE` sobre `:id`, multiempresa) exige `seguridad.gestionar_usuarios`                  |
+| Self-service aislado al propio usuario      |   ✅   | `/me`, `/me/password`, `/me/preferencias`, `/me/avatar` operan exclusivamente sobre `context.userId` del JWT, nunca un `:id` externo |
+| Usuario eliminado no editable               |   ✅   | Nuevo — `UsuarioEliminadoException`, gap real encontrado escribiendo tests (`findById` no filtra `deleted_at`)                       |
+| Asignación de empresa valida estado         |   ✅   | Rechaza empresa inactiva o ya asignada antes de escribir (`EmpresaInactivaException`/`EmpresaYaAsignadaException`)                   |
+| Avatar: tamaño y saneamiento de nombre      |   ✅   | Máximo 5MB, nombre saneado antes de convertirse en object key, bucket propio por tenant                                              |
+| Enumeración de usuarios/empresas ajenas     |   ✅   | Mensajes 404 sin distinguir "no existe" de "no te pertenece" donde aplica                                                            |
+
 ## 2. Autorización (RBAC)
 
 `PermissionsGuard` global, **fail-closed** por diseño: sin resolver
 registrado, deniega todo. `seguridad` registra el resolver real
 (`PermissionsResolverService`) que resuelve rol→permiso contra la base de
 datos (sin cache Redis todavía — cada request hace la consulta). Roles y
-permisos administrables vía API (`/seguridad/roles`, con asignación de
-permisos y de roles a usuarios).
+permisos administrables vía API (`/seguridad/roles`, con asignación y
+revocación de permisos y de roles a usuarios — `revocarRol` quedó
+alcanzable recién en Parte 03, antes era código muerto sin ruta).
 
 ## 3. Multiempresa / aislamiento de datos
 
@@ -44,8 +58,14 @@ permisos y de roles a usuarios).
   `withTenantScope` en cada operación de repositorio — nunca un `WHERE
 tenant_id = ...` manual en código de aplicación (estructuralmente
   imposible de "olvidar").
+- **Pertenencia multiempresa de usuario** (`core.user_companies`,
+  wireado Parte 03): un usuario puede estar asignado a varias empresas
+  del tenant — sigue siendo una lista de pertenencia, no cambia cuál es
+  la empresa ACTIVA de la sesión (eso lo sigue fijando `auth` al emitir
+  el token).
 - **Archivos** (`core/storage`): aislamiento a nivel de bucket
-  (`archivos-<tenantId>`), no de fila — MinIO no tiene RLS, este es el
+  (`archivos-<tenantId>`, y ahora también `avatares-<tenantId>` para
+  fotos de perfil), no de fila — MinIO no tiene RLS, este es el
   equivalente funcional.
 - 🟡 185 FK reales cruzan schemas de módulos de negocio distintos — ver
   `TECHNICAL_DEBT.md §2`, requiere decisión de negocio, no es una fuga de
@@ -65,27 +85,35 @@ tenant_id = ...` manual en código de aplicación (estructuralmente
 - SQL injection: Prisma parametrizado en toda la capa de aplicación, sin
   SQL crudo con interpolación de strings.
 
-## 5. Archivos subidos (`core/storage`)
+## 5. Archivos subidos (`core/storage`, y avatares de `seguridad`)
 
-- Límite de tamaño: 25MB (`multer`).
+- Límite de tamaño: 25MB genérico (`multer`, `core/storage`), 5MB para
+  avatares de perfil (`AvatarUsuarioService`, Parte 03).
 - Sanitización de nombre de archivo antes de convertirse en object key
   (colapsa secuencias de `..`, quita `/` y caracteres fuera de
-  alfanumérico/`.`/`-`/`_`).
+  alfanumérico/`.`/`-`/`_`) — mismo saneamiento en ambos.
 - URLs de descarga siempre firmadas de corta duración (~5 min) — nunca
   credenciales de MinIO expuestas al cliente.
 - Protegido por `JwtAuthGuard` global (sin `@Public()`).
+- Buckets separados por propósito y por tenant: `archivos-<tenantId>`
+  (genérico) vs. `avatares-<tenantId>` (fotos de perfil) — nunca un
+  bucket global compartido entre tenants.
 
 ## 6. Dependencias — `pnpm audit`, refrescado esta sesión
 
 **39 vulnerabilidades** (1 crítica, 19 altas, 18 moderadas, 1 baja) —
-mismo número que al cierre de la sesión anterior (sin drift). Todas en
-dependencias transitivas de tooling/observabilidad (Vitest UI server,
-minimatch/picomatch ReDoS en build tooling, exporters de OpenTelemetry,
-js-yaml vía `@nestjs/swagger`) — **ninguna en una dependencia directa de
-runtime de negocio**. `security.yml` corre `pnpm audit` sin bloquear el
-merge (`|| true`) hasta que se resuelva con tiempo dedicado de
-regresión. Detalle completo y por qué no se tocan ahora:
-`TECHNICAL_DEBT.md §1`.
+mismo número que al cierre de la sesión anterior (sin drift), pese a que
+`seguridad-backend` sumó `multer`/`@types/multer`/`@nestjs/platform-express`/
+`@gorazus/core-storage` como dependencias propias (para el avatar de
+perfil): las cuatro ya estaban en el lockfile (usadas por `core/storage`/
+`apps/api` desde FASE 2), pnpm las deduplica, cero paquetes nuevos
+resueltos. Todas las vulnerabilidades restantes en dependencias
+transitivas de tooling/observabilidad (Vitest UI server, minimatch/
+picomatch ReDoS en build tooling, exporters de OpenTelemetry, js-yaml vía
+`@nestjs/swagger`) — **ninguna en una dependencia directa de runtime de
+negocio**. `security.yml` corre `pnpm audit` sin bloquear el merge (`||
+true`) hasta que se resuelva con tiempo dedicado de regresión. Detalle
+completo y por qué no se tocan ahora: `TECHNICAL_DEBT.md §1`.
 
 ## 7. Secretos
 
@@ -98,13 +126,17 @@ documentado antes de esta sesión).
 ## 8. No evaluado esta sesión
 
 - Pentesting real / escaneo activo contra la API corriendo, incluidos los
-  3 endpoints nuevos de Parte 02 (`GET /auth/me`, `GET /auth/session`,
-  `POST /auth/revoke`) — Docker no disponible durante toda la sesión, ver
-  `AUTH_TEST_REPORT.md §3`.
+  endpoints nuevos de Parte 02 (`GET /auth/me`, `GET /auth/session`,
+  `POST /auth/revoke`) y Parte 03 (edición/estado/multiempresa/
+  preferencias/avatar de usuarios) — Docker no disponible durante ambas
+  sesiones, ver `AUTH_TEST_REPORT.md §3`/`USERS_TEST_REPORT.md §3`.
 - Auditoría de código de terceros más allá de `pnpm audit` (ej. análisis
-  estático de la cadena de suministro) — sin dependencias nuevas esta
-  parte, conteo de `pnpm audit` sin cambios.
+  estático de la cadena de suministro) — sin dependencias NUEVAS al
+  lockfile esta parte (ver §6), conteo de `pnpm audit` sin cambios.
 - Tasa real de falsos positivos de la protección de session-hijacking
   (IP/User-Agent) en tráfico real — es la razón por la que
   `AUTH_STRICT_SESSION_VALIDATION` queda en `false` por default, ver
   `JWT_CONFIGURATION.md §4`.
+- Rate limiting específico para `POST /seguridad/usuarios` (crear) o
+  `PATCH /:id/password` (reset administrativo) — ver
+  `USERS_SECURITY_REPORT.md §6`.

@@ -5,7 +5,16 @@ completa y estable (no un release público), `PATCH` una corrección puntual. `0
 el proyecto arrancó en `0.1.0` (bootstrap del monorepo + FASE 01-05). Sin releases públicos
 todavía, así que no hay compromiso de compatibilidad entre versiones `0.x`.
 
-## Versión actual: **0.4.0** (2026-07-22)
+## Versión actual: **0.5.0** (2026-07-22)
+
+FASE 03, Parte 03 — Gestión de Usuarios Enterprise. `MINOR`: CRUD administrativo completo
+(editar/eliminar/restaurar/estado agregado/reseteo de contraseña), multiempresa (`core.user_companies`,
+wireada sin consumidor desde Enterprise v1.0.0) y preferencias/avatar (`core.user_profiles`, ídem) —
+más una corrección de seguridad real (fuga de `password_hash` en 5 endpoints preexistentes). Ver
+`USERS_REPORT.md` para el detalle completo, `USERS_SECURITY_REPORT.md` para el hallazgo de
+seguridad, `USERS_TEST_REPORT.md` para testing, `USERS_API.md` para referencia de endpoints.
+
+## 0.4.0 (2026-07-22)
 
 FASE 03, Parte 02 — Autenticación Enterprise. `MINOR`, no `PATCH`: a diferencia de Parte 2.1
 (aditivo/preparatorio), esta parte agrega funcionalidad real y cambia comportamiento de endpoints
@@ -54,6 +63,7 @@ FASE 2 — Backend Core (endurecimiento de `auth` + capacidades nuevas de infrae
 
 | Versión | Fecha      | Resumen                                                                                                                                                                                                                                                                                                                      |
 | ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0.5.0   | 2026-07-22 | FASE 03, Parte 03 — Gestión de Usuarios Enterprise: CRUD admin completo (editar/eliminar/restaurar/estado agregado/reseteo de contraseña), multiempresa (`user_companies`), preferencias/avatar (`user_profiles`), corrección de fuga de `password_hash`.                                                                    |
 | 0.4.0   | 2026-07-22 | FASE 03, Parte 02 — Autenticación Enterprise: "recordar sesión", protección de session-hijacking (IP/UA), verificación de empresa/sucursal activa, `GET /auth/me`, `GET /auth/session`, `POST /auth/revoke`, adopción de config/JWT Provider preparados en 0.3.1.                                                            |
 | 0.3.1   | 2026-07-22 | FASE 2, Parte 2.1 — Infraestructura de `auth` preparada sin tocar login: Value Object `Email`, Domain Events preparados (sin publicar), JWT Provider, `GuestGuard`, config de TTLs/umbrales (sin consumidor todavía).                                                                                                        |
 | 0.3.0   | 2026-07-22 | FASE 2 Backend Core — 4 gaps de seguridad de `auth` cerrados (bloqueo por intentos, rate limit propio, revocación de token, CSRF), 2FA exigido en login, `core/storage` con consumidor real, email real de reset de contraseña.                                                                                              |
@@ -62,10 +72,10 @@ FASE 2 — Backend Core (endurecimiento de `auth` + capacidades nuevas de infrae
 
 ## Próxima versión prevista
 
-`0.5.0` — módulo de negocio Almacenes (`modules/inventario`, único ítem real pendiente de la lista
+`0.6.0` — módulo de negocio Almacenes (`modules/inventario`, único ítem real pendiente de la lista
 de prioridad "primero" de FASE 03, ver `ROADMAP.md`), después Productos e Inventario con movimiento
-de stock real. Sin fecha comprometida (postergada de `0.4.0` — ese número lo tomó Autenticación
-Enterprise, Parte 02, en su lugar).
+de stock real. Sin fecha comprometida (postergada de `0.5.0` — ese número lo tomó Gestión de
+Usuarios Enterprise, Parte 03, en su lugar).
 
 ## Versionado del modelo de datos (track independiente)
 

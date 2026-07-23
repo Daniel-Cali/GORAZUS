@@ -1,11 +1,11 @@
 # Technical Debt — GORAZUS ERP
 
-> Actualizado FASE 03 — Backend Core Enterprise, Parte 02 (Autenticación
-> Enterprise). Sesión del 2026-07-22, versión **0.4.0**, rama `gorazus2`.
-> Consolida deuda técnica ya dispersa en `CHANGELOG.md` ("Pendiente
-> conocido") y en los reportes de sesiones previas, más lo detectado esta
-> sesión — no repite el detalle completo de cada item, referencia la
-> fuente.
+> Actualizado FASE 03 — Backend Core Enterprise, Parte 03 (Gestión de
+> Usuarios Enterprise). Sesión del 2026-07-22, versión **0.5.0**, rama
+> `gorazus2`. Consolida deuda técnica ya dispersa en `CHANGELOG.md`
+> ("Pendiente conocido") y en los reportes de sesiones previas, más lo
+> detectado esta sesión — no repite el detalle completo de cada item,
+> referencia la fuente.
 
 ## Cómo leer esto
 
@@ -32,7 +32,13 @@ de gravedad 🔴 sin documentar ya.
   reusar un token rotado, pero no distingue "reuso detectado" de "nunca
   existió" para registrar el incidente como señal de posible robo de
   token.
-- 🟠 **(nuevo) `POST /seguridad/sesiones/:id/revocar` (admin, `modules/
+- 🟢 **(corregido, FASE 03 Parte 03) Fuga de `password_hash` en 5
+  endpoints de `UsuariosController`** — `GET/PATCH /me`, `POST /` crear,
+  `activar`/`desactivar`, `GET /` listar devolvían la fila cruda de
+  `core.users`. Corregido con `toUsuarioPublico()`. Ver
+  `USERS_SECURITY_REPORT.md §1` para el detalle completo — queda acá
+  solo como registro de que existió, no como deuda pendiente.
+- 🟠 **`POST /seguridad/sesiones/:id/revocar` (admin, `modules/
 seguridad`) no marca el `sessionId` en la blacklist de Redis** —
   detectado en FASE 03 Parte 02 al construir el equivalente de
   autoservicio (`POST /auth/revoke`, que sí lo hace). Un access token ya
@@ -97,13 +103,23 @@ seguridad`) no marca el `sessionId` en la blacklist de Redis** —
 - 🟡 **Catálogo de países/jurisdicciones fiscales sin CRUD/UI** — solo
   script de seed mínimo (`seed-tax-jurisdictions.ts`) que desbloquea
   Impuestos.
-- 🟡 **(nuevo) Login por username no implementado** — `core.users` no
-  tiene columna `username` (solo `email`, único por tenant), y el modelo
-  de datos está congelado (`Enterprise v1.0.0`, `VERSION.md`). Agregar la
+- 🟡 **Login por username no implementado** — `core.users` no tiene
+  columna `username` (solo `email`, único por tenant), y el modelo de
+  datos está congelado (`Enterprise v1.0.0`, `VERSION.md`). Agregar la
   columna requiere una migración versionada + una decisión de producto
   (¿obligatorio, único, editable, alias del email?) que no correspondía
   tomar dentro de FASE 03 Parte 02 — login por email ya cubre el caso de
-  uso real actual. Ver `AUTH_REPORT.md §4`.
+  uso real actual. Ver `AUTH_REPORT.md §4`. Confirmado igual en Parte 03
+  (`USERS_REPORT.md §4`): "cambio de nombre de usuario" tampoco se
+  implementó, mismo motivo.
+- 🟡 **(nuevo) Sin `user_branches`/`user_warehouses`** — `core.user_companies`
+  (multiempresa) se wireó en FASE 03 Parte 03, pero no existe una tabla
+  equivalente a nivel sucursal ni almacén en el modelo certificado. Un
+  usuario sigue teniendo una única sucursal fija (`core.users.branch_id`).
+  Para almacenes específicamente, además falta el módulo de negocio
+  entero (`modules/inventario`, ver ítem de Almacenes más abajo) — no
+  tiene sentido modelar la asignación antes de que existan almacenes
+  administrables. Ver `USERS_REPORT.md §4`.
 
 ## 4. Calidad de código y CI
 
@@ -133,17 +149,17 @@ seguridad`) no marca el `sessionId` en la blacklist de Redis** —
 
 - Kubernetes (`infra/kubernetes/`) — manifiestos validados con `kubectl
 kustomize` en su momento, sin cluster real de prueba todavía.
-- 🟡 **Docker Desktop no disponible durante FASE 03 completa (Parte 01 y
-  Parte 02) y la sesión de Backend Core anterior** (`failed to connect to
+- 🟡 **Docker Desktop no disponible durante FASE 03 completa (Partes 01,
+  02 y 03) y la sesión de Backend Core anterior** (`failed to connect to
 the docker API` — nivel host de Windows, fuera del control de este
   entorno de agente). No es deuda del proyecto — es una nota operativa:
   los tests e2e reales de `auth`/`seguridad`/`configuracion`, incluidos
-  los que ejercitarían la funcionalidad nueva de Parte 02 contra Postgres/
-  Redis real, no se pudieron correr. Ver `TEST_REPORT.md`/
-  `AUTH_TEST_REPORT.md`/`BACKEND_HEALTH_REPORT.md` para el detalle de qué
-  sí se verificó sin infraestructura (build/lint/unitarios con fakes) y
-  qué queda pendiente de re-confirmar la próxima vez que Docker esté
-  arriba.
+  los que ejercitarían la funcionalidad nueva de Parte 02/03 contra
+  Postgres/Redis/MinIO real, no se pudieron correr. Ver `TEST_REPORT.md`/
+  `AUTH_TEST_REPORT.md`/`USERS_TEST_REPORT.md`/`BACKEND_HEALTH_REPORT.md`
+  para el detalle de qué sí se verificó sin infraestructura (build/lint/
+  unitarios con fakes) y qué queda pendiente de re-confirmar la próxima
+  vez que Docker esté arriba.
 
 ## 6. Explícitamente NO es deuda (decisiones ya tomadas, no revisitar)
 

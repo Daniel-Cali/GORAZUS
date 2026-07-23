@@ -10,7 +10,7 @@ trabajo en [CHANGELOG.md](CHANGELOG.md).
 | Módulo                                                                                                                                                                                                                                                             | Backend                                                                                                                                                                                                                                                                                                       | Frontend                                                                  |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | `auth`                                                                                                                                                                                                                                                             | ✅ Login (con bloqueo por intentos + 2FA exigido si está confirmado + "recordar sesión"), refresh (con protección de session-hijacking + verificación de empresa/sucursal activa), logout, `GET /auth/me`, `GET /auth/session`, `POST /auth/revoke`, recuperación de contraseña (email real), CSRF en refresh | ✅ Login                                                                  |
-| `seguridad`                                                                                                                                                                                                                                                        | ✅ Roles/permisos (RBAC), usuarios (CRUD + perfil propio), auditoría, sesiones, 2FA (setup real, exigido en login desde `auth`)                                                                                                                                                                               | ✅ Listado/alta de usuarios                                               |
+| `seguridad`                                                                                                                                                                                                                                                        | ✅ Roles/permisos (RBAC), usuarios (CRUD completo + soft delete/restore + estado agregado + multiempresa + preferencias + avatar), auditoría, sesiones, 2FA (setup real, exigido en login desde `auth`)                                                                                                       | ✅ Listado/alta de usuarios                                               |
 | `configuracion`                                                                                                                                                                                                                                                    | ✅ Empresas, Sucursales, Parámetros, Monedas, Impuestos (alcance mínimo)                                                                                                                                                                                                                                      | ❌ Sin construir                                                          |
 | Resto (24 módulos: ventas, pos, inventario, compras, productos, clientes, proveedores, caja, bancos, contabilidad, crm, rrhh, nómina, producción, servicios, activos-fijos, proyectos, reportes, bi, impuestos*, tesorería, dashboard, administracion, documentos) | ❌ Sin backend                                                                                                                                                                                                                                                                                                | 🟡 Placeholder `ComingSoonPage` (25 módulos ya registrados en el sidebar) |
 
@@ -18,12 +18,13 @@ trabajo en [CHANGELOG.md](CHANGELOG.md).
 `docs/architecture/46-modulo-taxes.md`) es distinto del catálogo mínimo de perfiles/tasas ya
 construido dentro de `modules/configuracion/backend` — ver `CHANGELOG.md`, entrada FASE 02.
 
-## Fase actual: FASE 03 — Backend Core Enterprise, Parte 02 (Autenticación Enterprise, 2026-07-22)
+## Fase actual: FASE 03 — Backend Core Enterprise, Parte 03 (Gestión de Usuarios Enterprise, 2026-07-22)
 
-`v0.4.0` agregó a `auth`: "recordar sesión", protección de session-hijacking, verificación de
-empresa/sucursal activa, `GET /auth/me`, `GET /auth/session`, `POST /auth/revoke` — ver
-`AUTH_REPORT.md` para el detalle completo, `PROJECT_STATUS.md` para el estado consolidado y
-`TECHNICAL_DEBT.md` para la deuda técnica detectada (incluida esta parte).
+`v0.5.0` agregó a `seguridad`: CRUD administrativo completo de usuarios (editar/eliminar/restaurar),
+estado agregado, multiempresa (`user_companies`), preferencias/avatar (`user_profiles`), y corrigió
+una fuga real de `password_hash` en 5 endpoints preexistentes — ver `USERS_REPORT.md` para el
+detalle completo, `PROJECT_STATUS.md` para el estado consolidado y `TECHNICAL_DEBT.md` para la
+deuda técnica detectada (incluida esta parte).
 
 ### Ya completo (no repetir en próximas fases)
 
@@ -32,7 +33,8 @@ empresa/sucursal activa, `GET /auth/me`, `GET /auth/session`, `POST /auth/revoke
   (rotación + CSRF + protección de session-hijacking + verificación de empresa/sucursal activa),
   logout (revocación inmediata de sesión), `GET /auth/me`, `GET /auth/session`, `POST /auth/revoke`
   (una sesión o todas), recuperación de contraseña (email real por SMTP).
-- **Seguridad**: RBAC (roles/permisos), usuarios (CRUD + perfil propio + self-service), auditoría
+- **Seguridad**: RBAC (roles/permisos), usuarios (CRUD administrativo completo, soft delete/restore,
+  estado agregado, multiempresa, preferencias, avatar, perfil propio + self-service), auditoría
   (lectura), sesiones (listar/revocar — administrativo, distinto del autoservicio de `auth`), 2FA
   (setup/confirmar/deshabilitar, TOTP real).
 - **Archivos**: `core/storage` con endpoint genérico de subida/descarga/borrado (MinIO, bucket por

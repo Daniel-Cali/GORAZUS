@@ -24,13 +24,13 @@ con honestidad, no oculta.
 
 ## 2. Versión actual
 
-**0.4.0** (2026-07-22) — FASE 03, Parte 02: Autenticación Enterprise —
-"recordar sesión", protección de session-hijacking, verificación de
-empresa/sucursal activa, `GET /auth/me`, `GET /auth/session`,
-`POST /auth/revoke`, adopción de la config/JWT Provider preparados en
-`0.3.1`. Ver [VERSION.md](./VERSION.md) para el historial completo de
-versiones y [AUTH_REPORT.md](./AUTH_REPORT.md) para el detalle de esta
-parte.
+**0.5.0** (2026-07-22) — FASE 03, Parte 03: Gestión de Usuarios
+Enterprise — CRUD administrativo completo, multiempresa
+(`core.user_companies`), preferencias/avatar (`core.user_profiles`), y
+corrección de una fuga real de `password_hash` en 5 endpoints
+preexistentes. Ver [VERSION.md](./VERSION.md) para el historial completo
+de versiones y [USERS_REPORT.md](./USERS_REPORT.md) para el detalle de
+esta parte.
 
 ## 3. Estado del código (resumen de ROADMAP.md)
 

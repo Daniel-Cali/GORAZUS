@@ -468,6 +468,40 @@ ErrorBoundary > RouterProvider`), y `app-shell/module-registry.ts` con las 25 fe
   `AUTH_TEST_REPORT.md`, `JWT_CONFIGURATION.md`, `OPENAPI_AUTH.md`; `SECURITY_REPORT.md`
   actualizado. `0.3.1` → `0.4.0` (`MINOR`: funcionalidad real, no aditivo).
 
+- **FASE 03 — Backend Core Enterprise, Parte 03: Gestión de Usuarios Enterprise (2026-07-22).**
+  No existe un módulo `users` separado — extiende `UsuariosController`/`UsuariosAdminService`
+  (`modules/seguridad/backend`, FASE 02). **Corrección de seguridad primero**: los 6 endpoints
+  preexistentes devolvían la fila cruda de `core.users`, incluido `password_hash` (Argon2id) — 5 de
+  ellos lo filtraban en la respuesta HTTP (`GET/PATCH /me`, `POST /` crear, `activar`/`desactivar`,
+  `GET /` listar). Corregido con `toUsuarioPublico()`, aplicado a toda respuesta que incluya un
+  usuario (`USERS_SECURITY_REPORT.md §1`). Nuevo: edición administrativa (`PUT /:id`, nombre y/o
+  correo de cualquier usuario), cambio de correo self-service (`PATCH /me` ahora acepta `email`),
+  soft delete + restore (`DELETE /:id`, `POST /:id/restore` — antes no existía ningún mecanismo de
+  eliminación), estado agregado (`PATCH /:id/status`: active/inactive/suspended/blocked/
+  pending_activation — `core.users` solo persiste `is_active`+`deleted_at`, los estados finos van a
+  `metadata.status` SIEMPRE junto con `is_active=false`, nunca como única señal), reseteo de
+  contraseña administrativo (`PATCH /:id/password`), revocar rol (`DELETE /:id/roles/:rolId` — el
+  método de servicio ya existía sin ruta, código muerto desde FASE 02), multiempresa (`GET/POST/
+DELETE /:id/empresas`, wirea `core.user_companies`, existente en el modelo certificado sin
+  consumidor desde Enterprise v1.0.0), preferencias (`GET/PATCH /me/preferencias`, wirea
+  `core.user_profiles`, ídem — idioma/zona horaria en columnas reales, tema/formatos/página
+  inicial/registros por página/notificaciones en su `metadata` JSONB, sin migración), foto de perfil
+  (`POST/DELETE /me/avatar`, reusa `StorageService`/`core-storage` con bucket propio
+  `avatares-<tenantId>`, key guardada en `user_profiles.metadata.avatarKey` — no en la columna FK
+  `avatar_file_id`, que ningún flujo de subida existente llena). **Gap real encontrado escribiendo
+  tests**: `BaseRepository.findById()` no filtra `deleted_at` — sin un guard nuevo
+  (`UsuarioEliminadoException`), editar/cambiar-estado/resetear-password seguían funcionando en
+  silencio sobre un usuario ya eliminado; corregido. **Deliberadamente no implementado**: cambio de
+  username (mismo gap que Parte 02, `core.users` no tiene esa columna), múltiples
+  sucursales/almacenes por usuario (no existe `user_branches`/`user_warehouses`, y
+  `modules/inventario` sigue vacío), firma digital (el pedido dice "preparada", no implementada —
+  `metadata.signatureKey` reservado, sin endpoint). 38 tests unitarios nuevos (5 suites) + 11 e2e
+  nuevos (extendiendo `usuarios.controller.e2e-spec.ts`, que además cubrió por primera vez
+  `crear`/`listar`/`asignarRol`, ya existentes pero sin e2e) — Docker no disponible durante toda la
+  sesión, e2e reales pendientes de reconfirmar (`USERS_TEST_REPORT.md`). Entregables nuevos:
+  `USERS_REPORT.md`, `USERS_SECURITY_REPORT.md`, `USERS_API.md`, `USERS_API_REPORT.md`,
+  `USERS_TEST_REPORT.md`, `USERS_README.md`. `0.4.0` → `0.5.0` (`MINOR`).
+
 ### Corregido
 
 - **FASE 2 Backend Core — 4 gaps reales de seguridad en el login, encontrados al auditar el módulo
