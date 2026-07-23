@@ -561,6 +561,30 @@ DELETE /:id/empresas`, wirea `core.user_companies`, existente en el modelo certi
   pendientes de reconfirmar (`PRODUCTOS_TEST_REPORT.md`). Entregables nuevos: `PRODUCTOS_REPORT.md`,
   `PRODUCTOS_API.md`, `PRODUCTOS_TEST_REPORT.md`. `0.6.0` → `0.7.0` (`MINOR`).
 
+- **FASE 05 — Inventario Enterprise, Parte 01: Diseño del módulo (2026-07-23), sin código.**
+  Rama nueva `feature/inventory-core` (desde `gorazus2`). Auditoría completa del schema `inventory`
+  (34 tablas, no 32 como asumía el pedido original — corregido contra la fuente real
+  `docs/database/sql/06_inventory.sql`) y de `products` (35 tablas, dependencia de costeo/BOM) contra
+  el SQL real, no contra documentación previa. Mapeo completo del pedido de "Inventario Enterprise"
+  (Kardex, existencias por estado, ubicaciones de 9 niveles, series/lotes/vencimientos/garantías/
+  peso/volumen/QR/RFID, todos los tipos de movimiento, trazabilidad IP/equipo/caja) contra las
+  tablas reales — la mayoría del pedido **sí** tiene tabla real (una sola `stock` + vista
+  `v_available_stock`, no una tabla por estado; jerarquía de ubicaciones auto-referenciada de
+  profundidad arbitraria, no 9 tablas). 6 gaps reales sin columna ni tabla identificados y
+  documentados (QR/RFID, fecha de fabricación, peso/volumen/dimensiones, obsolescencia, garantías,
+  trazabilidad de caja) — ninguno se resolvió con una migración silenciosa; quedan como decisión de
+  negocio pendiente, explícitamente fuera de esta parte. Decisión de diseño sin migración: usar
+  `warehouse_locations.metadata.locationType` (columna `metadata JSONB` ya existente en el patrón
+  universal) como convención de aplicación para distinguir pasillo/estante/nivel/posición dentro de
+  la misma cadena `parent_location_id` ya construida en Almacenes (`v0.6.0`). Plan de implementación
+  de 7 partes (Parte 02 Motor de stock/movimientos → 03 Reservas/transferencias → 04 Ajustes/conteos
+  → 05 Recepciones/salidas/reglas de almacén → 06 Costeo → 07 Series/lotes → 08 Producción),
+  ordenado por dependencia real, no por el orden en que se listaron en el pedido. Entregables nuevos:
+  `INVENTORY_ARCHITECTURE.md`, `INVENTORY_HEALTH_REPORT.md`, `INVENTORY_STATUS.md`,
+  `INVENTORY_NEXT_PHASE.md`; addendum agregado a `docs/architecture/19-modulo-inventory.md §13`.
+  Sin bump de versión — mismo criterio que FASE 03 Parte 01 (auditoría/diseño puro, sin
+  funcionalidad nueva): sigue en `0.7.0`.
+
 ### Corregido
 
 - **FASE 2 Backend Core — 4 gaps reales de seguridad en el login, encontrados al auditar el módulo

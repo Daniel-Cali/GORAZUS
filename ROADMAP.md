@@ -12,7 +12,7 @@ trabajo en [CHANGELOG.md](CHANGELOG.md).
 | `auth`                                                                                                                                                                                                                                      | ✅ Login (con bloqueo por intentos + 2FA exigido si está confirmado + "recordar sesión"), refresh (con protección de session-hijacking + verificación de empresa/sucursal activa), logout, `GET /auth/me`, `GET /auth/session`, `POST /auth/revoke`, recuperación de contraseña (email real), CSRF en refresh | ✅ Login                                                                  |
 | `seguridad`                                                                                                                                                                                                                                 | ✅ Roles/permisos (RBAC), usuarios (CRUD completo + soft delete/restore + estado agregado + multiempresa + preferencias + avatar), auditoría, sesiones, 2FA (setup real, exigido en login desde `auth`)                                                                                                       | ✅ Listado/alta de usuarios                                               |
 | `configuracion`                                                                                                                                                                                                                             | ✅ Empresas, Sucursales, Parámetros, Monedas, Impuestos (alcance mínimo)                                                                                                                                                                                                                                      | ❌ Sin construir                                                          |
-| `inventario`                                                                                                                                                                                                                                | 🟡 Almacenes (Almacén→Zona→Ubicación) — CRUD real. Stock/movimientos/costeo/conteos/producción (29 tablas restantes) sin backend todavía, fase "Inventario" siguiente                                                                                                                                         | ❌ Sin construir                                                          |
+| `inventario`                                                                                                                                                                                                                                | 🟡 Almacenes (Almacén→Zona→Ubicación) — CRUD real. Arquitectura completa de las 31 tablas restantes (stock/movimientos/reservas/transferencias/ajustes/conteos/recepciones/salidas/costeo/series/lotes/producción) ya diseñada (`INVENTORY_ARCHITECTURE.md`, FASE 05 Parte 01), sin código todavía            | ❌ Sin construir                                                          |
 | `productos`                                                                                                                                                                                                                                 | 🟡 Unidades de Medida, Categorías, Marcas, Modelos, Productos (5 tablas núcleo) — CRUD real. Variantes/atributos/combos/kits/BOM/imágenes (30 tablas restantes) sin backend todavía                                                                                                                           | ❌ Sin construir                                                          |
 | Resto (22 módulos: ventas, pos, compras, clientes, proveedores, caja, bancos, contabilidad, crm, rrhh, nómina, producción, servicios, activos-fijos, proyectos, reportes, bi, impuestos*, tesorería, dashboard, administracion, documentos) | ❌ Sin backend                                                                                                                                                                                                                                                                                                | 🟡 Placeholder `ComingSoonPage` (25 módulos ya registrados en el sidebar) |
 
@@ -20,12 +20,14 @@ trabajo en [CHANGELOG.md](CHANGELOG.md).
 `docs/architecture/46-modulo-taxes.md`) es distinto del catálogo mínimo de perfiles/tasas ya
 construido dentro de `modules/configuracion/backend` — ver `CHANGELOG.md`, entrada FASE 02.
 
-## Fase actual: FASE 04 — Productos (2026-07-23)
+## Fase actual: FASE 05, Parte 01 — Inventario Enterprise (diseño) (2026-07-23)
 
-`v0.7.0` agregó `modules/productos/backend`: CRUD de Unidades de Medida, Categorías, Marcas,
-Modelos y Productos (5 de 35 tablas del schema `products`) — ver `PRODUCTOS_REPORT.md` para el
-detalle completo, `PROJECT_STATUS.md` para el estado consolidado y `TECHNICAL_DEBT.md` para la
-deuda técnica detectada.
+Sin código nuevo, sin bump de versión (sigue en `v0.7.0`) — esta parte auditó el schema real de
+`inventory` (34 tablas) y `products` contra el SQL fuente, y dejó la arquitectura completa de las
+31 tablas de `inventory` que Almacenes no cubrió, lista para implementar sin cambios estructurales
+posteriores. Rama de trabajo: `feature/inventory-core`. Ver `INVENTORY_ARCHITECTURE.md` para el
+detalle completo, `INVENTORY_STATUS.md` para el estado consolidado y `INVENTORY_NEXT_PHASE.md`
+para el plan de 7 partes de implementación (Parte 02 en adelante).
 
 ### Ya completo (no repetir en próximas fases)
 
@@ -39,8 +41,9 @@ deuda técnica detectada.
   (lectura), sesiones (listar/revocar — administrativo, distinto del autoservicio de `auth`), 2FA
   (setup/confirmar/deshabilitar, TOTP real).
 - **Inventario — Almacenes**: CRUD de Almacén→Zona→Ubicación, con validación real de empresa/
-  sucursal/almacén/zona padre. Stock/movimientos/costeo/conteos/producción siguen sin construir
-  (fase "Inventario" siguiente, no esta).
+  sucursal/almacén/zona padre. Arquitectura de las 31 tablas restantes (stock/movimientos/reservas/
+  transferencias/ajustes/conteos/recepciones/salidas/costeo/series/lotes/producción) ya diseñada
+  (`INVENTORY_ARCHITECTURE.md`), sin código todavía.
 - **Productos**: CRUD de Unidades de Medida, Categorías (jerárquica), Marcas, Modelos y Productos
   (`good`/`service`/`kit`/`combo`/`composite`), con validación cruzada marca↔modelo y el invariante
   de que un `service` no rastrea serie/lote. Variantes/atributos/combos/kits/BOM/imágenes siguen sin
@@ -51,11 +54,13 @@ deuda técnica detectada.
   MailHog reales cuando la infraestructura estuvo disponible — ver `TEST_REPORT.md`/
   `PRODUCTOS_TEST_REPORT.md` para el detalle y una nota sobre disponibilidad de Docker.
 
-### Próxima fase: Inventario
+### Próxima fase: Inventario, Parte 02 — Motor de stock y movimientos
 
-Con Productos completo, la Fase 04 del orden de desarrollo queda cerrada. Orden confirmado
-(`NEXT_STEPS.md`): **Inventario** (stock/movimientos/costeo reales, sobre la base de Almacenes en
-`0.6.0` y Productos en `0.7.0`) → Clientes → Ventas → Caja → POS.
+Con el diseño de Inventario completo, la Parte 01 de la Fase 05 queda cerrada. Orden confirmado
+(`INVENTORY_NEXT_PHASE.md`): **Parte 02 — Motor de stock y movimientos** (`stock`/
+`stock_movement_types`/`stock_movements`, la base de la que dependen las 6 partes siguientes) →
+03 Reservas/transferencias → 04 Ajustes/conteos → 05 Recepciones/salidas/reglas de almacén →
+06 Costeo → 07 Series/lotes → 08 Producción → Clientes → Ventas → Caja → POS.
 
 ## Backlog conocido
 
