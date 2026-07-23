@@ -5,7 +5,21 @@ completa y estable (no un release público), `PATCH` una corrección puntual. `0
 el proyecto arrancó en `0.1.0` (bootstrap del monorepo + FASE 01-05). Sin releases públicos
 todavía, así que no hay compromiso de compatibilidad entre versiones `0.x`.
 
-## Versión actual: **0.7.0** (2026-07-23)
+## Versión actual: **0.8.0** (2026-07-23)
+
+FASE 05, Parte 02 — Motor de Stock y Movimientos. `MINOR`: primer código real sobre `stock`/
+`stock_movement_types`/`stock_movements` (3 de las 34 tablas de `inventory`, sumadas a las 3 de
+Almacenes en `0.6.0`) — motor único de movimientos con actualización atómica de stock, consultas
+de disponible y kardex real (`inventory.v_kardex`). Ver `INVENTORY_STOCK_REPORT.md` para el detalle
+completo, `INVENTORY_STOCK_TEST_REPORT.md` para testing, `INVENTORY_STOCK_API.md` para referencia
+de endpoints.
+
+> **Nota** — FASE 05, Parte 01 fue una fase de diseño puro (arquitectura del módulo de Inventario
+> Enterprise, sin código de negocio), así que no incrementó la versión — siguió siendo `0.7.0`
+> hasta esta parte. Ver `INVENTORY_ARCHITECTURE.md`/`INVENTORY_STATUS.md` para el resultado de esa
+> fase de diseño.
+
+## 0.7.0 (2026-07-23)
 
 FASE 04 — Productos. `MINOR`: primer código real de `modules/productos/backend` — CRUD de las 5
 tablas núcleo del catálogo (Unidades de Medida, Categorías, Marcas, Modelos, Productos), sobre las
@@ -78,6 +92,7 @@ FASE 2 — Backend Core (endurecimiento de `auth` + capacidades nuevas de infrae
 
 | Versión | Fecha      | Resumen                                                                                                                                                                                                                                                                                                                      |
 | ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0.8.0   | 2026-07-23 | FASE 05, Parte 02 — Motor de Stock y Movimientos: primer código real de `stock`/`stock_movement_types`/`stock_movements` (3 de 34 tablas de `inventory`), motor único de movimientos con actualización atómica de stock, disponible y kardex real.                                                                           |
 | 0.7.0   | 2026-07-23 | FASE 04 — Productos: primer código real de `modules/productos/backend` (Unidades de Medida, Categorías, Marcas, Modelos, Productos), 5 de 35 tablas del schema `products`.                                                                                                                                                   |
 | 0.6.0   | 2026-07-23 | FASE 03, continuidad — Almacenes: primer código real de `modules/inventario/backend` (Almacén→Zona→Ubicación), cierra la lista de prioridad "primero" de FASE 03.                                                                                                                                                            |
 | 0.5.0   | 2026-07-22 | FASE 03, Parte 03 — Gestión de Usuarios Enterprise: CRUD admin completo (editar/eliminar/restaurar/estado agregado/reseteo de contraseña), multiempresa (`user_companies`), preferencias/avatar (`user_profiles`), corrección de fuga de `password_hash`.                                                                    |
@@ -89,9 +104,8 @@ FASE 2 — Backend Core (endurecimiento de `auth` + capacidades nuevas de infrae
 
 ## Próxima versión prevista
 
-`0.8.0` — Inventario (stock/movimientos/costeo reales, sobre la base de Almacenes en `0.6.0` y
-Productos en `0.7.0` — el stock siempre referencia un `product_id` y un `warehouse_id`, ambos ya
-existen). Sin fecha comprometida.
+`0.9.0` — Fase 05, Parte 03: Reservas y Transferencias (`stock_reservations`/`stock_transfers`/
+`stock_transfer_lines`), sobre el motor de movimientos de `0.8.0`. Sin fecha comprometida.
 
 ## Versionado del modelo de datos (track independiente)
 

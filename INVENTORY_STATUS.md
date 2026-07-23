@@ -1,71 +1,54 @@
-# Estado del Módulo de Inventario — tras Fase 05, Parte 01 (Diseño)
+# Estado del Módulo de Inventario — tras Fase 05, Parte 02 (Motor de Stock y Movimientos)
 
 ## 1. En una frase
 
-El módulo `inventory` tiene 34 tablas certificadas en el modelo de datos,
-de las cuales **3 tienen código real** (Almacén→Zona→Ubicación, `v0.6.0`);
-esta parte no agregó código, agregó la **arquitectura completa y
-verificada** para construir las 31 restantes sin sorpresas estructurales
-— ver `INVENTORY_ARCHITECTURE.md`.
+El módulo `inventory` tiene 34 tablas certificadas en el modelo de datos, de las cuales **6 tienen
+código real** (Almacén→Zona→Ubicación desde `v0.6.0`, más Stock/Tipos de movimiento/Movimientos
+desde `v0.8.0`) — el motor único que actualiza `stock` atómicamente y las 28 tablas restantes ya
+tienen su arquitectura completa diseñada (`INVENTORY_ARCHITECTURE.md`), lista para las 6 partes que
+siguen (`INVENTORY_NEXT_PHASE.md`).
 
-## 2. Cobertura de código — antes y después de esta parte
+## 2. Cobertura de código — progreso por parte
 
-|                                                           | Antes (v0.7.0)                   | Después de Parte 01                                                                                                                 |
-| --------------------------------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| Tablas de `inventory` con código real                     | 3 / 34 (9%)                      | 3 / 34 (9%) — sin cambio, fase de diseño                                                                                            |
-| Tablas de `inventory` con arquitectura de diseño definida | 3 / 34 (solo las ya construidas) | **34 / 34 (100%)** — ver `INVENTORY_ARCHITECTURE.md §2, §6`                                                                         |
-| Gaps de schema identificados y documentados               | 0 (no auditado formalmente)      | **6** (QR/RFID, fecha fabricación, peso/volumen/dimensiones, obsolescencia, garantías, caja — ver `INVENTORY_ARCHITECTURE.md §5.2`) |
+|                                                           | Tras Parte 01 (diseño)      | Tras Parte 02 (`v0.8.0`)                                               |
+| --------------------------------------------------------- | --------------------------- | ---------------------------------------------------------------------- |
+| Tablas de `inventory` con código real                     | 3 / 34 (9%)                 | **6 / 34 (18%)**                                                       |
+| Tablas de `inventory` con arquitectura de diseño definida | 34 / 34 (100%)              | 34 / 34 (100%) — sin cambio                                            |
+| Endpoints reales del módulo `inventario`                  | 12 (Almacén/Zona/Ubicación) | **21** (+ tipos de movimiento, movimientos, stock, disponible, kardex) |
 
-## 3. Qué existe hoy en código (sin cambios esta parte)
+## 3. Qué existe hoy en código
 
-- `AlmacenesController`/`AlmacenesService`/`AlmacenRepository` —
-  `inventory.warehouses`.
-- `ZonasAlmacenController`/`ZonasAlmacenService`/`ZonaAlmacenRepository` —
-  `inventory.warehouse_zones`.
-- `UbicacionesAlmacenController`/`UbicacionesAlmacenService`/
-  `UbicacionAlmacenRepository` — `inventory.warehouse_locations`.
+- `AlmacenesController`/`AlmacenesService`/`AlmacenRepository` — `inventory.warehouses`.
+- `ZonasAlmacenController`/`ZonasAlmacenService`/`ZonaAlmacenRepository` — `inventory.warehouse_zones`.
+- `UbicacionesAlmacenController`/`UbicacionesAlmacenService`/`UbicacionAlmacenRepository` —
+  `inventory.warehouse_locations`.
+- `TiposMovimientoController`/`TiposMovimientoService`/`TipoMovimientoStockRepository` —
+  `inventory.stock_movement_types` (catálogo, `code` único por tenant).
+- `MovimientosController`/`MovimientosService`/`MovimientoStockRepository` — motor único que
+  escribe en `inventory.stock` e `inventory.stock_movements` atómicamente.
+- `StockController`/`StockService`/`StockRepository` — consultas de solo lectura (listado +
+  disponible) sobre `inventory.stock`.
+- `KardexController`/`KardexService`/`KardexRepository` — consulta real de `inventory.v_kardex`.
+- `ProductoLookupRepository` (nuevo) — adapta `products.products` desde `inventario`, mismo patrón
+  que `EmpresaSucursalLookupRepository`.
 
-## 4. Qué queda diseñado pero sin construir (31 tablas)
+## 4. Qué queda diseñado pero sin construir (28 tablas)
 
-Agrupadas por la secuencia de implementación recomendada en
-`INVENTORY_NEXT_PHASE.md`:
-
-- **Motor de stock y movimientos** (núcleo, del que depende todo lo demás):
-  `stock`, `stock_movement_types`, `stock_movements`, vistas
-  `v_available_stock`/`v_kardex`.
-- **Reservas y transferencias**: `stock_reservations`, `stock_transfers`,
-  `stock_transfer_lines`.
-- **Ajustes y conteos físicos**: `stock_adjustments`,
-  `stock_adjustment_lines`, `stock_adjustment_reasons`,
-  `physical_counts`, `physical_count_lines`, `cycle_count_schedules`.
-- **Recepciones, salidas y reglas de almacén**: `goods_receipts`,
-  `goods_receipt_lines`, `goods_issues`, `goods_issue_lines`,
-  `goods_issue_reasons`, `putaway_rules`, `picking_rules`,
-  `replenishment_rules`.
-- **Costeo**: `fifo_cost_layers`, `lifo_cost_layers`,
-  `average_cost_history`.
-- **Series y lotes**: `inventory_serials`, `inventory_lots`.
-- **Producción**: `production_order_status`, `production_orders`,
-  `production_order_status_history`, `production_order_components`,
-  `production_order_outputs`, `production_consumptions`.
+Sin cambios en la lista — ver `INVENTORY_NEXT_PHASE.md` para el detalle agrupado en 6 partes
+(03 Reservas/transferencias, 04 Ajustes/conteos, 05 Recepciones/salidas/reglas de almacén,
+06 Costeo, 07 Series/lotes, 08 Producción).
 
 ## 5. Módulo `productos` — sin cambios esta parte
 
-Sigue en 5/35 tablas (`v0.7.0`) — esta fase no tocó `products`, solo lo
-auditó como dependencia de `inventory` (costeo lee `costing_method`,
-producción lee `bill_of_materials`). Las 30 tablas restantes de
-`products` (variantes, atributos, kits/combos/BOM/recetas, imágenes,
-proveedores, código de barras, precios, reseñas) siguen fuera de alcance
-de la Fase 05 — son del dominio de Productos, no de Inventario.
+Sigue en 5/35 tablas (`v0.7.0`). El motor de movimientos de esta parte ya lo consume (vía
+`ProductoLookupRepository`) para validar `product_id`, pero no agregó código nuevo a `productos`
+mismo.
 
 ## 6. Versión
 
-Sin cambio — esta parte es diseño puro, no funcionalidad nueva, mismo
-criterio que FASE 03 Parte 01 (auditoría, `v0.3.1` sin bump). Sigue en
-**`0.7.0`** hasta que Parte 02 entregue código real. Ver `VERSION.md`.
+**0.8.0** (2026-07-23) — primer código real de esta parte. Ver `VERSION.md`.
 
 ## 7. Rama de trabajo
 
-`feature/inventory-core` (creada esta parte desde `gorazus2`) — se seguirá
-usando para toda la Fase 05, con commits pequeños y frecuentes por parte,
-hasta que el módulo esté completo y se decida el merge a `gorazus2`.
+`feature/inventory-core` — sigue activa para el resto de la Fase 05, con commits pequeños y
+frecuentes por parte, hasta que el módulo esté completo y se decida el merge a `gorazus2`.

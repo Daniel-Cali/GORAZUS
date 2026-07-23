@@ -1,6 +1,6 @@
 {
   "name": "gorazus-erp",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "description": "GORAZUS ERP — monolito modular (Clean Architecture + DDD), preparado para extracción a microservicios.",
   "license": "UNLICENSED",

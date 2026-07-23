@@ -8,7 +8,10 @@ dominio propias → controller Zod + Swagger → e2e, agregado a
 `modules/inventario/backend` (mismo `InventarioModule`, ver
 `INVENTORY_ARCHITECTURE.md §9`).
 
-## Parte 02 — Motor de stock y movimientos (crítica, bloquea todo lo demás)
+## Parte 02 — Motor de stock y movimientos (crítica, bloquea todo lo demás) — ✅ completa (`v0.8.0`)
+
+Ver `INVENTORY_STOCK_REPORT.md` para el detalle real de lo construido — el resumen abajo es el plan
+original, dejado tal cual para trazabilidad.
 
 - Tablas: `stock`, `stock_movement_types`, `stock_movements`.
 - Vistas de solo lectura: `v_available_stock`, `v_kardex`.

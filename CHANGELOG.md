@@ -585,6 +585,36 @@ DELETE /:id/empresas`, wirea `core.user_companies`, existente en el modelo certi
   Sin bump de versión — mismo criterio que FASE 03 Parte 01 (auditoría/diseño puro, sin
   funcionalidad nueva): sigue en `0.7.0`.
 
+- **FASE 05 — Inventario Enterprise, Parte 02: Motor de Stock y Movimientos (2026-07-23).**
+  Primer código real sobre `inventory.stock`/`stock_movement_types`/`stock_movements` (3 de las 34
+  tablas del schema, sumadas a las 3 de Almacenes en `0.6.0`), agregado al mismo
+  `modules/inventario/backend` (`InventarioModule`) diseñado en Parte 01. Nuevo: catálogo de tipos
+  de movimiento (`TiposMovimientoController`, `code` único por tenant, sin `eliminar`), motor único
+  de movimientos (`POST /inventario/movimientos`) que actualiza `inventory.stock` y crea el
+  movimiento en la misma transacción de base de datos (`withTenantScope` ya envuelve en
+  `$transaction`) — valida producto (`ProductoLookupRepository` nuevo sobre `products.products`,
+  mismo patrón que `EmpresaLookupRepository`/`EmpresaSucursalLookupRepository`), almacén (reusa
+  `AlmacenRepository`), ubicación si se indica (reusa `UbicacionAlmacenRepository`), y resuelve
+  `company_id`/`branch_id` desde el almacén destino en vez de pedirlos redundantes. `StockRepository`
+  deliberadamente sin `create`/`update`: el saldo nunca se escribe fuera del motor de movimientos.
+  Invariante nueva reforzada en la entidad `Stock` (no en la base, sin `CHECK` cruzado posible):
+  reservado nunca puede superar lo disponible físicamente. `KardexRepository` — primer uso de una
+  vista de Postgres (`inventory.v_kardex`) desde código de aplicación en todo el proyecto, vía
+  `$queryRawUnsafe` parametrizado (mismo mecanismo de bind parameters que `tenant-scope.ts`), reusa
+  el saldo corrido ya calculado por función de ventana en la base en vez de reimplementarlo.
+  `StockInsuficienteException` (409) si una salida dejaría `quantity_on_hand` negativo — chequeo
+  sin locking explícito, riesgo de condición de carrera bajo concurrencia real documentado, no
+  oculto (`INVENTORY_STOCK_REPORT.md §5`). Nuevo permiso `inventario.gestionar_stock` (`seed-rbac.ts`,
+  distinto de `gestionar_almacenes`) y script `seed-stock-movement-types.ts` (8 tipos idempotentes:
+  receipt/issue/transfer_out/transfer_in/adjustment_increase/adjustment_decrease/production_output/
+  production_consumption). 32 tests unitarios nuevos (6 suites: 3 entidades + 3 servicios) + 1 e2e
+  nuevo (`stock-movimientos.controller.e2e-spec.ts`, primer e2e del proyecto que compone dos módulos
+  de negocio reales — `InventarioModule` + `ProductosModule` — en el mismo `TestingModule` para
+  crear un producto real vía su propia API) — Docker no disponible durante toda la sesión (7ª sesión
+  consecutiva), e2e reales pendientes de reconfirmar (`INVENTORY_STOCK_TEST_REPORT.md`). Entregables
+  nuevos: `INVENTORY_STOCK_REPORT.md`, `INVENTORY_STOCK_API.md`, `INVENTORY_STOCK_TEST_REPORT.md`.
+  `0.7.0` → `0.8.0` (`MINOR`).
+
 ### Corregido
 
 - **FASE 2 Backend Core — 4 gaps reales de seguridad en el login, encontrados al auditar el módulo
