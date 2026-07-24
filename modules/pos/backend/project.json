@@ -1,0 +1,26 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "pos-backend",
+  "sourceRoot": "modules/pos/backend",
+  "projectType": "library",
+  "tags": ["type:backend"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/modules/pos/backend"],
+      "options": {
+        "command": "tsc -p modules/pos/backend/tsconfig.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/modules/pos/backend"],
+      "options": {
+        "jestConfig": "modules/pos/backend/jest.config.ts"
+      }
+    }
+  }
+}

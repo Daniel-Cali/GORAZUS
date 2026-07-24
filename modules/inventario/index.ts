@@ -13,3 +13,4 @@ export {
   AlmacenInvalidoException,
   StockInsuficienteException,
 } from './backend/services/movimientos.service';
+export { TiposMovimientoService } from './backend/services/tipos-movimiento.service';

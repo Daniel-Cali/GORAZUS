@@ -75,6 +75,46 @@ export class TiposMovimientoService {
     return tipo;
   }
 
+  /**
+   * Get-or-create idempotente del tipo de movimiento por código — mismo
+   * patrón que `CajaService.resolverTipoPorCodigo`/`VentasService.resolverEstadoPorCodigo`.
+   * Primer consumidor: `modules/pos/backend` (checkout — resuelve
+   * "salida por venta" sin depender de que alguien lo cree a mano antes,
+   * `POS_ARCHITECTURE.md §4.3`).
+   */
+  async resolverPorCodigo(
+    context: UserContext,
+    code: string,
+    direction: 'in' | 'out',
+  ): Promise<string> {
+    const existente = await this.tipoMovimientoRepository.findMany(
+      context,
+      { code },
+      { page: 1, pageSize: 1 },
+    );
+    if (existente.data[0]) return existente.data[0].id;
+
+    try {
+      const creado = await this.tipoMovimientoRepository.create(context, {
+        tenant_id: context.tenantId,
+        code,
+        direction,
+      });
+      return creado.id;
+    } catch (error) {
+      const esViolacionDeUnicidad =
+        typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002';
+      if (!esViolacionDeUnicidad) throw error;
+      const reintento = await this.tipoMovimientoRepository.findMany(
+        context,
+        { code },
+        { page: 1, pageSize: 1 },
+      );
+      if (!reintento.data[0]) throw error;
+      return reintento.data[0].id;
+    }
+  }
+
   async actualizar(
     context: UserContext,
     id: string,
