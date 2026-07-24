@@ -80,6 +80,14 @@ Bucket por tenant (`archivos-<tenantId>`), no uno global. Sin tabla de metadata 
 `key` devuelto se guarda en la columna `metadata JSONB` del registro de negocio que lo necesite,
 cuando exista ese módulo.
 
+## `inventario`, `productos`, `clientes`, `caja`, `ventas`, `pos`
+
+Este índice no duplica el detalle de estos módulos — ver su documentación dedicada:
+`INVENTORY_API.md`/`INVENTORY_STOCK_API.md`/`INVENTORY_RESERVAS_TRANSFERENCIAS_API.md`,
+`ALMACENES_API.md`, `PRODUCTOS_API.md` y, agregado en FASE 06 Parte 01, `POS_API.md` (endpoints de
+`/clientes`, `/caja`, `/ventas/facturas` y `/pos` — checkout completo del Punto de Venta). El spec
+real ([openapi.json](openapi.json)) ya incluye las rutas de los seis módulos.
+
 ## `health` — probes de infraestructura (sin auth, `@Public()`)
 
 | Método | Ruta            | Descripción      |

@@ -22,6 +22,50 @@ no una reescritura del schema. Detalle completo:
 
 ### Añadido
 
+- **FASE 06, Parte 01 — Punto de Venta (POS) Enterprise (2026-07-24).**
+  - **`modules/clientes/backend`** (nuevo): CRUD mínimo sobre `customers.customers` +
+    `obtenerOCrearConsumidorFinal` (get-or-create idempotente, `tax_id='CF'`) para ventas sin
+    cliente registrado.
+  - **`modules/caja/backend`** (nuevo): registros de caja, apertura (`uq_cash_openings_one_active`
+    impide más de una apertura activa a nivel de base), cierre (`expected_amount` = apertura + suma
+    de movimientos), catálogo de tipos de movimiento get-or-create, movimientos sobre
+    `cash.cash_movements` (particionada mensualmente, repositorio custom, no `BaseRepository`).
+  - **`modules/ventas/backend`** (nuevo): facturas (`sales.invoices`, particionada por
+    `issued_at` — sin relación real hacia `invoice_lines`, Postgres no permite FK simple contra una
+    tabla particionada, así que el repositorio escribe header y líneas en dos pasos dentro de la
+    misma transacción) con impuesto real calculado por línea contra `taxes.tax_rates`, recibos con
+    allocations, transición `draft → issued`.
+  - **`modules/pos/backend`** (nuevo, orquestador): `PosCheckoutService` compone
+    `InventarioModule`/`VentasModule`/`CajaModule`/`ClientesModule` vía el barrel de cada módulo
+    (`modules/<x>/index.ts`) — primer caso real de composición backend-a-backend entre módulos de
+    negocio en el proyecto, validando en la práctica el patrón ya documentado pero nunca usado en
+    `docs/architecture/01-estructura-monorepo.md §5`. Checkout completo: valida stock disponible,
+    valida caja abierta, resuelve cliente (o Consumidor Final), crea factura, valida pago
+    suficiente (soporta pago mixto — N formas de pago), descuenta stock, registra recibo +
+    movimiento de caja por cada pago, confirma la factura. También soporta suspender/recuperar una
+    venta sin cobrar ni tocar stock.
+  - **`modules/pos/frontend`** (nuevo): pantalla `/pos` de página completa (sin `AppShell`),
+    selector de empresa/sucursal/caja con apertura de turno, buscador de productos con
+    auto-agregado al carrito, diálogo de cobro con pago mixto y cálculo de cambio, atajos de
+    teclado F1/F5/F6/F7/Escape.
+  - **Dos bugs preexistentes de Fase 05 encontrados y corregidos** durante la verificación
+    end-to-end contra Postgres real (Docker arriba por primera vez en 9 sesiones): (1) doble
+    aplicación de movimientos de stock — el trigger `inventory.fn_apply_stock_movement` y
+    `MovimientoStockRepositoryPrisma.aplicarMovimiento` escribían el mismo delta cada uno, desde
+    Fase 05 Parte 02; (2) `operator does not exist: uuid = text` en `stock-lock.util.ts` por falta
+    de casts explícitos en `$queryRawUnsafe`. Ver `POS_DATABASE.md §5` y `POS_TEST_REPORT.md §3`.
+  - **Desviación de alcance documentada**: el orden previsto en `ROADMAP.md`/
+    `INVENTORY_NEXT_PHASE.md` tenía Inventario Parte 05-08 (Recepciones/Costeo/Series/Producción)
+    antes de Clientes/Ventas/Caja/POS — esta parte los saltó por pedido explícito del usuario, no
+    por decisión unilateral. Documentado en `POS_ARCHITECTURE.md §1` y `NEXT_STEPS.md`.
+  - **Explícitamente diferido** (`POS_ARCHITECTURE.md §3`): cotizaciones/pedidos/apartados,
+    devoluciones/cambios/garantías, promociones/cupones/tarjetas de regalo/lealtad, crédito real de
+    clientes, asiento contable automático, facturación electrónica fiscal, envío de comprobante por
+    correo/WhatsApp, venta por lote/serie, arqueo por denominación.
+  - 42 tests unitarios nuevos (42/42), 153 tests de Inventario re-verificados sin regresiones. Ver
+    `POS_TEST_REPORT.md` para el detalle completo, `POS_API.md` para referencia de endpoints,
+    `POS_HEALTH_REPORT.md` para riesgos y deuda técnica.
+
 - **FASE 02 — Backend Core + Gestión de Versiones: Empresas/Sucursales/Configuración/Monedas/
   Impuestos, y extensión de Seguridad + Usuarios (2026-07-20/21).**
   - **`modules/configuracion/backend`** (nuevo paquete, Core): CRUD completo de Empresas

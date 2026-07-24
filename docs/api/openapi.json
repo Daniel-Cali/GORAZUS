@@ -198,6 +198,93 @@
         ]
       }
     },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "summary": "Usuario actual",
+        "description": "Identidad del usuario autenticado — mínimo (sin roles/permisos ni perfil editable, eso es /seguridad/usuarios/me).",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentUserEnvelopeDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "El usuario de la sesión ya no existe."
+          }
+        },
+        "tags": ["auth"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/session": {
+      "get": {
+        "operationId": "AuthController_session",
+        "summary": "Validar sesión",
+        "description": "Verifica, más allá de la firma/expiración del JWT, que el usuario y la empresa/sucursal activas de la sesión sigan activos.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionValidationEnvelopeDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Usuario, empresa o sucursal activa ya no está activo."
+          }
+        },
+        "tags": ["auth"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/revoke": {
+      "post": {
+        "operationId": "AuthController_revoke",
+        "summary": "Revocar sesión(es)",
+        "description": "Con sessionId: revoca solo esa sesión (requiere que sea del usuario autenticado). Sin sessionId: revoca todas las sesiones activas del usuario (\"cerrar sesión en todos los dispositivos\").",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokeTokenEnvelopeDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "sessionId indicado no existe o pertenece a otro usuario."
+          }
+        },
+        "tags": ["auth"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/auth/forgot-password": {
       "post": {
         "operationId": "AuthController_forgotPassword",
@@ -313,7 +400,7 @@
       "patch": {
         "operationId": "UsuariosController_actualizarMiPerfil",
         "summary": "Editar mi propio perfil",
-        "description": "Solo el nombre — email y roles son administrativos.",
+        "description": "Nombre y (opcionalmente) correo — roles/estado son administrativos.",
         "parameters": [],
         "responses": {
           "200": {
@@ -332,11 +419,81 @@
       "patch": {
         "operationId": "UsuariosController_cambiarMiPassword",
         "summary": "Cambiar mi propia contraseña",
-        "description": "Exige la contraseña actual — distinto del alta administrativa con contraseña temporal.",
+        "description": "Exige la contraseña actual — distinto del reseteo administrativo con contraseña temporal.",
         "parameters": [],
         "responses": {
           "200": {
             "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/usuarios/me/preferencias": {
+      "get": {
+        "operationId": "UsuariosController_obtenerMisPreferencias",
+        "summary": "Ver mis preferencias",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "UsuariosController_actualizarMisPreferencias",
+        "summary": "Actualizar mis preferencias",
+        "description": "PATCH parcial — tema/formatos/página inicial/registros por página/notificaciones (metadata), idioma/zona horaria (columnas reales).",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/usuarios/me/avatar": {
+      "post": {
+        "operationId": "UsuariosController_subirMiAvatar",
+        "summary": "Subir mi foto de perfil",
+        "description": "Multipart, campo \"file\". Máximo 5MB. Reemplaza la foto anterior si había una.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Foto subida — devuelve una URL firmada de corta duración."
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "UsuariosController_eliminarMiAvatar",
+        "summary": "Borrar mi foto de perfil",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Borrada (idempotente — no falla si no había foto)."
           }
         },
         "tags": ["seguridad"],
@@ -372,6 +529,173 @@
         "parameters": [],
         "responses": {
           "201": {
+            "description": "Usuario creado (incluye la contraseña temporal)."
+          },
+          "409": {
+            "description": "Ya existe un usuario con ese correo."
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/usuarios/{id}": {
+      "get": {
+        "operationId": "UsuariosController_obtener",
+        "summary": "Ver un usuario por id",
+        "description": "Requiere seguridad.gestionar_usuarios.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "UsuariosController_editar",
+        "summary": "Editar un usuario",
+        "description": "Edición administrativa — nombre y/o correo, PATCH parcial. Requiere seguridad.gestionar_usuarios.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "409": {
+            "description": "El correo nuevo ya está en uso por otro usuario."
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "UsuariosController_eliminar",
+        "summary": "Eliminar usuario (soft delete)",
+        "description": "Baja lógica (`deleted_at`) — reversible con `POST :id/restore`. Requiere seguridad.gestionar_usuarios.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Usuario eliminado lógicamente."
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/usuarios/{id}/status": {
+      "patch": {
+        "operationId": "UsuariosController_cambiarEstado",
+        "summary": "Cambiar el estado de un usuario",
+        "description": "active/inactive/suspended/blocked/pending_activation — \"deleted\" es `DELETE :id`, no un valor válido acá. Requiere seguridad.gestionar_usuarios.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/usuarios/{id}/password": {
+      "patch": {
+        "operationId": "UsuariosController_resetearPassword",
+        "summary": "Resetear la contraseña de un usuario",
+        "description": "Genera y devuelve una contraseña temporal — a diferencia de `PATCH me/password`, no exige la contraseña anterior. Requiere seguridad.gestionar_usuarios.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/usuarios/{id}/restore": {
+      "post": {
+        "operationId": "UsuariosController_restaurar",
+        "summary": "Restaurar usuario eliminado",
+        "description": "Revierte `DELETE :id`. Requiere seguridad.gestionar_usuarios.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
             "description": ""
           }
         },
@@ -387,7 +711,7 @@
       "post": {
         "operationId": "UsuariosController_desactivar",
         "summary": "Desactivar usuario",
-        "description": "Baja lógica (is_active=false) — no revoca sesiones/API keys todavía (Fase 2). Requiere seguridad.gestionar_usuarios.",
+        "description": "Atajo de `PATCH :id/status {status:\"inactive\"}`. Requiere seguridad.gestionar_usuarios.",
         "parameters": [
           {
             "name": "id",
@@ -415,7 +739,7 @@
       "post": {
         "operationId": "UsuariosController_activar",
         "summary": "Activar usuario",
-        "description": "Reactivación — simétrico a desactivar. Requiere seguridad.gestionar_usuarios.",
+        "description": "Atajo de `PATCH :id/status {status:\"active\"}`. Requiere seguridad.gestionar_usuarios.",
         "parameters": [
           {
             "name": "id",
@@ -484,6 +808,132 @@
         ],
         "responses": {
           "201": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/usuarios/{id}/roles/{rolId}": {
+      "delete": {
+        "operationId": "UsuariosController_revocarRol",
+        "summary": "Revocar rol de usuario",
+        "description": "Requiere seguridad.gestionar_usuarios.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "rolId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/usuarios/{id}/empresas": {
+      "get": {
+        "operationId": "UsuariosController_listarEmpresas",
+        "summary": "Listar empresas asignadas a un usuario",
+        "description": "Multiempresa (`core.user_companies`) — distinto de la empresa/sucursal ACTIVA de la sesión (eso lo fija `auth` al emitir el token). Requiere seguridad.gestionar_usuarios.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "UsuariosController_asignarEmpresa",
+        "summary": "Asignar una empresa a un usuario",
+        "description": "Requiere seguridad.gestionar_usuarios.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "409": {
+            "description": "La empresa ya estaba asignada, o está inactiva."
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/usuarios/{id}/empresas/{companyId}": {
+      "delete": {
+        "operationId": "UsuariosController_desasignarEmpresa",
+        "summary": "Quitar una empresa de un usuario",
+        "description": "Requiere seguridad.gestionar_usuarios.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
             "description": ""
           }
         },
@@ -1089,6 +1539,2073 @@
           }
         ]
       }
+    },
+    "/api/v1/inventario/almacenes": {
+      "get": {
+        "operationId": "AlmacenesController_listar",
+        "summary": "Listar almacenes",
+        "description": "Requiere inventario.gestionar_almacenes. Filtrable por branchId.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "AlmacenesController_crear",
+        "summary": "Crear almacén",
+        "description": "Requiere inventario.gestionar_almacenes. companyId/branchId deben ser una empresa/sucursal ya existentes.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/almacenes/{id}": {
+      "get": {
+        "operationId": "AlmacenesController_obtener",
+        "summary": "Obtener almacén por id",
+        "description": "Requiere inventario.gestionar_almacenes.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "AlmacenesController_actualizar",
+        "summary": "Actualizar almacén",
+        "description": "Requiere inventario.gestionar_almacenes. PATCH parcial — nunca reasigna empresa/sucursal.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/zonas": {
+      "get": {
+        "operationId": "ZonasAlmacenController_listar",
+        "summary": "Listar zonas",
+        "description": "Requiere inventario.gestionar_almacenes. Filtrable por warehouseId.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "ZonasAlmacenController_crear",
+        "summary": "Crear zona",
+        "description": "Requiere inventario.gestionar_almacenes. warehouseId debe ser un almacén ya existente.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/zonas/{id}": {
+      "get": {
+        "operationId": "ZonasAlmacenController_obtener",
+        "summary": "Obtener zona por id",
+        "description": "Requiere inventario.gestionar_almacenes.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "ZonasAlmacenController_actualizar",
+        "summary": "Actualizar zona",
+        "description": "Requiere inventario.gestionar_almacenes. PATCH parcial — nunca reasigna el almacén.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/ubicaciones": {
+      "get": {
+        "operationId": "UbicacionesAlmacenController_listar",
+        "summary": "Listar ubicaciones",
+        "description": "Requiere inventario.gestionar_almacenes. Filtrable por zoneId.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "UbicacionesAlmacenController_crear",
+        "summary": "Crear ubicación",
+        "description": "Requiere inventario.gestionar_almacenes. zoneId debe ser una zona ya existente; parentLocationId (opcional) debe pertenecer a la misma zona.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/ubicaciones/{id}": {
+      "get": {
+        "operationId": "UbicacionesAlmacenController_obtener",
+        "summary": "Obtener ubicación por id",
+        "description": "Requiere inventario.gestionar_almacenes.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "UbicacionesAlmacenController_actualizar",
+        "summary": "Actualizar ubicación",
+        "description": "Requiere inventario.gestionar_almacenes. Solo el código — nunca reasigna zona ni ubicación padre.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/tipos-movimiento": {
+      "get": {
+        "operationId": "TiposMovimientoController_listar",
+        "summary": "Listar tipos de movimiento",
+        "description": "Requiere inventario.gestionar_stock.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "TiposMovimientoController_crear",
+        "summary": "Crear tipo de movimiento",
+        "description": "Requiere inventario.gestionar_stock. code único por tenant.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/tipos-movimiento/{id}": {
+      "get": {
+        "operationId": "TiposMovimientoController_obtener",
+        "summary": "Obtener tipo de movimiento por id",
+        "description": "Requiere inventario.gestionar_stock.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "TiposMovimientoController_actualizar",
+        "summary": "Actualizar tipo de movimiento",
+        "description": "Requiere inventario.gestionar_stock. No permite cambiar direction si el tipo ya tiene movimientos registrados.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/stock": {
+      "get": {
+        "operationId": "StockController_listar",
+        "summary": "Listar stock",
+        "description": "Requiere inventario.gestionar_stock. Filtrable por productId/warehouseId.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/stock/disponible": {
+      "get": {
+        "operationId": "StockController_disponible",
+        "summary": "Disponible de un producto en un almacén",
+        "description": "Requiere inventario.gestionar_stock. Disponible = a mano - reservado (inventory.v_available_stock).",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "warehouseId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/movimientos": {
+      "post": {
+        "operationId": "MovimientosController_registrar",
+        "summary": "Registrar movimiento de stock",
+        "description": "Requiere inventario.gestionar_stock. Actualiza inventory.stock atómicamente junto con el movimiento.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "MovimientosController_listar",
+        "summary": "Listar movimientos",
+        "description": "Requiere inventario.gestionar_stock. Filtrable por productId/warehouseId.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/kardex": {
+      "get": {
+        "operationId": "KardexController_consultar",
+        "summary": "Consultar kardex de un producto en un almacén",
+        "description": "Requiere inventario.gestionar_stock. desde/hasta en formato ISO 8601, opcionales.",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "warehouseId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/reservas": {
+      "post": {
+        "operationId": "ReservasController_crear",
+        "summary": "Reservar stock",
+        "description": "Requiere inventario.gestionar_stock. Aumenta quantity_reserved, no descuenta quantity_on_hand.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "ReservasController_listar",
+        "summary": "Listar reservas",
+        "description": "Requiere inventario.gestionar_stock. Filtrable por productId/warehouseId.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/reservas/{id}/liberar": {
+      "post": {
+        "operationId": "ReservasController_liberar",
+        "summary": "Liberar una reserva",
+        "description": "Requiere inventario.gestionar_stock. Idempotente: rechaza liberar una reserva ya liberada.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/reservas/{id}": {
+      "get": {
+        "operationId": "ReservasController_obtener",
+        "summary": "Obtener reserva por id",
+        "description": "Requiere inventario.gestionar_stock.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/transferencias": {
+      "post": {
+        "operationId": "TransferenciasController_crear",
+        "summary": "Crear transferencia (borrador)",
+        "description": "Requiere inventario.gestionar_stock. No genera movimientos todavía — eso ocurre en /iniciar.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "TransferenciasController_listar",
+        "summary": "Listar transferencias",
+        "description": "Requiere inventario.gestionar_stock. Filtrable por sourceWarehouseId/destinationWarehouseId/status.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/transferencias/{id}": {
+      "get": {
+        "operationId": "TransferenciasController_obtener",
+        "summary": "Obtener transferencia por id (con líneas)",
+        "description": "Requiere inventario.gestionar_stock.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/transferencias/{id}/iniciar": {
+      "post": {
+        "operationId": "TransferenciasController_iniciar",
+        "summary": "Iniciar transferencia (draft → in_transit)",
+        "description": "Requiere inventario.gestionar_stock. Genera un movimiento transfer_out por línea, atómico.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/transferencias/{id}/recibir": {
+      "post": {
+        "operationId": "TransferenciasController_recibir",
+        "summary": "Recibir transferencia (in_transit → received)",
+        "description": "Requiere inventario.gestionar_stock. Genera un movimiento transfer_in por línea, atómico.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/transferencias/{id}/cancelar": {
+      "post": {
+        "operationId": "TransferenciasController_cancelar",
+        "summary": "Cancelar transferencia (draft → cancelled)",
+        "description": "Requiere inventario.gestionar_stock. Solo permitido desde draft — sin movimientos que revertir.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/motivos-ajuste": {
+      "get": {
+        "operationId": "MotivosAjusteController_listar",
+        "summary": "Listar motivos de ajuste",
+        "description": "Requiere inventario.gestionar_stock.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "MotivosAjusteController_crear",
+        "summary": "Crear motivo de ajuste",
+        "description": "Requiere inventario.gestionar_stock.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/motivos-ajuste/{id}": {
+      "get": {
+        "operationId": "MotivosAjusteController_obtener",
+        "summary": "Obtener motivo por id",
+        "description": "Requiere inventario.gestionar_stock.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "MotivosAjusteController_actualizar",
+        "summary": "Actualizar motivo de ajuste",
+        "description": "Requiere inventario.gestionar_stock.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/ajustes": {
+      "post": {
+        "operationId": "AjustesController_crear",
+        "summary": "Crear ajuste (borrador)",
+        "description": "Requiere inventario.gestionar_stock. previousQuantity se resuelve del stock real, no se pide.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "AjustesController_listar",
+        "summary": "Listar ajustes",
+        "description": "Requiere inventario.gestionar_stock. Filtrable por warehouseId/status.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/ajustes/{id}": {
+      "get": {
+        "operationId": "AjustesController_obtener",
+        "summary": "Obtener ajuste por id (con líneas)",
+        "description": "Requiere inventario.gestionar_stock.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/ajustes/{id}/confirmar": {
+      "post": {
+        "operationId": "AjustesController_confirmar",
+        "summary": "Confirmar ajuste (draft → confirmed)",
+        "description": "Requiere inventario.gestionar_stock. Genera un movimiento por línea con diferencia real, atómico.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/conteos": {
+      "post": {
+        "operationId": "ConteosController_crear",
+        "summary": "Crear conteo físico (planned)",
+        "description": "Requiere inventario.gestionar_stock. Sin productIds, autogenera líneas desde el stock actual del almacén (Conteo General).",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "ConteosController_listar",
+        "summary": "Listar conteos",
+        "description": "Requiere inventario.gestionar_stock. Filtrable por warehouseId/status.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/conteos/{id}": {
+      "get": {
+        "operationId": "ConteosController_obtener",
+        "summary": "Obtener conteo por id (con líneas)",
+        "description": "Requiere inventario.gestionar_stock.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/conteos/{id}/iniciar": {
+      "post": {
+        "operationId": "ConteosController_iniciar",
+        "summary": "Iniciar conteo (planned → in_progress)",
+        "description": "Requiere inventario.gestionar_stock.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/conteos/{id}/lineas/{lineaId}/capturar": {
+      "post": {
+        "operationId": "ConteosController_capturarLinea",
+        "summary": "Capturar cantidad contada de una línea (conteo ciego)",
+        "description": "Requiere inventario.gestionar_stock. La respuesta nunca incluye systemQuantity.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lineaId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/conteos/{id}/completar": {
+      "post": {
+        "operationId": "ConteosController_completar",
+        "summary": "Completar conteo (in_progress → completed)",
+        "description": "Requiere inventario.gestionar_stock. Exige todas las líneas capturadas; genera un ajuste en borrador si hay discrepancias.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/programacion-conteos": {
+      "post": {
+        "operationId": "ProgramacionConteosController_crear",
+        "summary": "Crear programación de conteo cíclico",
+        "description": "Requiere inventario.gestionar_stock.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "ProgramacionConteosController_listar",
+        "summary": "Listar programaciones",
+        "description": "Requiere inventario.gestionar_stock.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/programacion-conteos/{id}": {
+      "get": {
+        "operationId": "ProgramacionConteosController_obtener",
+        "summary": "Obtener programación por id",
+        "description": "Requiere inventario.gestionar_stock.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "ProgramacionConteosController_actualizar",
+        "summary": "Actualizar programación",
+        "description": "Requiere inventario.gestionar_stock.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/programacion-conteos/{id}/generar": {
+      "post": {
+        "operationId": "ProgramacionConteosController_generar",
+        "summary": "Generar el conteo físico programado",
+        "description": "Requiere inventario.gestionar_stock. Crea un physical_count real filtrado a la zona y avanza next_run_date.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/productos/unidades-medida": {
+      "get": {
+        "operationId": "UnidadesMedidaController_listar",
+        "summary": "Listar unidades de medida",
+        "description": "Requiere productos.gestionar_productos.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "UnidadesMedidaController_crear",
+        "summary": "Crear unidad de medida",
+        "description": "Requiere productos.gestionar_productos.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/productos/unidades-medida/{id}": {
+      "get": {
+        "operationId": "UnidadesMedidaController_obtener",
+        "summary": "Obtener unidad de medida por id",
+        "description": "Requiere productos.gestionar_productos.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "UnidadesMedidaController_actualizar",
+        "summary": "Actualizar unidad de medida",
+        "description": "Requiere productos.gestionar_productos.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/productos/categorias": {
+      "get": {
+        "operationId": "CategoriasProductoController_listar",
+        "summary": "Listar categorías",
+        "description": "Requiere productos.gestionar_productos. Filtrable por parentCategoryId.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "CategoriasProductoController_crear",
+        "summary": "Crear categoría",
+        "description": "Requiere productos.gestionar_productos. parentCategoryId (opcional) debe ser una categoría ya existente.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/productos/categorias/{id}": {
+      "get": {
+        "operationId": "CategoriasProductoController_obtener",
+        "summary": "Obtener categoría por id",
+        "description": "Requiere productos.gestionar_productos.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "CategoriasProductoController_actualizar",
+        "summary": "Actualizar categoría",
+        "description": "Requiere productos.gestionar_productos.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/productos/marcas": {
+      "get": {
+        "operationId": "MarcasController_listar",
+        "summary": "Listar marcas",
+        "description": "Requiere productos.gestionar_productos.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "MarcasController_crear",
+        "summary": "Crear marca",
+        "description": "Requiere productos.gestionar_productos.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/productos/marcas/{id}": {
+      "get": {
+        "operationId": "MarcasController_obtener",
+        "summary": "Obtener marca por id",
+        "description": "Requiere productos.gestionar_productos.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "MarcasController_actualizar",
+        "summary": "Actualizar marca",
+        "description": "Requiere productos.gestionar_productos.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/productos/modelos": {
+      "get": {
+        "operationId": "ModelosProductoController_listar",
+        "summary": "Listar modelos",
+        "description": "Requiere productos.gestionar_productos. Filtrable por brandId.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "ModelosProductoController_crear",
+        "summary": "Crear modelo",
+        "description": "Requiere productos.gestionar_productos. brandId debe ser una marca ya existente.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/productos/modelos/{id}": {
+      "get": {
+        "operationId": "ModelosProductoController_obtener",
+        "summary": "Obtener modelo por id",
+        "description": "Requiere productos.gestionar_productos.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "ModelosProductoController_actualizar",
+        "summary": "Actualizar modelo",
+        "description": "Requiere productos.gestionar_productos. Nunca reasigna la marca.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/productos": {
+      "get": {
+        "operationId": "ProductosController_listar",
+        "summary": "Listar productos",
+        "description": "Requiere productos.gestionar_productos. Filtrable por categoryId.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "ProductosController_crear",
+        "summary": "Crear producto",
+        "description": "Requiere productos.gestionar_productos. baseUnitId obligatorio; category/brand/model opcionales, validados si se indican (y el modelo debe pertenecer a la marca indicada).",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/productos/{id}": {
+      "get": {
+        "operationId": "ProductosController_obtener",
+        "summary": "Obtener producto por id",
+        "description": "Requiere productos.gestionar_productos.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "ProductosController_actualizar",
+        "summary": "Actualizar producto",
+        "description": "Requiere productos.gestionar_productos. PATCH parcial — nunca reasigna sku ni unidad base.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["productos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/clientes": {
+      "get": {
+        "operationId": "ClientesController_listar",
+        "summary": "Listar clientes",
+        "description": "Requiere clientes.gestionar_clientes. Filtrable por companyId y búsqueda por nombre/tax_id.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["clientes"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "ClientesController_crear",
+        "summary": "Crear cliente",
+        "description": "Requiere clientes.gestionar_clientes. companyId/branchId deben ser una empresa/sucursal ya existentes.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["clientes"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/clientes/{id}": {
+      "get": {
+        "operationId": "ClientesController_obtener",
+        "summary": "Obtener cliente por id",
+        "description": "Requiere clientes.gestionar_clientes.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["clientes"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "ClientesController_actualizar",
+        "summary": "Actualizar cliente",
+        "description": "Requiere clientes.gestionar_clientes. PATCH parcial — nunca reasigna empresa/tax_id.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["clientes"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/caja/registros": {
+      "get": {
+        "operationId": "CajaController_listarRegistros",
+        "summary": "Listar cajas",
+        "description": "Requiere caja.gestionar_caja.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["caja"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "CajaController_crearRegistro",
+        "summary": "Crear caja",
+        "description": "Requiere caja.gestionar_caja.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["caja"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/caja/registros/{id}/apertura-activa": {
+      "get": {
+        "operationId": "CajaController_obtenerAperturaActiva",
+        "summary": "Obtener la apertura activa de una caja (si hay una)",
+        "description": "Requiere caja.gestionar_caja. Devuelve null en `data` si la caja está cerrada.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["caja"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/caja/aperturas": {
+      "post": {
+        "operationId": "CajaController_abrir",
+        "summary": "Abrir caja",
+        "description": "Requiere caja.gestionar_caja. Falla si ya hay una apertura activa.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["caja"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/caja/cierres": {
+      "post": {
+        "operationId": "CajaController_cerrar",
+        "summary": "Cerrar caja",
+        "description": "Requiere caja.gestionar_caja. Monto esperado = apertura + suma de movimientos.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["caja"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ventas/facturas": {
+      "get": {
+        "operationId": "FacturasController_listar",
+        "summary": "Listar facturas",
+        "description": "Requiere ventas.gestionar_ventas.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "FacturasController_crear",
+        "summary": "Crear factura (borrador)",
+        "description": "Requiere ventas.gestionar_ventas. Calcula impuestos por línea con la tasa vigente.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ventas/facturas/{id}": {
+      "get": {
+        "operationId": "FacturasController_obtener",
+        "summary": "Obtener factura por id (con líneas)",
+        "description": "Requiere ventas.gestionar_ventas.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ventas/facturas/{id}/recibos": {
+      "post": {
+        "operationId": "FacturasController_registrarRecibo",
+        "summary": "Registrar recibo de cobro contra una factura",
+        "description": "Requiere ventas.gestionar_ventas.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ventas/facturas/{id}/confirmar": {
+      "post": {
+        "operationId": "FacturasController_confirmar",
+        "summary": "Confirmar factura (draft → issued)",
+        "description": "Requiere ventas.gestionar_ventas.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pos/productos": {
+      "get": {
+        "operationId": "PosController_buscarProductos",
+        "summary": "Buscar productos (SKU/código de barras/tipeo manual)",
+        "description": "Requiere pos.operar_pos.",
+        "parameters": [
+          {
+            "name": "query",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["pos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pos/ventas": {
+      "post": {
+        "operationId": "PosController_confirmarVenta",
+        "summary": "Confirmar venta (checkout completo)",
+        "description": "Requiere pos.operar_pos. Valida stock, crea la factura, descuenta inventario, registra el/los pago(s) y confirma la factura.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["pos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pos/ventas/suspender": {
+      "post": {
+        "operationId": "PosController_suspenderVenta",
+        "summary": "Suspender venta (guardar el carrito sin cobrar ni descontar stock)",
+        "description": "Requiere pos.operar_pos.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["pos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pos/ventas/suspendidas": {
+      "get": {
+        "operationId": "PosController_listarSuspendidas",
+        "summary": "Listar ventas suspendidas de una sucursal",
+        "description": "Requiere pos.operar_pos.",
+        "parameters": [
+          {
+            "name": "branchId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["pos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pos/ventas/{id}": {
+      "get": {
+        "operationId": "PosController_recuperarVenta",
+        "summary": "Recuperar una venta suspendida por id",
+        "description": "Requiere pos.operar_pos.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["pos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
     }
   },
   "info": {
@@ -1167,6 +3684,118 @@
         "properties": {
           "data": {
             "$ref": "#/components/schemas/RefreshResponseDto"
+          }
+        },
+        "required": ["data"]
+      },
+      "CurrentUserResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "lastLoginAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "tenantId": {
+            "type": "string"
+          },
+          "activeCompanyId": {
+            "type": "object",
+            "nullable": true
+          },
+          "activeBranchId": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "fullName",
+          "isActive",
+          "lastLoginAt",
+          "tenantId",
+          "activeCompanyId",
+          "activeBranchId"
+        ]
+      },
+      "CurrentUserEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/CurrentUserResponseDto"
+          }
+        },
+        "required": ["data"]
+      },
+      "SessionValidationResponseDto": {
+        "type": "object",
+        "properties": {
+          "valid": {
+            "type": "boolean"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "tenantId": {
+            "type": "string"
+          },
+          "sessionId": {
+            "type": "string"
+          },
+          "activeCompanyId": {
+            "type": "object",
+            "nullable": true
+          },
+          "activeBranchId": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "valid",
+          "userId",
+          "tenantId",
+          "sessionId",
+          "activeCompanyId",
+          "activeBranchId"
+        ]
+      },
+      "SessionValidationEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SessionValidationResponseDto"
+          }
+        },
+        "required": ["data"]
+      },
+      "RevokeTokenResponseDto": {
+        "type": "object",
+        "properties": {
+          "revokedSessions": {
+            "type": "number",
+            "description": "Cantidad de sesiones revocadas (0, 1, o todas las activas)."
+          }
+        },
+        "required": ["revokedSessions"]
+      },
+      "RevokeTokenEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/RevokeTokenResponseDto"
           }
         },
         "required": ["data"]

@@ -1,7 +1,7 @@
 # Technical Debt — GORAZUS ERP
 
-> Actualizado FASE 05, Parte 04 — Ajustes y Conteos Físicos. Sesión
-> del 2026-07-24, versión **0.10.0**, rama `feature/inventory-adjustments`.
+> Actualizado FASE 06, Parte 01 — Punto de Venta (POS) Enterprise. Sesión
+> del 2026-07-24, versión **0.11.0**, rama `feature/sales-pos`.
 > Consolida deuda técnica ya dispersa en
 > `CHANGELOG.md` ("Pendiente conocido") y en los reportes de sesiones
 > previas, más lo detectado esta sesión — no repite el detalle completo
@@ -12,8 +12,42 @@
 🔴 Bloquea o compromete seguridad/integridad real. 🟠 Afecta escalabilidad
 o mantenibilidad a mediano plazo. 🟡 Cosmético o de bajo impacto real.
 Ninguno de los ítems de abajo es nuevo esta sesión salvo donde se indica
-explícitamente "(nuevo)" — esta auditoría no encontró incidentes nuevos
-de gravedad 🔴 sin documentar ya.
+explícitamente "(nuevo)" — esta sesión sí encontró y corrigió dos
+incidentes reales de gravedad 🔴 heredados de Fase 05, ver §0.
+
+## 0. Nuevo esta sesión (FASE 06, Parte 01 — POS)
+
+- 🟢 **(corregido) Doble aplicación de movimientos de stock** — desde Fase 05 Parte 02,
+  `MovimientoStockRepositoryPrisma.aplicarMovimiento` escribía `inventory.stock` a mano además del
+  trigger `inventory.fn_apply_stock_movement` (que ya lo hace como upsert real) — cada movimiento se
+  aplicaba dos veces. Nunca detectado porque Docker llevaba caído ~9 sesiones; el checkout del POS
+  fue el primer código que ejercitó este camino contra Postgres real con el trigger activo.
+  Corregido: la aplicación ya no escribe `inventory.stock`, solo valida y relee el resultado del
+  trigger. Verificado numéricamente (50 entrada − 5 venta = 45 exacto). **Impacto real**: cualquier
+  ambiente que haya corrido este código contra Postgres con el trigger activo antes de este fix
+  tiene `inventory.stock` con cantidades incorrectas — recomendado auditar si aplica. Ver
+  `POS_DATABASE.md §5`, `POS_TEST_REPORT.md §3`.
+- 🟢 **(corregido) `operator does not exist: uuid = text`** en `stock-lock.util.ts`
+  (Fase 05 Parte 04) — `$queryRawUnsafe` con placeholders posicionales sin cast explícito dentro de
+  `IS NOT DISTINCT FROM`. Corregido con `::uuid` explícito en los 3 parámetros. Mismo motivo de
+  detección tardía que el ítem anterior.
+- 🟠 **(nuevo) Checkout de POS no es una transacción distribuida real** —
+  `PosCheckoutService.confirmarVenta` encadena escrituras a `inventario`/`ventas`/`caja` en pasos
+  secuenciales, no en una única transacción cross-schema (Prisma no lo soporta entre
+  `PrismaClient`s distintos). Si el proceso cae entre pasos puede quedar una factura sin recibo.
+  Ver `POS_ARCHITECTURE.md §4.3`, `POS_HEALTH_REPORT.md §3`.
+- 🟡 **(nuevo) Sin e2e-spec de NestJS para POS** — la verificación end-to-end fue manual (`curl` +
+  Playwright), no un `*.e2e-spec.ts` que corra en CI. Ver `POS_TEST_REPORT.md §5`.
+- 🟡 **(nuevo) Búsqueda de productos del POS solo por `sku` (`contains`)** —
+  `ProductoLookupRepository` de `modules/pos` no busca por nombre, código de barras real ni QR;
+  suficiente para Parte 01, insuficiente para el buscador rápido completo pedido. Ver
+  `POS_HEALTH_REPORT.md §4`.
+- 🟡 **(nuevo) Sin pruebas de carga/concurrencia (k6) para el nuevo punto de entrada del POS** — el
+  bloqueo de fila reutilizado está verificado desde Fase 05 Parte 04, pero no bajo el volumen que
+  un POS real generaría. Ver `POS_TEST_REPORT.md §5`.
+- 🟡 **(nuevo) Recibo mixto genera N recibos, no N allocations de un mismo recibo** — un pago con
+  varias formas (efectivo + tarjeta) crea una fila en `sales.receipts` por cada una. Funciona, pero
+  difiere de lo que un reporte "recibos por cliente" podría esperar. Ver `POS_HEALTH_REPORT.md §3`.
 
 ## 1. Seguridad y dependencias
 
@@ -131,6 +165,14 @@ seguridad`) no marca el `sessionId` en la blacklist de Redis** —
   transición desde `draft`. Requeriría un movimiento de reversión que
   el pedido original de Parte 03 no especificó — decisión de producto
   pendiente si se necesita, no un bug.
+- 🟡 **(nuevo) `modules/clientes`/`caja`/`ventas`/`pos` solo tienen el mínimo real para el checkout
+  de contado, no el módulo completo** — de 111 tablas diseñadas entre `customers` (17), `sales`
+  (55) y `cash` (11), se construyeron 15 (1+5+5, más el orquestador `pos` sin tablas propias).
+  Cotizaciones/pedidos/apartados, devoluciones/cambios/garantías, promociones/cupones/lealtad/
+  tarjetas de regalo, crédito real de clientes, asiento contable automático, facturación
+  electrónica fiscal, envío de comprobante por correo/WhatsApp, venta por lote/serie y arqueo por
+  denominación quedan sin backend. Es el estado esperado del alcance de esta parte, ya diseñado y
+  documentado con honestidad en `POS_ARCHITECTURE.md §3` — no un gap oculto.
 - 🟡 **`modules/productos` solo tiene el producto base, no el catálogo
   completo** — 30 de las 35 tablas de `core/database/prisma/schemas/products/`
   (variantes, atributos, combos, kits, BOM/recetas, imágenes/videos,

@@ -5,7 +5,24 @@ completa y estable (no un release público), `PATCH` una corrección puntual. `0
 el proyecto arrancó en `0.1.0` (bootstrap del monorepo + FASE 01-05). Sin releases públicos
 todavía, así que no hay compromiso de compatibilidad entre versiones `0.x`.
 
-## Versión actual: **0.10.0** (2026-07-24)
+## Versión actual: **0.11.0** (2026-07-24)
+
+FASE 06, Parte 01 — Punto de Venta (POS) Enterprise. `MINOR`: primer código real de venta —
+módulos nuevos `clientes` (`customers.customers` + resolución de "Consumidor Final"), `caja`
+(`cash_registers`/`cash_register_openings`/`cash_register_closings`/`cash_movement_types`/
+`cash_movements`), `ventas` (`invoice_status`/`invoices`/`invoice_lines`/`receipts`/
+`receipt_allocations`) y `pos` (orquestador de checkout, sin tablas propias, primer caso real de
+composición backend-a-backend entre módulos de negocio vía el barrel `modules/<x>/index.ts`).
+**Se saltó el orden previsto** (`ROADMAP.md`/`INVENTORY_NEXT_PHASE.md` tenían Inventario Parte
+05-08 antes de Clientes/Ventas/Caja/POS) porque el pedido explícito de esta sesión fue construir el
+POS directamente — documentado como desviación honesta, no un cambio de plan silencioso. Durante la
+verificación end-to-end contra Postgres real (Docker arriba por primera vez en 9 sesiones) se
+encontraron y corrigieron dos bugs preexistentes de Fase 05: doble aplicación de movimientos de
+stock (el trigger de base de datos y la aplicación escribían el mismo delta) y un error de tipo en
+el bloqueo de filas (`uuid = text`). Ver `POS_ARCHITECTURE.md`, `POS_DATABASE.md`, `POS_API.md`,
+`POS_TEST_REPORT.md`, `POS_HEALTH_REPORT.md`, `POS_RELEASE_NOTES.md` para el detalle completo.
+
+## 0.10.0 (2026-07-24)
 
 FASE 05, Parte 04 — Ajustes y Conteos Físicos. `MINOR`: primer código real sobre
 `stock_adjustment_reasons`/`stock_adjustments`/`stock_adjustment_lines`/`physical_counts`/
@@ -115,26 +132,26 @@ FASE 2 — Backend Core (endurecimiento de `auth` + capacidades nuevas de infrae
 
 ## Historial
 
-| Versión | Fecha      | Resumen                                                                                                                                                                                                                                                                                                                      |
-| ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0.10.0  | 2026-07-24 | FASE 05, Parte 04 — Ajustes y Conteos Físicos: primer código real de `stock_adjustments`/`physical_counts`/`cycle_count_schedules` y catálogos asociados, bloqueo real de filas (`SELECT ... FOR UPDATE`) en el motor de movimientos.                                                                                        |
-| 0.9.0   | 2026-07-23 | FASE 05, Parte 03 — Reservas y Transferencias: primer código real de `stock_reservations`/`stock_transfers`/`stock_transfer_lines`, `registrarLote` atómico multi-línea, chequeo de stock suficiente corregido contra disponible real.                                                                                       |
-| 0.8.0   | 2026-07-23 | FASE 05, Parte 02 — Motor de Stock y Movimientos: primer código real de `stock`/`stock_movement_types`/`stock_movements` (3 de 34 tablas de `inventory`), motor único de movimientos con actualización atómica de stock, disponible y kardex real.                                                                           |
-| 0.7.0   | 2026-07-23 | FASE 04 — Productos: primer código real de `modules/productos/backend` (Unidades de Medida, Categorías, Marcas, Modelos, Productos), 5 de 35 tablas del schema `products`.                                                                                                                                                   |
-| 0.6.0   | 2026-07-23 | FASE 03, continuidad — Almacenes: primer código real de `modules/inventario/backend` (Almacén→Zona→Ubicación), cierra la lista de prioridad "primero" de FASE 03.                                                                                                                                                            |
-| 0.5.0   | 2026-07-22 | FASE 03, Parte 03 — Gestión de Usuarios Enterprise: CRUD admin completo (editar/eliminar/restaurar/estado agregado/reseteo de contraseña), multiempresa (`user_companies`), preferencias/avatar (`user_profiles`), corrección de fuga de `password_hash`.                                                                    |
-| 0.4.0   | 2026-07-22 | FASE 03, Parte 02 — Autenticación Enterprise: "recordar sesión", protección de session-hijacking (IP/UA), verificación de empresa/sucursal activa, `GET /auth/me`, `GET /auth/session`, `POST /auth/revoke`, adopción de config/JWT Provider preparados en 0.3.1.                                                            |
-| 0.3.1   | 2026-07-22 | FASE 2, Parte 2.1 — Infraestructura de `auth` preparada sin tocar login: Value Object `Email`, Domain Events preparados (sin publicar), JWT Provider, `GuestGuard`, config de TTLs/umbrales (sin consumidor todavía).                                                                                                        |
-| 0.3.0   | 2026-07-22 | FASE 2 Backend Core — 4 gaps de seguridad de `auth` cerrados (bloqueo por intentos, rate limit propio, revocación de token, CSRF), 2FA exigido en login, `core/storage` con consumidor real, email real de reset de contraseña.                                                                                              |
-| 0.2.0   | 2026-07-21 | FASE 02 — Backend Core (Empresas/Sucursales/Config/Monedas/Impuestos) + extensión de Seguridad (Auditoría/Sesiones/Reset de contraseña/2FA) + Usuarios (perfil/self-service/historial).                                                                                                                                      |
-| 0.1.0   | 2026-07-20 | Bootstrap del monorepo + FASE 01-05: Foundation Platform (`core/*`), persistencia (21 clientes Prisma, RLS forzado), primeros módulos de negocio reales (`auth`, `seguridad`), frontend (`apps/web`, `ui-kit`), Notification Center (WhatsApp), Ollama, Kubernetes/monitoreo/HTTPS/backup, testing (Playwright, k6, CodeQL). |
+| Versión | Fecha      | Resumen                                                                                                                                                                                                                                                                                                                                  |
+| ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0.11.0  | 2026-07-24 | FASE 06, Parte 01 — Punto de Venta (POS) Enterprise: módulos `clientes`/`caja`/`ventas`/`pos` reales, checkout completo (buscar→carrito→cobrar mixto→factura→stock→caja), 2 bugs preexistentes de Fase 05 corregidos (doble aplicación de stock, cast `uuid`). Se saltó el orden previsto (Inventario Parte 05-08) por pedido explícito. |
+| 0.10.0  | 2026-07-24 | FASE 05, Parte 04 — Ajustes y Conteos Físicos: primer código real de `stock_adjustments`/`physical_counts`/`cycle_count_schedules` y catálogos asociados, bloqueo real de filas (`SELECT ... FOR UPDATE`) en el motor de movimientos.                                                                                                    |
+| 0.9.0   | 2026-07-23 | FASE 05, Parte 03 — Reservas y Transferencias: primer código real de `stock_reservations`/`stock_transfers`/`stock_transfer_lines`, `registrarLote` atómico multi-línea, chequeo de stock suficiente corregido contra disponible real.                                                                                                   |
+| 0.8.0   | 2026-07-23 | FASE 05, Parte 02 — Motor de Stock y Movimientos: primer código real de `stock`/`stock_movement_types`/`stock_movements` (3 de 34 tablas de `inventory`), motor único de movimientos con actualización atómica de stock, disponible y kardex real.                                                                                       |
+| 0.7.0   | 2026-07-23 | FASE 04 — Productos: primer código real de `modules/productos/backend` (Unidades de Medida, Categorías, Marcas, Modelos, Productos), 5 de 35 tablas del schema `products`.                                                                                                                                                               |
+| 0.6.0   | 2026-07-23 | FASE 03, continuidad — Almacenes: primer código real de `modules/inventario/backend` (Almacén→Zona→Ubicación), cierra la lista de prioridad "primero" de FASE 03.                                                                                                                                                                        |
+| 0.5.0   | 2026-07-22 | FASE 03, Parte 03 — Gestión de Usuarios Enterprise: CRUD admin completo (editar/eliminar/restaurar/estado agregado/reseteo de contraseña), multiempresa (`user_companies`), preferencias/avatar (`user_profiles`), corrección de fuga de `password_hash`.                                                                                |
+| 0.4.0   | 2026-07-22 | FASE 03, Parte 02 — Autenticación Enterprise: "recordar sesión", protección de session-hijacking (IP/UA), verificación de empresa/sucursal activa, `GET /auth/me`, `GET /auth/session`, `POST /auth/revoke`, adopción de config/JWT Provider preparados en 0.3.1.                                                                        |
+| 0.3.1   | 2026-07-22 | FASE 2, Parte 2.1 — Infraestructura de `auth` preparada sin tocar login: Value Object `Email`, Domain Events preparados (sin publicar), JWT Provider, `GuestGuard`, config de TTLs/umbrales (sin consumidor todavía).                                                                                                                    |
+| 0.3.0   | 2026-07-22 | FASE 2 Backend Core — 4 gaps de seguridad de `auth` cerrados (bloqueo por intentos, rate limit propio, revocación de token, CSRF), 2FA exigido en login, `core/storage` con consumidor real, email real de reset de contraseña.                                                                                                          |
+| 0.2.0   | 2026-07-21 | FASE 02 — Backend Core (Empresas/Sucursales/Config/Monedas/Impuestos) + extensión de Seguridad (Auditoría/Sesiones/Reset de contraseña/2FA) + Usuarios (perfil/self-service/historial).                                                                                                                                                  |
+| 0.1.0   | 2026-07-20 | Bootstrap del monorepo + FASE 01-05: Foundation Platform (`core/*`), persistencia (21 clientes Prisma, RLS forzado), primeros módulos de negocio reales (`auth`, `seguridad`), frontend (`apps/web`, `ui-kit`), Notification Center (WhatsApp), Ollama, Kubernetes/monitoreo/HTTPS/backup, testing (Playwright, k6, CodeQL).             |
 
 ## Próxima versión prevista
 
-`0.11.0` — Fase 05, Parte 05: Recepciones, Salidas y Reglas de Almacén (`goods_receipts`/
-`goods_receipt_lines`/`goods_issues`/`goods_issue_lines`/`goods_issue_reasons`/`putaway_rules`/
-`picking_rules`/`replenishment_rules`), sobre el motor de movimientos ya construido. Sin fecha
-comprometida.
+`0.12.0` — Fase 06, Parte 02 del POS (alcance a confirmar: devoluciones/cambios, o retomar el
+orden original con Inventario Parte 05 — Recepciones, Salidas y Reglas de Almacén, todavía
+pendiente). Sin fecha comprometida.
 
 ## Versionado del modelo de datos (track independiente)
 
