@@ -9,6 +9,10 @@ import { MovimientosController } from './controllers/movimientos.controller';
 import { KardexController } from './controllers/kardex.controller';
 import { ReservasController } from './controllers/reservas.controller';
 import { TransferenciasController } from './controllers/transferencias.controller';
+import { MotivosAjusteController } from './controllers/motivos-ajuste.controller';
+import { AjustesController } from './controllers/ajustes.controller';
+import { ConteosController } from './controllers/conteos.controller';
+import { ProgramacionConteosController } from './controllers/programacion-conteos.controller';
 import { AlmacenesService } from './services/almacenes.service';
 import { ZonasAlmacenService } from './services/zonas-almacen.service';
 import { UbicacionesAlmacenService } from './services/ubicaciones-almacen.service';
@@ -18,6 +22,10 @@ import { MovimientosService } from './services/movimientos.service';
 import { KardexService } from './services/kardex.service';
 import { ReservasService } from './services/reservas.service';
 import { TransferenciasService } from './services/transferencias.service';
+import { MotivosAjusteService } from './services/motivos-ajuste.service';
+import { AjustesService } from './services/ajustes.service';
+import { ConteosService } from './services/conteos.service';
+import { ProgramacionConteosService } from './services/programacion-conteos.service';
 import { AlmacenRepository } from './repositories/almacen.repository';
 import { AlmacenRepositoryPrisma } from './repositories/almacen.repository.prisma';
 import { ZonaAlmacenRepository } from './repositories/zona-almacen.repository';
@@ -40,16 +48,23 @@ import { ReservaStockRepository } from './repositories/reserva-stock.repository'
 import { ReservaStockRepositoryPrisma } from './repositories/reserva-stock.repository.prisma';
 import { TransferenciaRepository } from './repositories/transferencia.repository';
 import { TransferenciaRepositoryPrisma } from './repositories/transferencia.repository.prisma';
+import { MotivoAjusteRepository } from './repositories/motivo-ajuste.repository';
+import { MotivoAjusteRepositoryPrisma } from './repositories/motivo-ajuste.repository.prisma';
+import { AjusteStockRepository } from './repositories/ajuste-stock.repository';
+import { AjusteStockRepositoryPrisma } from './repositories/ajuste-stock.repository.prisma';
+import { ConteoFisicoRepository } from './repositories/conteo-fisico.repository';
+import { ConteoFisicoRepositoryPrisma } from './repositories/conteo-fisico.repository.prisma';
+import { ProgramaConteoCiclicoRepository } from './repositories/programa-conteo-ciclico.repository';
+import { ProgramaConteoCiclicoRepositoryPrisma } from './repositories/programa-conteo-ciclico.repository.prisma';
 
 /**
- * `inventario` — Almacenes (FASE 03, continuidad): estructura física
- * Almacén → Zona → Ubicación. FASE 05 Parte 02 agregó el motor de stock
- * y movimientos (`stock`/`stock_movement_types`/`stock_movements`,
- * `INVENTORY_ARCHITECTURE.md §6`). FASE 05 Parte 03 agrega Reservas
- * (`stock_reservations`) y Transferencias (`stock_transfers`/
- * `stock_transfer_lines`), ambas orquestando el motor de movimientos ya
- * construido — el resto del schema `inventory` (ajustes, conteos,
- * recepciones, salidas, costeo, series, lotes, producción) sigue sin
+ * `inventario` — Almacenes (FASE 03, continuidad), motor de stock y
+ * movimientos (FASE 05 Parte 02), Reservas y Transferencias (Parte 03).
+ * FASE 05 Parte 04 agrega Ajustes (`stock_adjustments`/
+ * `stock_adjustment_lines`/`stock_adjustment_reasons`) y Conteos
+ * Físicos (`physical_counts`/`physical_count_lines`/
+ * `cycle_count_schedules`) — el resto de las 34 tablas del schema
+ * (recepciones, salidas, costeo, series, lotes, producción) sigue sin
  * código, ver `INVENTORY_NEXT_PHASE.md`.
  */
 @Module({
@@ -64,6 +79,10 @@ import { TransferenciaRepositoryPrisma } from './repositories/transferencia.repo
     KardexController,
     ReservasController,
     TransferenciasController,
+    MotivosAjusteController,
+    AjustesController,
+    ConteosController,
+    ProgramacionConteosController,
   ],
   providers: [
     AlmacenesService,
@@ -75,6 +94,10 @@ import { TransferenciaRepositoryPrisma } from './repositories/transferencia.repo
     KardexService,
     ReservasService,
     TransferenciasService,
+    MotivosAjusteService,
+    AjustesService,
+    ConteosService,
+    ProgramacionConteosService,
     { provide: AlmacenRepository, useClass: AlmacenRepositoryPrisma },
     { provide: ZonaAlmacenRepository, useClass: ZonaAlmacenRepositoryPrisma },
     { provide: UbicacionAlmacenRepository, useClass: UbicacionAlmacenRepositoryPrisma },
@@ -89,6 +112,10 @@ import { TransferenciaRepositoryPrisma } from './repositories/transferencia.repo
     { provide: KardexRepository, useClass: KardexRepositoryPrisma },
     { provide: ReservaStockRepository, useClass: ReservaStockRepositoryPrisma },
     { provide: TransferenciaRepository, useClass: TransferenciaRepositoryPrisma },
+    { provide: MotivoAjusteRepository, useClass: MotivoAjusteRepositoryPrisma },
+    { provide: AjusteStockRepository, useClass: AjusteStockRepositoryPrisma },
+    { provide: ConteoFisicoRepository, useClass: ConteoFisicoRepositoryPrisma },
+    { provide: ProgramaConteoCiclicoRepository, useClass: ProgramaConteoCiclicoRepositoryPrisma },
   ],
 })
 export class InventarioModule {}
