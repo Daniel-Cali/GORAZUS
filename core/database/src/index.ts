@@ -86,12 +86,14 @@ export type { two_factor_credentials } from '../prisma/schemas/security/generate
  * (`PRISMA_INVENTORY`), mismo criterio que los anteriores. Primer
  * consumidor: `modules/inventario/backend` (Almacenes — FASE 03,
  * continuidad: `warehouses`/`warehouse_zones`/`warehouse_locations`).
- * FASE 05 Parte 02 (Motor de stock y movimientos) agregó `stock`/
- * `stock_movement_types`/`stock_movements`. FASE 05 Parte 03 (Reservas y
- * Transferencias) agrega `stock_reservations`/`stock_transfers`/
- * `stock_transfer_lines` — el resto de las 34 tablas del schema
- * (ajustes, conteos, recepciones, salidas, costeo, series, lotes,
- * producción) sigue sin código, ver `INVENTORY_NEXT_PHASE.md`.
+ * FASE 05 Parte 02 agregó `stock`/`stock_movement_types`/
+ * `stock_movements`. FASE 05 Parte 03 agregó `stock_reservations`/
+ * `stock_transfers`/`stock_transfer_lines`. FASE 05 Parte 04 (Ajustes y
+ * Conteos Físicos) agrega `stock_adjustment_reasons`/`stock_adjustments`/
+ * `stock_adjustment_lines`/`physical_counts`/`physical_count_lines`/
+ * `cycle_count_schedules` — el resto de las 34 tablas del schema
+ * (recepciones, salidas, costeo, series, lotes, producción) sigue sin
+ * código, ver `INVENTORY_NEXT_PHASE.md`.
  */
 export type {
   PrismaClient as InventoryPrismaClient,
@@ -107,6 +109,12 @@ export type {
   stock_reservations,
   stock_transfers,
   stock_transfer_lines,
+  stock_adjustment_reasons,
+  stock_adjustments,
+  stock_adjustment_lines,
+  physical_counts,
+  physical_count_lines,
+  cycle_count_schedules,
 } from '../prisma/schemas/inventory/generated';
 /**
  * Cliente Prisma del schema `products` — sexto cliente independiente
