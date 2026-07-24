@@ -1,3 +1,4 @@
+import path from 'node:path';
 import type { Config } from 'tailwindcss';
 import tailwindcssAnimate from 'tailwindcss-animate';
 
@@ -9,12 +10,18 @@ import tailwindcssAnimate from 'tailwindcss-animate';
  */
 export default {
   darkMode: ['class'],
-  // Subcarpetas explícitas (no `ui-kit/**`) para no recorrer `ui-kit/node_modules`.
+  // Absolutas vía `__dirname`: Tailwind resuelve `content` relativo a
+  // `process.cwd()`, no a este archivo — si el dev server arranca con
+  // cwd en la raíz del monorepo (p. ej. `nx serve web`), los globs
+  // relativos no matchean nada, el scan de JIT queda vacío y solo
+  // sobreviven las clases usadas directamente vía `@apply` en globals.css
+  // (rompe cualquier utilidad de Tailwind usada solo en componentes .tsx).
   content: [
-    './index.html',
-    './src/**/*.{ts,tsx}',
-    '../../ui-kit/components/**/*.{ts,tsx}',
-    '../../ui-kit/theme/**/*.{ts,tsx}',
+    path.join(__dirname, 'index.html'),
+    path.join(__dirname, 'src/**/*.{ts,tsx}'),
+    // Subcarpetas explícitas (no `ui-kit/**`) para no recorrer `ui-kit/node_modules`.
+    path.join(__dirname, '../../ui-kit/components/**/*.{ts,tsx}'),
+    path.join(__dirname, '../../ui-kit/theme/**/*.{ts,tsx}'),
   ],
   theme: {
     container: { center: true, padding: '2rem', screens: { '2xl': '1400px' } },
