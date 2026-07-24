@@ -1,0 +1,22 @@
+{
+  "name": "@gorazus/ventas-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GORAZUS ERP — feature ventas: la venta POS es una factura directa (FASE 06 Parte 01). Ver POS_ARCHITECTURE.md §3. Solo se importa por ruta relativa desde apps/api o el barrel modules/ventas/index.ts, nunca por nombre de paquete.",
+  "dependencies": {
+    "@gorazus/contracts": "workspace:*",
+    "@gorazus/core-database": "workspace:*",
+    "@gorazus/core-http": "workspace:*",
+    "@nestjs/common": "^10.4.0",
+    "@nestjs/core": "^10.4.0",
+    "@nestjs/swagger": "^7.4.0",
+    "reflect-metadata": "^0.2.0",
+    "rxjs": "^7.8.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@nestjs/testing": "^10.4.0",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^20.19.43"
+  }
+}

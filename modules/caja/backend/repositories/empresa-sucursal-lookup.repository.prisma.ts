@@ -1,0 +1,33 @@
+import { Inject, Injectable } from '@nestjs/common';
+import { PRISMA_CORE, withTenantScope } from '@gorazus/core-database';
+import type { CorePrismaClient } from '@gorazus/core-database';
+import type { UserContext } from '@gorazus/contracts';
+import { EmpresaSucursalLookupRepository } from './empresa-sucursal-lookup.repository';
+
+@Injectable()
+export class EmpresaSucursalLookupRepositoryPrisma extends EmpresaSucursalLookupRepository {
+  constructor(@Inject(PRISMA_CORE) private readonly client: CorePrismaClient) {
+    super();
+  }
+
+  async existeEmpresa(context: UserContext, companyId: string): Promise<boolean> {
+    const empresa = await withTenantScope(this.client, context, (tx) =>
+      tx.companies.findFirst({ where: { id: companyId, deleted_at: null }, select: { id: true } }),
+    );
+    return empresa !== null;
+  }
+
+  async existeSucursalDeEmpresa(
+    context: UserContext,
+    branchId: string,
+    companyId: string,
+  ): Promise<boolean> {
+    const sucursal = await withTenantScope(this.client, context, (tx) =>
+      tx.branches.findFirst({
+        where: { id: branchId, company_id: companyId, deleted_at: null },
+        select: { id: true },
+      }),
+    );
+    return sucursal !== null;
+  }
+}

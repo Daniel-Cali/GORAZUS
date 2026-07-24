@@ -58,6 +58,8 @@ export type {
   Prisma as ConfigurationPrisma,
 } from '../prisma/schemas/configuration/generated';
 export type { currencies, countries } from '../prisma/schemas/configuration/generated';
+/** `payment_forms` ya sembrado (`docs/database/sql/22_seed_data.sql`) — consumido por `modules/pos/backend` (forma de pago del checkout, FASE 06 Parte 01). */
+export type { payment_forms } from '../prisma/schemas/configuration/generated';
 /**
  * Cliente Prisma del schema `taxes` — tercer cliente independiente
  * (`PRISMA_TAXES`), mismo criterio que `ConfigurationPrismaClient` de
@@ -137,6 +139,60 @@ export type {
   product_models,
   products,
 } from '../prisma/schemas/products/generated';
+/**
+ * Cliente Prisma del schema `customers` — séptimo cliente independiente
+ * (`PRISMA_CUSTOMERS`), mismo criterio que los anteriores. Primer
+ * consumidor: `modules/clientes/backend` (FASE 06 Parte 01 — solo
+ * `customers.customers`, 1 de las 17 tablas del schema; perfil de
+ * crédito/clasificación/rutas/visitas/lealtad sin código todavía, ver
+ * `POS_ARCHITECTURE.md §3`).
+ */
+export type {
+  PrismaClient as CustomersPrismaClient,
+  Prisma as CustomersPrisma,
+} from '../prisma/schemas/customers/generated';
+export type { customers } from '../prisma/schemas/customers/generated';
+/**
+ * Cliente Prisma del schema `sales` — octavo cliente independiente
+ * (`PRISMA_SALES`), mismo criterio que los anteriores. Primer
+ * consumidor: `modules/ventas/backend` (FASE 06 Parte 01 — la venta POS
+ * es una factura directa, `sales_channel='pos'`: `invoice_status`,
+ * `invoices`, `invoice_lines`, `receipts`, `receipt_allocations`, 5 de
+ * las 55 tablas del schema; cotización/pedido/remito/devolución/
+ * garantía/promociones/lealtad/tarjetas de regalo sin código todavía,
+ * ver `POS_ARCHITECTURE.md §3`).
+ */
+export type {
+  PrismaClient as SalesPrismaClient,
+  Prisma as SalesPrisma,
+} from '../prisma/schemas/sales/generated';
+export type {
+  invoice_status,
+  invoices,
+  invoice_lines,
+  receipts,
+  receipt_allocations,
+} from '../prisma/schemas/sales/generated';
+/**
+ * Cliente Prisma del schema `cash` — noveno cliente independiente
+ * (`PRISMA_CASH`), mismo criterio que los anteriores. Primer consumidor:
+ * `modules/caja/backend` (FASE 06 Parte 01 — `cash_registers`,
+ * `cash_register_openings`, `cash_register_closings`,
+ * `cash_movement_types`, `cash_movements`, 5 de las 11 tablas del
+ * schema; arqueo por denominación/transferencias entre cajas/caja chica
+ * sin código todavía, ver `POS_ARCHITECTURE.md §3`).
+ */
+export type {
+  PrismaClient as CashPrismaClient,
+  Prisma as CashPrisma,
+} from '../prisma/schemas/cash/generated';
+export type {
+  cash_registers,
+  cash_register_openings,
+  cash_register_closings,
+  cash_movement_types,
+  cash_movements,
+} from '../prisma/schemas/cash/generated';
 // prisma.service.ts (cliente único monolítico) queda superado por el
 // enfoque de 21 clientes por schema en database.module.ts — ver el
 // comentario de cabecera de ese archivo. No se elimina el archivo

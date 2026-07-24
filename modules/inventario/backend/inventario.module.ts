@@ -117,5 +117,11 @@ import { ProgramaConteoCiclicoRepositoryPrisma } from './repositories/programa-c
     { provide: ConteoFisicoRepository, useClass: ConteoFisicoRepositoryPrisma },
     { provide: ProgramaConteoCiclicoRepository, useClass: ProgramaConteoCiclicoRepositoryPrisma },
   ],
+  // `StockService`/`MovimientosService` exportados para el checkout de POS
+  // (FASE 06 Parte 01, `modules/pos/backend`) — primer consumidor real del
+  // patrón de barrel documentado en `docs/architecture/01-estructura-monorepo.md §5`
+  // ("`modules/<x>/backend` puede importar `modules/<y>/index.ts`"), nunca
+  // importado por ruta profunda. Ver `modules/inventario/index.ts`.
+  exports: [StockService, MovimientosService],
 })
 export class InventarioModule {}
