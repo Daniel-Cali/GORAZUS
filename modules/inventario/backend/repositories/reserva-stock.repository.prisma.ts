@@ -14,6 +14,7 @@ import {
   ReservaNoEncontradaError,
   type CrearReservaParams,
 } from './reserva-stock.repository';
+import { lockStockRow } from './stock-lock.util';
 
 @Injectable()
 export class ReservaStockRepositoryPrisma extends ReservaStockRepository {
@@ -23,13 +24,13 @@ export class ReservaStockRepositoryPrisma extends ReservaStockRepository {
 
   async crear(context: UserContext, params: CrearReservaParams): Promise<stock_reservations> {
     return withTenantScope(this.client, context, async (tx) => {
-      const stockActual = await tx.stock.findFirst({
-        where: {
-          product_id: params.productId,
-          warehouse_id: params.warehouseId,
-          location_id: null,
-          deleted_at: null,
-        },
+      // Bloqueo real (Parte 04) — dos reservas concurrentes sobre el
+      // mismo producto/almacén ya no pueden leer el mismo "disponible"
+      // antes de que cualquiera confirme la suya.
+      const stockActual = await lockStockRow(tx, {
+        productId: params.productId,
+        warehouseId: params.warehouseId,
+        locationId: null,
       });
       const cantidadOnHand = stockActual ? Number(stockActual.quantity_on_hand) : 0;
       const cantidadReservada = stockActual ? Number(stockActual.quantity_reserved) : 0;
@@ -69,13 +70,10 @@ export class ReservaStockRepositoryPrisma extends ReservaStockRepository {
       if (!reserva) throw new ReservaNoEncontradaError(id);
       if (reserva.released_at) throw new ReservaYaLiberadaError(id);
 
-      const stockActual = await tx.stock.findFirst({
-        where: {
-          product_id: reserva.product_id,
-          warehouse_id: reserva.warehouse_id,
-          location_id: null,
-          deleted_at: null,
-        },
+      const stockActual = await lockStockRow(tx, {
+        productId: reserva.product_id,
+        warehouseId: reserva.warehouse_id,
+        locationId: null,
       });
       if (stockActual) {
         const cantidadReservada = Number(stockActual.quantity_reserved);
