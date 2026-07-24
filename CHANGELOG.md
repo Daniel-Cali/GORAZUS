@@ -615,6 +615,33 @@ DELETE /:id/empresas`, wirea `core.user_companies`, existente en el modelo certi
   nuevos: `INVENTORY_STOCK_REPORT.md`, `INVENTORY_STOCK_API.md`, `INVENTORY_STOCK_TEST_REPORT.md`.
   `0.7.0` → `0.8.0` (`MINOR`).
 
+- **FASE 05 — Inventario Enterprise, Parte 03: Reservas y Transferencias (2026-07-23).**
+  Primer código real sobre `inventory.stock_reservations`/`stock_transfers`/`stock_transfer_lines`
+  (3 tablas más, 9 de 34 en total). Nuevo: reservas (`POST /inventario/reservas`) que incrementan
+  `stock.quantity_reserved` atómicamente sin descontar `quantity_on_hand`, validando que no excedan
+  lo disponible; liberar (`POST /inventario/reservas/:id/liberar`) decrementa `quantity_reserved` y
+  marca `released_at`, rechaza liberar dos veces (409, idempotencia real). Transferencias
+  (`POST /inventario/transferencias`) crean encabezado + líneas juntos en `draft`; `/iniciar`
+  (`draft → in_transit`) genera un `transfer_out` por línea en el almacén origen; `/recibir`
+  (`in_transit → received`) genera un `transfer_in` por línea en el destino; `/cancelar` solo
+  permitido desde `draft` (cancelar `in_transit` requeriría un movimiento de reversión no
+  especificado en el pedido, gap documentado, no construido). `MovimientoStockRepository.registrarLote`
+  (nuevo) aplica N movimientos dentro de la MISMA transacción — necesario porque una transferencia
+  de varias líneas se aplica completa o nada; se logró factorizando el cuerpo de `registrar` en un
+  método privado compartido, sin duplicar la lógica atómica. Corrección real del `TODO` dejado en
+  `0.8.0`: el chequeo de "stock suficiente" ahora compara contra disponible real
+  (`quantity_on_hand - quantity_reserved`), no contra `quantity_on_hand` a secas — verificado en el
+  e2e (reservar 30 de 50, una salida de 40 que dejaría `on_hand` por debajo de lo reservado se
+  rechaza con `409`). Mismo permiso `inventario.gestionar_stock` (sin permiso nuevo, misma área
+  funcional). 34 tests unitarios nuevos (6 suites: 2 entidades + 2 servicios + 3 tests agregados a
+  `movimientos.service.spec.ts` para `registrarLote`) + 1 e2e nuevo
+  (`reservas-transferencias.controller.e2e-spec.ts`, flujo completo de reservas con verificación
+  numérica real de disponible y flujo completo de transferencia con verificación de stock en origen
+  y destino) — Docker no disponible durante toda la sesión, e2e reales pendientes de reconfirmar
+  (`INVENTORY_RESERVAS_TRANSFERENCIAS_TEST_REPORT.md`). Entregables nuevos:
+  `INVENTORY_RESERVAS_TRANSFERENCIAS_REPORT.md`, `INVENTORY_RESERVAS_TRANSFERENCIAS_API.md`,
+  `INVENTORY_RESERVAS_TRANSFERENCIAS_TEST_REPORT.md`. `0.8.0` → `0.9.0` (`MINOR`).
+
 ### Corregido
 
 - **FASE 2 Backend Core — 4 gaps reales de seguridad en el login, encontrados al auditar el módulo

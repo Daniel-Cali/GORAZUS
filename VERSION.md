@@ -5,7 +5,19 @@ completa y estable (no un release público), `PATCH` una corrección puntual. `0
 el proyecto arrancó en `0.1.0` (bootstrap del monorepo + FASE 01-05). Sin releases públicos
 todavía, así que no hay compromiso de compatibilidad entre versiones `0.x`.
 
-## Versión actual: **0.8.0** (2026-07-23)
+## Versión actual: **0.9.0** (2026-07-23)
+
+FASE 05, Parte 03 — Reservas y Transferencias. `MINOR`: primer código real sobre
+`stock_reservations`/`stock_transfers`/`stock_transfer_lines` (3 tablas más de `inventory`, 9 de 34
+en total) — reservas que protegen stock físico (`quantity_reserved`) sin descontarlo, transferencias
+entre almacenes con flujo de estados (`draft → in_transit → received`) que generan movimientos
+atómicos por línea vía `MovimientoStockRepository.registrarLote` (nuevo). Corrige el chequeo de
+stock suficiente para comparar contra disponible real (`on_hand - reserved`), no solo contra `on_hand`
+(TODO dejado en `0.8.0`). Ver `INVENTORY_RESERVAS_TRANSFERENCIAS_REPORT.md` para el detalle
+completo, `INVENTORY_RESERVAS_TRANSFERENCIAS_TEST_REPORT.md` para testing,
+`INVENTORY_RESERVAS_TRANSFERENCIAS_API.md` para referencia de endpoints.
+
+## 0.8.0 (2026-07-23)
 
 FASE 05, Parte 02 — Motor de Stock y Movimientos. `MINOR`: primer código real sobre `stock`/
 `stock_movement_types`/`stock_movements` (3 de las 34 tablas de `inventory`, sumadas a las 3 de
@@ -92,6 +104,7 @@ FASE 2 — Backend Core (endurecimiento de `auth` + capacidades nuevas de infrae
 
 | Versión | Fecha      | Resumen                                                                                                                                                                                                                                                                                                                      |
 | ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0.9.0   | 2026-07-23 | FASE 05, Parte 03 — Reservas y Transferencias: primer código real de `stock_reservations`/`stock_transfers`/`stock_transfer_lines`, `registrarLote` atómico multi-línea, chequeo de stock suficiente corregido contra disponible real.                                                                                       |
 | 0.8.0   | 2026-07-23 | FASE 05, Parte 02 — Motor de Stock y Movimientos: primer código real de `stock`/`stock_movement_types`/`stock_movements` (3 de 34 tablas de `inventory`), motor único de movimientos con actualización atómica de stock, disponible y kardex real.                                                                           |
 | 0.7.0   | 2026-07-23 | FASE 04 — Productos: primer código real de `modules/productos/backend` (Unidades de Medida, Categorías, Marcas, Modelos, Productos), 5 de 35 tablas del schema `products`.                                                                                                                                                   |
 | 0.6.0   | 2026-07-23 | FASE 03, continuidad — Almacenes: primer código real de `modules/inventario/backend` (Almacén→Zona→Ubicación), cierra la lista de prioridad "primero" de FASE 03.                                                                                                                                                            |
@@ -104,8 +117,9 @@ FASE 2 — Backend Core (endurecimiento de `auth` + capacidades nuevas de infrae
 
 ## Próxima versión prevista
 
-`0.9.0` — Fase 05, Parte 03: Reservas y Transferencias (`stock_reservations`/`stock_transfers`/
-`stock_transfer_lines`), sobre el motor de movimientos de `0.8.0`. Sin fecha comprometida.
+`0.10.0` — Fase 05, Parte 04: Ajustes y Conteos Físicos (`stock_adjustments`/
+`stock_adjustment_lines`/`stock_adjustment_reasons`/`physical_counts`/`physical_count_lines`/
+`cycle_count_schedules`), sobre el motor de movimientos ya construido. Sin fecha comprometida.
 
 ## Versionado del modelo de datos (track independiente)
 

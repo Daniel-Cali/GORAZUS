@@ -1,7 +1,7 @@
 # Technical Debt — GORAZUS ERP
 
-> Actualizado FASE 05, Parte 02 — Motor de Stock y Movimientos. Sesión
-> del 2026-07-23, versión **0.8.0**, rama `feature/inventory-core`.
+> Actualizado FASE 05, Parte 03 — Reservas y Transferencias. Sesión
+> del 2026-07-23, versión **0.9.0**, rama `feature/inventory-core`.
 > Consolida deuda técnica ya dispersa en
 > `CHANGELOG.md` ("Pendiente conocido") y en los reportes de sesiones
 > previas, más lo detectado esta sesión — no repite el detalle completo
@@ -94,26 +94,33 @@ seguridad`) no marca el `sessionId` en la blacklist de Redis** —
   documentado con honestidad en `ROADMAP.md`, no oculto ni presentado
   como completo.
 - 🟡 **`modules/inventario` solo tiene Almacenes + motor de stock/
-  movimientos, no Inventario completo** — 28 de las 34 tablas de
-  `core/database/prisma/schemas/inventory/` (reservas, transferencias,
-  ajustes, conteos, recepciones/salidas, costeo FIFO/LIFO/promedio,
-  series, lotes, producción, reglas de reposición/putaway/picking)
-  siguen sin backend. Es el estado esperado del alcance de esta parte,
-  ya diseñado en `INVENTORY_ARCHITECTURE.md` y secuenciado en
+  movimientos/reservas/transferencias, no Inventario completo** — 25 de
+  las 34 tablas de `core/database/prisma/schemas/inventory/` (ajustes,
+  conteos, recepciones/salidas, costeo FIFO/LIFO/promedio, series,
+  lotes, producción, reglas de reposición/putaway/picking) siguen sin
+  backend. Es el estado esperado del alcance de esta parte, ya diseñado
+  en `INVENTORY_ARCHITECTURE.md` y secuenciado en
   `INVENTORY_NEXT_PHASE.md` — no un gap oculto.
-- 🟠 **Chequeo de stock suficiente sin locking explícito (nuevo)** —
-  `MovimientoStockRepositoryPrisma.registrar()` lee el saldo actual y lo
-  actualiza dentro de la misma transacción, pero sin `SELECT ... FOR
-UPDATE` ni aislamiento `SERIALIZABLE` — dos movimientos concurrentes
-  sobre el mismo `(product_id, warehouse_id, location_id)` podrían, en
-  el peor caso, ambos leer el mismo saldo antes de que cualquiera de los
-  dos escriba. Ningún otro repositorio del proyecto usa locking explícito
-  todavía — ver `INVENTORY_STOCK_REPORT.md §5`.
-- 🟡 **Chequeo de stock suficiente compara contra `quantity_on_hand`, no
-  contra `quantity_available` (nuevo)** — equivalente hoy porque
-  `quantity_reserved` siempre es `0` (no existen reservas todavía). Debe
-  revisarse cuando Fase 05 Parte 03 (Reservas) exista — `TODO` explícito
-  ya dejado en el código (`movimiento-stock.repository.prisma.ts`).
+- 🟠 **Chequeo de stock suficiente sin locking explícito** —
+  `MovimientoStockRepositoryPrisma.aplicarMovimiento()` lee el saldo
+  actual y lo actualiza dentro de la misma transacción, pero sin
+  `SELECT ... FOR UPDATE` ni aislamiento `SERIALIZABLE` — dos
+  movimientos (o lotes de transferencia) concurrentes sobre el mismo
+  `(product_id, warehouse_id, location_id)` podrían, en el peor caso,
+  ambos leer el mismo saldo antes de que cualquiera de los dos escriba.
+  Extendido a `registrarLote` (Parte 03) sin agravarse ni resolverse.
+  Ningún otro repositorio del proyecto usa locking explícito todavía —
+  ver `INVENTORY_RESERVAS_TRANSFERENCIAS_REPORT.md §4`.
+- 🟢 **(corregido, Parte 03) Chequeo de stock suficiente comparaba
+  contra `quantity_on_hand`, no contra `quantity_available`** — el
+  `TODO` dejado en `0.8.0` se resolvió: ahora compara contra disponible
+  real (`on_hand - reserved`), verificado en e2e. Queda acá solo como
+  registro de que existió.
+- 🟡 **Cancelar una transferencia ya `in_transit` no está soportado**
+  (nuevo) — `TransferenciasService.cancelar()` solo permite la
+  transición desde `draft`. Requeriría un movimiento de reversión que
+  el pedido original de Parte 03 no especificó — decisión de producto
+  pendiente si se necesita, no un bug.
 - 🟡 **`modules/productos` solo tiene el producto base, no el catálogo
   completo** — 30 de las 35 tablas de `core/database/prisma/schemas/products/`
   (variantes, atributos, combos, kits, BOM/recetas, imágenes/videos,

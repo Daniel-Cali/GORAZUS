@@ -28,7 +28,10 @@ original, dejado tal cual para trazabilidad.
   `production_output`, `production_consumption`) — mismo patrón de script
   idempotente que `seed-rbac.ts`/`seed-tax-jurisdictions.ts`.
 
-## Parte 03 — Reservas y transferencias
+## Parte 03 — Reservas y transferencias — ✅ completa (`v0.9.0`)
+
+Ver `INVENTORY_RESERVAS_TRANSFERENCIAS_REPORT.md` para el detalle real de lo construido — el
+resumen abajo es el plan original, dejado tal cual para trazabilidad.
 
 - Tablas: `stock_reservations`, `stock_transfers`, `stock_transfer_lines`.
 - Depende de Parte 02 (cada reserva/transferencia genera movimientos).

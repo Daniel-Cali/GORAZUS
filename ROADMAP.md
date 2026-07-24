@@ -7,27 +7,29 @@ trabajo en [CHANGELOG.md](CHANGELOG.md).
 
 ## Estado del backend por módulo de negocio (código real, no solo diseño)
 
-| Módulo                                                                                                                                                                                                                                      | Backend                                                                                                                                                                                                                                                                                                                                          | Frontend                                                                  |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| `auth`                                                                                                                                                                                                                                      | ✅ Login (con bloqueo por intentos + 2FA exigido si está confirmado + "recordar sesión"), refresh (con protección de session-hijacking + verificación de empresa/sucursal activa), logout, `GET /auth/me`, `GET /auth/session`, `POST /auth/revoke`, recuperación de contraseña (email real), CSRF en refresh                                    | ✅ Login                                                                  |
-| `seguridad`                                                                                                                                                                                                                                 | ✅ Roles/permisos (RBAC), usuarios (CRUD completo + soft delete/restore + estado agregado + multiempresa + preferencias + avatar), auditoría, sesiones, 2FA (setup real, exigido en login desde `auth`)                                                                                                                                          | ✅ Listado/alta de usuarios                                               |
-| `configuracion`                                                                                                                                                                                                                             | ✅ Empresas, Sucursales, Parámetros, Monedas, Impuestos (alcance mínimo)                                                                                                                                                                                                                                                                         | ❌ Sin construir                                                          |
-| `inventario`                                                                                                                                                                                                                                | 🟡 Almacenes (Almacén→Zona→Ubicación) + motor de stock y movimientos (`stock`/`stock_movement_types`/`stock_movements`, disponible, kardex real) — CRUD/motor real. 28 tablas restantes (reservas/transferencias/ajustes/conteos/recepciones/salidas/costeo/series/lotes/producción) diseñadas (`INVENTORY_ARCHITECTURE.md`), sin código todavía | ❌ Sin construir                                                          |
-| `productos`                                                                                                                                                                                                                                 | 🟡 Unidades de Medida, Categorías, Marcas, Modelos, Productos (5 tablas núcleo) — CRUD real. Variantes/atributos/combos/kits/BOM/imágenes (30 tablas restantes) sin backend todavía                                                                                                                                                              | ❌ Sin construir                                                          |
-| Resto (22 módulos: ventas, pos, compras, clientes, proveedores, caja, bancos, contabilidad, crm, rrhh, nómina, producción, servicios, activos-fijos, proyectos, reportes, bi, impuestos*, tesorería, dashboard, administracion, documentos) | ❌ Sin backend                                                                                                                                                                                                                                                                                                                                   | 🟡 Placeholder `ComingSoonPage` (25 módulos ya registrados en el sidebar) |
+| Módulo                                                                                                                                                                                                                                      | Backend                                                                                                                                                                                                                                                                                                       | Frontend                                                                  |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `auth`                                                                                                                                                                                                                                      | ✅ Login (con bloqueo por intentos + 2FA exigido si está confirmado + "recordar sesión"), refresh (con protección de session-hijacking + verificación de empresa/sucursal activa), logout, `GET /auth/me`, `GET /auth/session`, `POST /auth/revoke`, recuperación de contraseña (email real), CSRF en refresh | ✅ Login                                                                  |
+| `seguridad`                                                                                                                                                                                                                                 | ✅ Roles/permisos (RBAC), usuarios (CRUD completo + soft delete/restore + estado agregado + multiempresa + preferencias + avatar), auditoría, sesiones, 2FA (setup real, exigido en login desde `auth`)                                                                                                       | ✅ Listado/alta de usuarios                                               |
+| `configuracion`                                                                                                                                                                                                                             | ✅ Empresas, Sucursales, Parámetros, Monedas, Impuestos (alcance mínimo)                                                                                                                                                                                                                                      | ❌ Sin construir                                                          |
+| `inventario`                                                                                                                                                                                                                                | 🟡 Almacenes (Almacén→Zona→Ubicación), motor de stock/movimientos y Reservas/Transferencias — CRUD/motor real (9 de 34 tablas). 25 tablas restantes (ajustes/conteos/recepciones/salidas/costeo/series/lotes/producción) diseñadas (`INVENTORY_ARCHITECTURE.md`), sin código todavía                          | ❌ Sin construir                                                          |
+| `productos`                                                                                                                                                                                                                                 | 🟡 Unidades de Medida, Categorías, Marcas, Modelos, Productos (5 tablas núcleo) — CRUD real. Variantes/atributos/combos/kits/BOM/imágenes (30 tablas restantes) sin backend todavía                                                                                                                           | ❌ Sin construir                                                          |
+| Resto (22 módulos: ventas, pos, compras, clientes, proveedores, caja, bancos, contabilidad, crm, rrhh, nómina, producción, servicios, activos-fijos, proyectos, reportes, bi, impuestos*, tesorería, dashboard, administracion, documentos) | ❌ Sin backend                                                                                                                                                                                                                                                                                                | 🟡 Placeholder `ComingSoonPage` (25 módulos ya registrados en el sidebar) |
 
 \* El módulo de negocio `modules/impuestos` (motor de reglas/cálculo/percepciones/retenciones,
 `docs/architecture/46-modulo-taxes.md`) es distinto del catálogo mínimo de perfiles/tasas ya
 construido dentro de `modules/configuracion/backend` — ver `CHANGELOG.md`, entrada FASE 02.
 
-## Fase actual: FASE 05, Parte 02 — Motor de Stock y Movimientos (2026-07-23)
+## Fase actual: FASE 05, Parte 03 — Reservas y Transferencias (2026-07-23)
 
-`v0.8.0` agregó código real sobre `stock`/`stock_movement_types`/`stock_movements` (3 de las 34
-tablas de `inventory`) — motor único de movimientos (`POST /inventario/movimientos`) que actualiza
-el saldo de stock atómicamente, consultas de disponible (`GET /inventario/stock/disponible`) y
-kardex real contra la vista `inventory.v_kardex` (`GET /inventario/kardex`). Ver
-`INVENTORY_STOCK_REPORT.md` para el detalle completo, `PROJECT_STATUS.md` para el estado
-consolidado y `TECHNICAL_DEBT.md` para la deuda técnica detectada.
+`v0.9.0` agregó código real sobre `stock_reservations`/`stock_transfers`/`stock_transfer_lines` (3
+tablas más de `inventory`, 9 de 34 en total) — reservas que protegen stock físico sin descontarlo, y
+transferencias entre almacenes con flujo de estados (`draft → in_transit → received`) que generan
+movimientos atómicos por línea vía `MovimientoStockRepository.registrarLote` (nuevo, aplica varios
+movimientos en una sola transacción). Corrige además el chequeo de stock suficiente de `v0.8.0` para
+comparar contra disponible real, no solo contra existencia física. Ver
+`INVENTORY_RESERVAS_TRANSFERENCIAS_REPORT.md` para el detalle completo, `PROJECT_STATUS.md` para el
+estado consolidado y `TECHNICAL_DEBT.md` para la deuda técnica detectada.
 
 ### Ya completo (no repetir en próximas fases)
 
@@ -43,25 +45,28 @@ consolidado y `TECHNICAL_DEBT.md` para la deuda técnica detectada.
 - **Inventario — Almacenes**: CRUD de Almacén→Zona→Ubicación, con validación real de empresa/
   sucursal/almacén/zona padre.
 - **Inventario — Motor de stock y movimientos**: catálogo de tipos de movimiento, registro de
-  movimientos con actualización atómica de `stock`, consulta de disponible, kardex real. 28 tablas
-  restantes (reservas/transferencias/ajustes/conteos/recepciones/salidas/costeo/series/lotes/
-  producción) ya diseñadas (`INVENTORY_ARCHITECTURE.md`), sin código todavía.
+  movimientos con actualización atómica de `stock`, consulta de disponible, kardex real.
+- **Inventario — Reservas y Transferencias**: reservas que protegen stock (`quantity_reserved`),
+  transferencias con flujo de estados completo y movimientos atómicos por línea. 25 tablas
+  restantes (ajustes/conteos/recepciones/salidas/costeo/series/lotes/producción) ya diseñadas
+  (`INVENTORY_ARCHITECTURE.md`), sin código todavía.
 - **Productos**: CRUD de Unidades de Medida, Categorías (jerárquica), Marcas, Modelos y Productos
   (`good`/`service`/`kit`/`combo`/`composite`), con validación cruzada marca↔modelo y el invariante
   de que un `service` no rastrea serie/lote. Variantes/atributos/combos/kits/BOM/imágenes siguen sin
   construir.
 - **Archivos**: `core/storage` con endpoint genérico de subida/descarga/borrado (MinIO, bucket por
   tenant) — infraestructura, no un módulo de negocio.
-- Control de calidad: 298+ tests reales (no solo unitarios) verificados contra Postgres/Redis/MinIO/
+- Control de calidad: 332+ tests reales (no solo unitarios) verificados contra Postgres/Redis/MinIO/
   MailHog reales cuando la infraestructura estuvo disponible — ver `TEST_REPORT.md`/
-  `INVENTORY_STOCK_TEST_REPORT.md` para el detalle y una nota sobre disponibilidad de Docker.
+  `INVENTORY_RESERVAS_TRANSFERENCIAS_TEST_REPORT.md` para el detalle y una nota sobre disponibilidad
+  de Docker.
 
-### Próxima fase: Inventario, Parte 03 — Reservas y Transferencias
+### Próxima fase: Inventario, Parte 04 — Ajustes y Conteos Físicos
 
-Con el motor de stock y movimientos completo, la Parte 02 de la Fase 05 queda cerrada. Orden
-confirmado (`INVENTORY_NEXT_PHASE.md`): **Parte 03 — Reservas y transferencias**
-(`stock_reservations`/`stock_transfers`/`stock_transfer_lines`, sobre el motor de `0.8.0`) →
-04 Ajustes/conteos → 05 Recepciones/salidas/reglas de almacén → 06 Costeo → 07 Series/lotes →
+Con Reservas y Transferencias completas, la Parte 03 de la Fase 05 queda cerrada. Orden confirmado
+(`INVENTORY_NEXT_PHASE.md`): **Parte 04 — Ajustes y conteos físicos** (`stock_adjustments`/
+`stock_adjustment_lines`/`stock_adjustment_reasons`/`physical_counts`/`physical_count_lines`/
+`cycle_count_schedules`) → 05 Recepciones/salidas/reglas de almacén → 06 Costeo → 07 Series/lotes →
 08 Producción → Clientes → Ventas → Caja → POS.
 
 ## Backlog conocido
@@ -75,6 +80,9 @@ confirmado (`INVENTORY_NEXT_PHASE.md`): **Parte 03 — Reservas y transferencias
 - Catálogo de países/jurisdicciones fiscales (`configuration.countries`/`taxes.tax_jurisdictions`)
   no tiene CRUD ni UI — solo el script de seed mínimo que desbloquea Impuestos.
 - Chequeo de stock suficiente sin locking (`inventory.stock`, riesgo de condición de carrera bajo
-  concurrencia real) — ver `INVENTORY_STOCK_REPORT.md §5`.
+  concurrencia real) — ver `INVENTORY_STOCK_REPORT.md §5`, extendido a `registrarLote` en
+  `INVENTORY_RESERVAS_TRANSFERENCIAS_REPORT.md §4`.
+- Cancelar una transferencia ya `in_transit` no está soportado (solo desde `draft`) — requeriría un
+  movimiento de reversión no especificado en el pedido original.
 - Ver `CHANGELOG.md` sección "Pendiente conocido" y `TECHNICAL_DEBT.md` para el resto (39
   vulnerabilidades de dependencias transitivas, Kubernetes sin cluster real de prueba, etc.).
