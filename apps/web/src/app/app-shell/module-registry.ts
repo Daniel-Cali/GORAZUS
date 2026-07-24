@@ -62,7 +62,14 @@ export const MODULE_REGISTRY: ModuleRegistryEntry[] = [
     permission: 'ventas.ver',
     group: 'Ventas',
   },
-  { id: 'pos', label: 'POS', icon: Store, path: '/pos', permission: 'pos.ver', group: 'Ventas' },
+  {
+    id: 'pos',
+    label: 'POS',
+    icon: Store,
+    path: '/pos',
+    permission: 'pos.operar_pos',
+    group: 'Ventas',
+  },
   {
     id: 'crm',
     label: 'CRM',

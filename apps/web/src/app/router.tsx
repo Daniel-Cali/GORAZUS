@@ -3,6 +3,7 @@ import { ComingSoonPage } from '@gorazus/ui-kit';
 import { authRoutes } from '@gorazus/modules/auth';
 import { dashboardRoutes } from '@gorazus/modules/dashboard';
 import { seguridadRoutes } from '@gorazus/modules/seguridad';
+import { posRoutes } from '@gorazus/modules/pos';
 import { RequireAuth } from './require-auth';
 import { AppShellLayout } from './app-shell/app-shell';
 import { MODULE_REGISTRY } from './app-shell/module-registry';
@@ -22,7 +23,10 @@ function ProtectedLayout() {
 }
 
 const realRoutes = [...dashboardRoutes, ...seguridadRoutes];
-const realPaths = new Set(realRoutes.map((route) => route.path));
+// `posRoutes` cuenta para excluir `/pos` del catálogo de placeholders,
+// pero se monta aparte (fuera de `ProtectedLayout`) — el POS no lleva
+// `AppShell`, ocupa toda la pantalla (`POS_UX.md §1`).
+const realPaths = new Set([...realRoutes, ...posRoutes].map((route) => route.path));
 
 /**
  * FASE 03 Frontend Enterprise: cada feature del registro sin backend real
@@ -42,6 +46,7 @@ export const router = createBrowserRouter([
   {
     element: <RequireAuth />,
     children: [
+      ...posRoutes,
       {
         element: <ProtectedLayout />,
         children: [

@@ -1045,6 +1045,34 @@ importers:
         specifier: ^20.19.43
         version: 20.19.43
 
+  modules/pos/frontend:
+    dependencies:
+      '@gorazus/contracts':
+        specifier: workspace:*
+        version: link:../../../packages/contracts
+      '@gorazus/ui-kit':
+        specifier: workspace:*
+        version: link:../../../ui-kit
+      '@tanstack/react-query':
+        specifier: ^5.62.0
+        version: 5.101.2(react@19.2.7)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.7
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.7(react@19.2.7)
+      react-router-dom:
+        specifier: ^7.1.0
+        version: 7.18.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+    devDependencies:
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.2.3(@types/react@19.2.17)
+
   modules/productos/backend:
     dependencies:
       '@gorazus/contracts':
