@@ -20,6 +20,14 @@ import { ConfiguracionModule } from '../../../../modules/configuracion/backend/c
 import { InventarioModule } from '../../../../modules/inventario/backend/inventario.module';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- mismo motivo que arriba
 import { ProductosModule } from '../../../../modules/productos/backend/productos.module';
+// eslint-disable-next-line @nx/enforce-module-boundaries -- mismo motivo que arriba
+import { ClientesModule } from '../../../../modules/clientes/backend/clientes.module';
+// eslint-disable-next-line @nx/enforce-module-boundaries -- mismo motivo que arriba
+import { CajaModule } from '../../../../modules/caja/backend/caja.module';
+// eslint-disable-next-line @nx/enforce-module-boundaries -- mismo motivo que arriba
+import { VentasModule } from '../../../../modules/ventas/backend/ventas.module';
+// eslint-disable-next-line @nx/enforce-module-boundaries -- mismo motivo que arriba
+import { PosModule } from '../../../../modules/pos/backend/pos.module';
 
 /**
  * Composition root — ver docs/architecture/01-estructura-monorepo.md §3:
@@ -50,6 +58,10 @@ import { ProductosModule } from '../../../../modules/productos/backend/productos
     ConfiguracionModule,
     InventarioModule,
     ProductosModule,
+    ClientesModule,
+    CajaModule,
+    VentasModule,
+    PosModule,
   ],
 })
 export class AppModule {}
