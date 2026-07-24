@@ -34,11 +34,18 @@ export async function lockStockRow(
   const txRaw = tx as unknown as {
     $queryRawUnsafe: (query: string, ...values: unknown[]) => Promise<StockRowLocked[]>;
   };
+  // `::uuid` explícito en los 3 parámetros — sin esto, Postgres no puede
+  // inferir el tipo de un placeholder posicional dentro de `IS NOT
+  // DISTINCT FROM` (a diferencia de `=`, que sí lo infiere de la columna
+  // del otro lado) y cae a `text` por defecto, rompiendo con
+  // "operator does not exist: uuid = text" — nunca se había ejercitado
+  // este camino contra Postgres real hasta el checkout de POS (Fase 06
+  // Parte 01), Docker llevaba caído desde antes de Fase 05 Parte 04.
   const rows = await txRaw.$queryRawUnsafe(
     `SELECT id, quantity_on_hand, quantity_reserved
      FROM inventory.stock
-     WHERE product_id = $1 AND warehouse_id = $2
-       AND location_id IS NOT DISTINCT FROM $3
+     WHERE product_id = $1::uuid AND warehouse_id = $2::uuid
+       AND location_id IS NOT DISTINCT FROM $3::uuid
        AND deleted_at IS NULL
      FOR UPDATE`,
     params.productId,

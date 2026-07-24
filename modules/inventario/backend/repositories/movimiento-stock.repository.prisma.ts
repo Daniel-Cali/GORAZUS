@@ -13,9 +13,7 @@ import {
   StockInsuficienteError,
   type RegistrarMovimientoParams,
 } from './movimiento-stock.repository';
-import { lockStockRow, esViolacionDeUnicidad } from './stock-lock.util';
-
-const MAX_INTENTOS_CARRERA = 2;
+import { lockStockRow } from './stock-lock.util';
 
 @Injectable()
 export class MovimientoStockRepositoryPrisma extends MovimientoStockRepository {
@@ -32,83 +30,76 @@ export class MovimientoStockRepositoryPrisma extends MovimientoStockRepository {
    * concurrentes apuntan al mismo `(product, warehouse, location)`, el
    * segundo espera a que el primero confirme antes de leer, en vez de
    * arriesgarse a leer el mismo saldo viejo que el primero.
+   *
+   * **No escribe `inventory.stock` acá.** `inventory.fn_apply_stock_movement`
+   * (`docs/database/sql/26_triggers.sql`, `AFTER INSERT ON stock_movements`)
+   * ya hace el upsert real (crea la fila si no existía, o suma el delta
+   * si existía) apenas se inserta el movimiento — escribirlo TAMBIÉN acá
+   * duplicaba el delta en cada movimiento (bug real: 100 de entrada
+   * quedaba en 200, una salida de 3 sobre eso quedaba en 194 en vez de
+   * 97). Descubierto en FASE 06 Parte 01 (checkout de POS) al ejercitar
+   * por primera vez este camino contra Postgres real con el trigger
+   * activo — nunca se había detectado antes porque Docker llevaba caído
+   * desde antes de Fase 05 Parte 02, donde se escribió este código.
+   * `lockStockRow` sigue siendo necesario acá: no para escribir, sino
+   * para leer el saldo bajo `FOR UPDATE` y validar "no dejar
+   * `quantity_on_hand` por debajo de lo reservado" contra un valor que
+   * no puede cambiar por debajo nuestro mientras validamos.
    */
   private async aplicarMovimiento(
     tx: InventoryPrismaClient,
     context: UserContext,
     params: RegistrarMovimientoParams,
   ): Promise<{ movimiento: stock_movements; stockActualizado: stock }> {
-    for (let intento = 1; intento <= MAX_INTENTOS_CARRERA; intento++) {
-      const stockActual = await lockStockRow(tx, {
-        productId: params.productId,
-        warehouseId: params.warehouseId,
-        locationId: params.locationId,
-      });
-      const cantidadActual = stockActual ? Number(stockActual.quantity_on_hand) : 0;
-      const cantidadReservada = stockActual ? Number(stockActual.quantity_reserved) : 0;
-      const nuevaCantidad =
-        params.direction === 'in'
-          ? cantidadActual + params.quantity
-          : cantidadActual - params.quantity;
+    const stockActual = await lockStockRow(tx, {
+      productId: params.productId,
+      warehouseId: params.warehouseId,
+      locationId: params.locationId,
+    });
+    const cantidadActual = stockActual ? Number(stockActual.quantity_on_hand) : 0;
+    const cantidadReservada = stockActual ? Number(stockActual.quantity_reserved) : 0;
+    const nuevaCantidad =
+      params.direction === 'in'
+        ? cantidadActual + params.quantity
+        : cantidadActual - params.quantity;
 
-      // Una salida nunca puede dejar `quantity_on_hand` por debajo de lo
-      // reservado para otros — comparar contra disponible real (a mano -
-      // reservado), no contra "a mano" a secas (Parte 03).
-      if (params.direction === 'out' && nuevaCantidad < cantidadReservada) {
-        throw new StockInsuficienteError(cantidadActual - cantidadReservada, params.quantity);
-      }
-
-      try {
-        const stockActualizado = stockActual
-          ? await tx.stock.update({
-              where: { id: stockActual.id },
-              data: { quantity_on_hand: nuevaCantidad },
-            })
-          : await tx.stock.create({
-              data: {
-                tenant_id: context.tenantId,
-                company_id: params.companyId,
-                branch_id: params.branchId,
-                product_id: params.productId,
-                warehouse_id: params.warehouseId,
-                location_id: params.locationId,
-                quantity_on_hand: nuevaCantidad,
-                quantity_reserved: 0,
-              },
-            });
-
-        const movimiento = await tx.stock_movements.create({
-          data: {
-            tenant_id: context.tenantId,
-            company_id: params.companyId,
-            branch_id: params.branchId,
-            product_id: params.productId,
-            warehouse_id: params.warehouseId,
-            movement_type_id: params.movementTypeId,
-            quantity: params.quantity,
-            unit_cost: params.unitCost,
-            source_module: params.sourceModule,
-            source_entity_id: params.sourceEntityId,
-            observations: params.observations,
-          },
-        });
-
-        return { movimiento, stockActualizado };
-      } catch (error) {
-        // Carrera real: no había fila (`stockActual === null`) y otra
-        // transacción concurrente insertó la misma combinación
-        // product/warehouse/location entre nuestro `SELECT ... FOR
-        // UPDATE` (que no encontró nada) y este `INSERT` — el índice
-        // único parcial `uq_inventory_stock` la rechaza. Se reintenta:
-        // la próxima vuelta del `for` sí va a encontrar (y bloquear) la
-        // fila que el otro ya creó.
-        if (!stockActual && esViolacionDeUnicidad(error) && intento < MAX_INTENTOS_CARRERA) {
-          continue;
-        }
-        throw error;
-      }
+    // Una salida nunca puede dejar `quantity_on_hand` por debajo de lo
+    // reservado para otros — comparar contra disponible real (a mano -
+    // reservado), no contra "a mano" a secas (Parte 03).
+    if (params.direction === 'out' && nuevaCantidad < cantidadReservada) {
+      throw new StockInsuficienteError(cantidadActual - cantidadReservada, params.quantity);
     }
-    throw new Error('No se pudo aplicar el movimiento tras reintentos por concurrencia');
+
+    const movimiento = await tx.stock_movements.create({
+      data: {
+        tenant_id: context.tenantId,
+        company_id: params.companyId,
+        branch_id: params.branchId,
+        product_id: params.productId,
+        warehouse_id: params.warehouseId,
+        movement_type_id: params.movementTypeId,
+        quantity: params.quantity,
+        unit_cost: params.unitCost,
+        source_module: params.sourceModule,
+        source_entity_id: params.sourceEntityId,
+        observations: params.observations,
+      },
+    });
+
+    // El trigger ya corrió (síncrono, dentro del mismo INSERT) — releer
+    // para devolver el saldo real posterior al movimiento.
+    const stockActualizado = await lockStockRow(tx, {
+      productId: params.productId,
+      warehouseId: params.warehouseId,
+      locationId: params.locationId,
+    });
+    if (!stockActualizado) {
+      throw new Error(
+        `inventory.stock no tiene fila para product=${params.productId} warehouse=${params.warehouseId} tras aplicar el movimiento — inventory.fn_apply_stock_movement no corrió como se esperaba.`,
+      );
+    }
+
+    return { movimiento, stockActualizado: stockActualizado as unknown as stock };
   }
 
   async registrar(
