@@ -60,3 +60,33 @@ todas las fases anteriores del proyecto).
   consecutiva), pero no aplica a una fase que no ejecuta código.
 - No se escribió ningún test — no hay código de negocio nuevo que probar
   todavía.
+
+## 5. Addendum — Fase 05, Parte 04 (2026-07-24): Ajustes y Conteos Físicos
+
+A diferencia de Parte 01 (diseño puro), esta parte sí construyó código real — el "health check" acá
+cubre lo que Parte 01 no pudo: verificación de concurrencia y estado real del código.
+
+### 5.1 Concurrencia — implementado, no solo documentado
+
+Parte 02/03 dejaron documentado (no resuelto) el riesgo de que dos operaciones concurrentes sobre el
+mismo `(product_id, warehouse_id, location_id)` pudieran leer el mismo saldo antes de que cualquiera
+escribiera. Esta parte lo cierra con bloqueo de filas real: `lockStockRow()`
+(`repositories/stock-lock.util.ts`) ejecuta `SELECT ... FOR UPDATE` dentro de la transacción activa,
+usado por el motor de movimientos (`MovimientoStockRepositoryPrisma.aplicarMovimiento`, con
+reintento ante la carrera de inserción detectada por el índice único real `uq_inventory_stock`) y
+por reservas (`ReservaStockRepositoryPrisma`). Verificado por build/lint/tests unitarios — **no**
+verificado bajo concurrencia real (dos requests simultáneos contra Postgres real), eso requiere
+Docker arriba y una prueba de carga dedicada, pendiente.
+
+### 5.2 Estado del código — build/lint/test
+
+`nx build inventario-backend`/`nx lint inventario-backend` limpios (0 errores, 0 warnings tras un
+fix de un import no usado). `nx test` (unitario, sin e2e): **153/153 pasando**, 24 suites — ver
+`INVENTORY_TEST_REPORT.md` para el detalle completo.
+
+### 5.3 Riesgo operativo detectado esta sesión (no de código)
+
+55 procesos `jest-worker` quedaron huérfanos de corridas de test interrumpidas por reinicios de
+sesión, agotando la memoria del sistema (~1.2 MB libres de 33 GB) y bloqueando temporalmente
+cualquier comando nuevo. Documentado en detalle en `INVENTORY_TEST_REPORT.md §3` — no es deuda de
+este módulo, es higiene de sesiones largas con múltiples reinicios del harness.

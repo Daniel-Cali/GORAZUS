@@ -5,7 +5,20 @@ completa y estable (no un release público), `PATCH` una corrección puntual. `0
 el proyecto arrancó en `0.1.0` (bootstrap del monorepo + FASE 01-05). Sin releases públicos
 todavía, así que no hay compromiso de compatibilidad entre versiones `0.x`.
 
-## Versión actual: **0.9.0** (2026-07-23)
+## Versión actual: **0.10.0** (2026-07-24)
+
+FASE 05, Parte 04 — Ajustes y Conteos Físicos. `MINOR`: primer código real sobre
+`stock_adjustment_reasons`/`stock_adjustments`/`stock_adjustment_lines`/`physical_counts`/
+`physical_count_lines`/`cycle_count_schedules` (6 tablas más de `inventory`, 15 de 34 en total) —
+ajustes que resuelven `previousQuantity` del stock real y generan movimientos vía
+`registrarLote`, conteos físicos con captura ciega y generación automática de ajuste ante
+discrepancias, programación de conteos cíclicos por zona. Cierra el riesgo de concurrencia
+documentado desde `0.8.0`: bloqueo real de filas (`SELECT ... FOR UPDATE`) en el motor de
+movimientos y en reservas. Ver `INVENTORY_ADJUSTMENTS_REPORT.md`, `INVENTORY_PHYSICAL_COUNTS.md` y
+`INVENTORY_CYCLE_COUNT.md` para el detalle completo, `INVENTORY_TEST_REPORT.md` para testing,
+`INVENTORY_API.md` para referencia de endpoints.
+
+## 0.9.0 (2026-07-23)
 
 FASE 05, Parte 03 — Reservas y Transferencias. `MINOR`: primer código real sobre
 `stock_reservations`/`stock_transfers`/`stock_transfer_lines` (3 tablas más de `inventory`, 9 de 34
@@ -104,6 +117,7 @@ FASE 2 — Backend Core (endurecimiento de `auth` + capacidades nuevas de infrae
 
 | Versión | Fecha      | Resumen                                                                                                                                                                                                                                                                                                                      |
 | ------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0.10.0  | 2026-07-24 | FASE 05, Parte 04 — Ajustes y Conteos Físicos: primer código real de `stock_adjustments`/`physical_counts`/`cycle_count_schedules` y catálogos asociados, bloqueo real de filas (`SELECT ... FOR UPDATE`) en el motor de movimientos.                                                                                        |
 | 0.9.0   | 2026-07-23 | FASE 05, Parte 03 — Reservas y Transferencias: primer código real de `stock_reservations`/`stock_transfers`/`stock_transfer_lines`, `registrarLote` atómico multi-línea, chequeo de stock suficiente corregido contra disponible real.                                                                                       |
 | 0.8.0   | 2026-07-23 | FASE 05, Parte 02 — Motor de Stock y Movimientos: primer código real de `stock`/`stock_movement_types`/`stock_movements` (3 de 34 tablas de `inventory`), motor único de movimientos con actualización atómica de stock, disponible y kardex real.                                                                           |
 | 0.7.0   | 2026-07-23 | FASE 04 — Productos: primer código real de `modules/productos/backend` (Unidades de Medida, Categorías, Marcas, Modelos, Productos), 5 de 35 tablas del schema `products`.                                                                                                                                                   |
@@ -117,9 +131,10 @@ FASE 2 — Backend Core (endurecimiento de `auth` + capacidades nuevas de infrae
 
 ## Próxima versión prevista
 
-`0.10.0` — Fase 05, Parte 04: Ajustes y Conteos Físicos (`stock_adjustments`/
-`stock_adjustment_lines`/`stock_adjustment_reasons`/`physical_counts`/`physical_count_lines`/
-`cycle_count_schedules`), sobre el motor de movimientos ya construido. Sin fecha comprometida.
+`0.11.0` — Fase 05, Parte 05: Recepciones, Salidas y Reglas de Almacén (`goods_receipts`/
+`goods_receipt_lines`/`goods_issues`/`goods_issue_lines`/`goods_issue_reasons`/`putaway_rules`/
+`picking_rules`/`replenishment_rules`), sobre el motor de movimientos ya construido. Sin fecha
+comprometida.
 
 ## Versionado del modelo de datos (track independiente)
 

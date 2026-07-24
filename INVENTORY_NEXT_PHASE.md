@@ -43,7 +43,11 @@ resumen abajo es el plan original, dejado tal cual para trazabilidad.
   `stock.quantity_reserved` — escribir el test de integración de
   sincronización en esta parte, no después.
 
-## Parte 04 — Ajustes y conteos físicos
+## Parte 04 — Ajustes y conteos físicos — ✅ completa (`v0.10.0`)
+
+Ver `INVENTORY_ADJUSTMENTS_REPORT.md`/`INVENTORY_PHYSICAL_COUNTS.md`/`INVENTORY_CYCLE_COUNT.md` para
+el detalle real de lo construido — el resumen abajo es el plan original, dejado tal cual para
+trazabilidad.
 
 - Tablas: `stock_adjustments`, `stock_adjustment_lines`,
   `stock_adjustment_reasons`, `physical_counts`, `physical_count_lines`,

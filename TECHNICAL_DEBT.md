@@ -1,7 +1,7 @@
 # Technical Debt — GORAZUS ERP
 
-> Actualizado FASE 05, Parte 03 — Reservas y Transferencias. Sesión
-> del 2026-07-23, versión **0.9.0**, rama `feature/inventory-core`.
+> Actualizado FASE 05, Parte 04 — Ajustes y Conteos Físicos. Sesión
+> del 2026-07-24, versión **0.10.0**, rama `feature/inventory-adjustments`.
 > Consolida deuda técnica ya dispersa en
 > `CHANGELOG.md` ("Pendiente conocido") y en los reportes de sesiones
 > previas, más lo detectado esta sesión — no repite el detalle completo
@@ -94,28 +94,38 @@ seguridad`) no marca el `sessionId` en la blacklist de Redis** —
   documentado con honestidad en `ROADMAP.md`, no oculto ni presentado
   como completo.
 - 🟡 **`modules/inventario` solo tiene Almacenes + motor de stock/
-  movimientos/reservas/transferencias, no Inventario completo** — 25 de
-  las 34 tablas de `core/database/prisma/schemas/inventory/` (ajustes,
-  conteos, recepciones/salidas, costeo FIFO/LIFO/promedio, series,
-  lotes, producción, reglas de reposición/putaway/picking) siguen sin
-  backend. Es el estado esperado del alcance de esta parte, ya diseñado
-  en `INVENTORY_ARCHITECTURE.md` y secuenciado en
-  `INVENTORY_NEXT_PHASE.md` — no un gap oculto.
-- 🟠 **Chequeo de stock suficiente sin locking explícito** —
-  `MovimientoStockRepositoryPrisma.aplicarMovimiento()` lee el saldo
-  actual y lo actualiza dentro de la misma transacción, pero sin
-  `SELECT ... FOR UPDATE` ni aislamiento `SERIALIZABLE` — dos
-  movimientos (o lotes de transferencia) concurrentes sobre el mismo
-  `(product_id, warehouse_id, location_id)` podrían, en el peor caso,
-  ambos leer el mismo saldo antes de que cualquiera de los dos escriba.
-  Extendido a `registrarLote` (Parte 03) sin agravarse ni resolverse.
-  Ningún otro repositorio del proyecto usa locking explícito todavía —
-  ver `INVENTORY_RESERVAS_TRANSFERENCIAS_REPORT.md §4`.
+  movimientos/reservas/transferencias/ajustes/conteos, no Inventario
+  completo** — 19 de las 34 tablas de
+  `core/database/prisma/schemas/inventory/` (recepciones/salidas, costeo
+  FIFO/LIFO/promedio, series, lotes, producción, reglas de reposición/
+  putaway/picking) siguen sin backend. Es el estado esperado del alcance
+  de esta parte, ya diseñado en `INVENTORY_ARCHITECTURE.md` y
+  secuenciado en `INVENTORY_NEXT_PHASE.md` — no un gap oculto.
+- 🟢 **(corregido, Parte 04) Chequeo de stock suficiente sin locking
+  explícito** — `MovimientoStockRepositoryPrisma.aplicarMovimiento()`
+  ahora bloquea la fila real (`SELECT ... FOR UPDATE`, `lockStockRow()`
+  en `repositories/stock-lock.util.ts`) antes de leer el saldo, con
+  reintento ante la carrera de inserción que detecta el índice único
+  real `uq_inventory_stock`. Aplicado también a reservas
+  (`ReservaStockRepositoryPrisma`). Verificado por build/lint/tests
+  unitarios — **no** verificado bajo concurrencia real contra Postgres
+  (requiere Docker arriba + prueba de carga dedicada, pendiente). Ver
+  `INVENTORY_HEALTH_REPORT.md §5.1`. Queda acá solo como registro de que
+  existió.
 - 🟢 **(corregido, Parte 03) Chequeo de stock suficiente comparaba
   contra `quantity_on_hand`, no contra `quantity_available`** — el
   `TODO` dejado en `0.8.0` se resolvió: ahora compara contra disponible
   real (`on_hand - reserved`), verificado en e2e. Queda acá solo como
   registro de que existió.
+- 🟡 **"Conteo doble" (dos capturas independientes por línea) no
+  soportado** (nuevo) — `inventory.physical_count_lines` solo tiene una
+  columna `counted_quantity`. Requeriría una columna o tabla nueva —
+  decisión de migración, no tomada. Ver `INVENTORY_PHYSICAL_COUNTS.md §2`.
+- 🟡 **Clasificación ABC/rotación para selección automática de conteos
+  cíclicos no soportada** (nuevo) — `inventory.cycle_count_schedules`
+  solo tiene `zone_id`/`frequency_days`/`next_run_date`, ninguna columna
+  de análisis. Requeriría una tabla de cálculo periódico nueva — fuera
+  de alcance, ver `INVENTORY_CYCLE_COUNT.md §3`.
 - 🟡 **Cancelar una transferencia ya `in_transit` no está soportado**
   (nuevo) — `TransferenciasService.cancelar()` solo permite la
   transición desde `draft`. Requeriría un movimiento de reversión que

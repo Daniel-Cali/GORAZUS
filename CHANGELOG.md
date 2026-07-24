@@ -642,6 +642,45 @@ DELETE /:id/empresas`, wirea `core.user_companies`, existente en el modelo certi
   `INVENTORY_RESERVAS_TRANSFERENCIAS_REPORT.md`, `INVENTORY_RESERVAS_TRANSFERENCIAS_API.md`,
   `INVENTORY_RESERVAS_TRANSFERENCIAS_TEST_REPORT.md`. `0.8.0` → `0.9.0` (`MINOR`).
 
+- **FASE 05 — Inventario Enterprise, Parte 04: Ajustes y Conteos Físicos (2026-07-24).**
+  Primer código real sobre `inventory.stock_adjustment_reasons`/`stock_adjustments`/
+  `stock_adjustment_lines`/`physical_counts`/`physical_count_lines`/`cycle_count_schedules` (6
+  tablas más, 15 de 34 en total). Nuevo: catálogo de motivos de ajuste (`code`/`name`, sembrado con
+  13 motivos: Daño, Pérdida, Robo, Error Humano, Diferencia de Conteo, Regularización, Producción,
+  Consumo Interno, Donación, Vencimiento, Ajuste Administrativo, Inventario Inicial, Otro). Ajustes
+  (`POST /inventario/ajustes`) resuelven `previousQuantity` del stock real al crear (no se le pide
+  al llamador); `confirmar` calcula la diferencia real por línea y genera `adjustment_increase`/
+  `adjustment_decrease` vía `MovimientosService.registrarLote`, reusando el motor multi-línea de
+  Parte 03 sin duplicar lógica. Conteos físicos (`POST /inventario/conteos`) arman líneas
+  explícitas o autogeneradas desde el stock real del almacén (filtrable por zona, join real vía
+  `stock.warehouse_locations.zone_id`); flujo `planned → in_progress → completed`; captura
+  deliberadamente ciega (`capturarLinea` nunca devuelve `system_quantity`); `completar` exige todas
+  las líneas capturadas y genera automáticamente un ajuste en **borrador** ante discrepancias
+  (motivo "Diferencia de Conteo", reusando `AjustesService.crear()` completo) — la confirmación de
+  ese ajuste queda para revisión humana aparte, nunca automática. Programación de conteos cíclicos
+  (`cycle_count_schedules`) con `frequency_days` genérico (cualquier período pedido se expresa en
+  días) y `POST /:id/generar` que crea un conteo real filtrado a la zona y avanza `next_run_date`.
+  **Concurrencia** (pedido explícito de esta parte): `lockStockRow()` (nuevo,
+  `repositories/stock-lock.util.ts`) ejecuta `SELECT ... FOR UPDATE` real dentro de la transacción
+  activa, aplicado al motor de movimientos (`aplicarMovimiento`, con reintento ante la carrera de
+  inserción que detecta el índice único real `uq_inventory_stock`) y a reservas — cierra el riesgo
+  de condición de carrera documentado sin resolver desde Parte 02. Mapeo explícito del pedido
+  original contra el schema real: los 12 "tipos de ajuste" pedidos no son una columna, son
+  aritmética (entrada/salida se derivan del signo de la diferencia) + el catálogo de motivos; los
+  11 "tipos de conteo" pedidos se resuelven con `productIds` explícito/autogenerado/filtrado por
+  zona — "por categoría/marca/proveedor" se compone con el módulo Productos ya existente, "doble" es
+  un gap real de schema documentado, no construido. Mismo permiso `inventario.gestionar_stock` (sin
+  permiso nuevo). 51 tests unitarios nuevos (8 suites: 4 entidades + 4 servicios) + 1 e2e nuevo
+  (`ajustes-conteos.controller.e2e-spec.ts`, flujo completo de ajuste y de conteo con verificación
+  numérica real de stock en cada paso, más programación cíclica con verificación de filtrado por
+  zona) — Docker no disponible durante toda la sesión (8ª sesión consecutiva), e2e reales pendientes
+  de reconfirmar (`INVENTORY_TEST_REPORT.md`, que también documenta un incidente de esta sesión:
+  procesos `jest-worker` huérfanos de corridas interrumpidas agotaron la memoria del sistema,
+  resuelto sin tocar código). Entregables nuevos: `INVENTORY_ADJUSTMENTS_REPORT.md`,
+  `INVENTORY_PHYSICAL_COUNTS.md`, `INVENTORY_CYCLE_COUNT.md`, `INVENTORY_TEST_REPORT.md`,
+  `INVENTORY_API.md`; `INVENTORY_HEALTH_REPORT.md` actualizado con addendum. `0.9.0` → `0.10.0`
+  (`MINOR`).
+
 ### Corregido
 
 - **FASE 2 Backend Core — 4 gaps reales de seguridad en el login, encontrados al auditar el módulo
