@@ -83,6 +83,13 @@ describe('MovimientosService', () => {
           stockActualizado: {} as never,
         };
       }),
+      registrarLote: jest.fn(async (_ctx: unknown, items: unknown[]) => {
+        if (registrarError) throw registrarError;
+        return items.map((_, i) => ({
+          movimiento: { id: `mv-lote-${i}` } as stock_movements,
+          stockActualizado: {} as never,
+        }));
+      }),
       listar: jest.fn(async () => ({ data: [], meta: { page: 1, pageSize: 20, total: 0 } })),
     } as unknown as MovimientoStockRepository;
 
@@ -173,6 +180,37 @@ describe('MovimientosService', () => {
   it('registrar: traduce StockInsuficienteError del repositorio a excepción de dominio', async () => {
     registrarError = new StockInsuficienteError(3, 10);
     await expect(buildService().registrar(CONTEXT, baseInput())).rejects.toThrow(
+      StockInsuficienteException,
+    );
+  });
+
+  it('registrarLote: valida cada item y delega al repositorio en un solo llamado', async () => {
+    const movimientos = await buildService().registrarLote(CONTEXT, [
+      baseInput({ productId: 'p-1' }),
+      baseInput({ productId: 'p-2' }),
+    ]);
+    expect(movimientos).toHaveLength(2);
+    expect(movimientoRepository.registrarLote).toHaveBeenCalledTimes(1);
+    expect(movimientoRepository.registrarLote).toHaveBeenCalledWith(
+      CONTEXT,
+      expect.arrayContaining([
+        expect.objectContaining({ productId: 'p-1' }),
+        expect.objectContaining({ productId: 'p-2' }),
+      ]),
+    );
+  });
+
+  it('registrarLote: rechaza si cualquier item referencia un producto inexistente', async () => {
+    productoValido = false;
+    await expect(buildService().registrarLote(CONTEXT, [baseInput()])).rejects.toThrow(
+      ProductoInvalidoException,
+    );
+    expect(movimientoRepository.registrarLote).not.toHaveBeenCalled();
+  });
+
+  it('registrarLote: traduce StockInsuficienteError del repositorio', async () => {
+    registrarError = new StockInsuficienteError(3, 10);
+    await expect(buildService().registrarLote(CONTEXT, [baseInput()])).rejects.toThrow(
       StockInsuficienteException,
     );
   });

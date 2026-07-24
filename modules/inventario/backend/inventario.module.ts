@@ -7,6 +7,8 @@ import { TiposMovimientoController } from './controllers/tipos-movimiento.contro
 import { StockController } from './controllers/stock.controller';
 import { MovimientosController } from './controllers/movimientos.controller';
 import { KardexController } from './controllers/kardex.controller';
+import { ReservasController } from './controllers/reservas.controller';
+import { TransferenciasController } from './controllers/transferencias.controller';
 import { AlmacenesService } from './services/almacenes.service';
 import { ZonasAlmacenService } from './services/zonas-almacen.service';
 import { UbicacionesAlmacenService } from './services/ubicaciones-almacen.service';
@@ -14,6 +16,8 @@ import { TiposMovimientoService } from './services/tipos-movimiento.service';
 import { StockService } from './services/stock.service';
 import { MovimientosService } from './services/movimientos.service';
 import { KardexService } from './services/kardex.service';
+import { ReservasService } from './services/reservas.service';
+import { TransferenciasService } from './services/transferencias.service';
 import { AlmacenRepository } from './repositories/almacen.repository';
 import { AlmacenRepositoryPrisma } from './repositories/almacen.repository.prisma';
 import { ZonaAlmacenRepository } from './repositories/zona-almacen.repository';
@@ -32,15 +36,21 @@ import { MovimientoStockRepository } from './repositories/movimiento-stock.repos
 import { MovimientoStockRepositoryPrisma } from './repositories/movimiento-stock.repository.prisma';
 import { KardexRepository } from './repositories/kardex.repository';
 import { KardexRepositoryPrisma } from './repositories/kardex.repository.prisma';
+import { ReservaStockRepository } from './repositories/reserva-stock.repository';
+import { ReservaStockRepositoryPrisma } from './repositories/reserva-stock.repository.prisma';
+import { TransferenciaRepository } from './repositories/transferencia.repository';
+import { TransferenciaRepositoryPrisma } from './repositories/transferencia.repository.prisma';
 
 /**
  * `inventario` — Almacenes (FASE 03, continuidad): estructura física
- * Almacén → Zona → Ubicación (`docs/architecture/19-modulo-inventory.md`
- * §1-2). FASE 05 Parte 02 agrega el motor de stock y movimientos
- * (`stock`/`stock_movement_types`/`stock_movements`, `INVENTORY_ARCHITECTURE.md
- * §6`) — el resto del schema `inventory` (reservas, transferencias,
- * ajustes, conteos, recepciones, salidas, costeo, series, lotes,
- * producción) sigue sin código, ver `INVENTORY_NEXT_PHASE.md`.
+ * Almacén → Zona → Ubicación. FASE 05 Parte 02 agregó el motor de stock
+ * y movimientos (`stock`/`stock_movement_types`/`stock_movements`,
+ * `INVENTORY_ARCHITECTURE.md §6`). FASE 05 Parte 03 agrega Reservas
+ * (`stock_reservations`) y Transferencias (`stock_transfers`/
+ * `stock_transfer_lines`), ambas orquestando el motor de movimientos ya
+ * construido — el resto del schema `inventory` (ajustes, conteos,
+ * recepciones, salidas, costeo, series, lotes, producción) sigue sin
+ * código, ver `INVENTORY_NEXT_PHASE.md`.
  */
 @Module({
   imports: [DatabaseModule],
@@ -52,6 +62,8 @@ import { KardexRepositoryPrisma } from './repositories/kardex.repository.prisma'
     StockController,
     MovimientosController,
     KardexController,
+    ReservasController,
+    TransferenciasController,
   ],
   providers: [
     AlmacenesService,
@@ -61,6 +73,8 @@ import { KardexRepositoryPrisma } from './repositories/kardex.repository.prisma'
     StockService,
     MovimientosService,
     KardexService,
+    ReservasService,
+    TransferenciasService,
     { provide: AlmacenRepository, useClass: AlmacenRepositoryPrisma },
     { provide: ZonaAlmacenRepository, useClass: ZonaAlmacenRepositoryPrisma },
     { provide: UbicacionAlmacenRepository, useClass: UbicacionAlmacenRepositoryPrisma },
@@ -73,6 +87,8 @@ import { KardexRepositoryPrisma } from './repositories/kardex.repository.prisma'
     { provide: StockRepository, useClass: StockRepositoryPrisma },
     { provide: MovimientoStockRepository, useClass: MovimientoStockRepositoryPrisma },
     { provide: KardexRepository, useClass: KardexRepositoryPrisma },
+    { provide: ReservaStockRepository, useClass: ReservaStockRepositoryPrisma },
+    { provide: TransferenciaRepository, useClass: TransferenciaRepositoryPrisma },
   ],
 })
 export class InventarioModule {}

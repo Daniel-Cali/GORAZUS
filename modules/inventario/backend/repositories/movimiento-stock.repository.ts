@@ -45,6 +45,16 @@ export abstract class MovimientoStockRepository {
     params: RegistrarMovimientoParams,
   ): Promise<{ movimiento: stock_movements; stockActualizado: stock }>;
 
+  /**
+   * Igual que `registrar`, pero para varios movimientos en la MISMA
+   * transacción — Parte 03 (Transferencias): una transferencia con varias
+   * líneas se aplica completa o nada, nunca a medio camino.
+   */
+  abstract registrarLote(
+    context: UserContext,
+    items: RegistrarMovimientoParams[],
+  ): Promise<Array<{ movimiento: stock_movements; stockActualizado: stock }>>;
+
   abstract listar(
     context: UserContext,
     filter: InventoryPrisma.stock_movementsWhereInput,

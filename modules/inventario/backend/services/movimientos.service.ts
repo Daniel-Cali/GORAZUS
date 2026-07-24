@@ -6,6 +6,7 @@ import { DomainException } from '@gorazus/core-http';
 import {
   MovimientoStockRepository,
   StockInsuficienteError,
+  type RegistrarMovimientoParams,
 } from '../repositories/movimiento-stock.repository';
 import { TipoMovimientoStockRepository } from '../repositories/tipo-movimiento-stock.repository';
 import { ProductoLookupRepository } from '../repositories/producto-lookup.repository';
@@ -51,10 +52,11 @@ export class StockInsuficienteException extends DomainException {
 /**
  * Motor de movimientos — única puerta de entrada para modificar
  * `inventory.stock` (`INVENTORY_ARCHITECTURE.md §6`). Cualquier módulo
- * futuro (Compras, Ventas, Producción — Parte 03 en adelante de esta
- * fase) registra sus entradas/salidas acá, nunca tocando `stock`
- * directo — mismo `source_module`/`source_entity_id` polimórfico que ya
- * documenta `docs/architecture/19-modulo-inventory.md`.
+ * futuro (Compras, Ventas, Producción) y las propias Transferencias
+ * (Parte 03, `TransferenciasService`) registran sus entradas/salidas
+ * acá, nunca tocando `stock` directo — mismo `source_module`/
+ * `source_entity_id` polimórfico que ya documenta
+ * `docs/architecture/19-modulo-inventory.md`.
  */
 @Injectable()
 export class MovimientosService {
@@ -66,7 +68,10 @@ export class MovimientosService {
     private readonly ubicacionRepository: UbicacionAlmacenRepository,
   ) {}
 
-  async registrar(context: UserContext, input: RegistrarMovimientoInput): Promise<stock_movements> {
+  private async resolverYValidar(
+    context: UserContext,
+    input: RegistrarMovimientoInput,
+  ): Promise<RegistrarMovimientoParams> {
     const tipo = await this.tipoMovimientoRepository.findById(context, {
       id: input.movementTypeId,
     });
@@ -99,22 +104,44 @@ export class MovimientosService {
       if (!ubicacion) throw new UbicacionInvalidaException(input.locationId);
     }
 
+    return {
+      companyId: almacen.company_id,
+      branchId: almacen.branch_id,
+      productId: input.productId,
+      warehouseId: input.warehouseId,
+      locationId: input.locationId ?? null,
+      movementTypeId: input.movementTypeId,
+      direction,
+      quantity: input.quantity,
+      unitCost: input.unitCost ?? null,
+      sourceModule: input.sourceModule ?? null,
+      sourceEntityId: input.sourceEntityId ?? null,
+      observations: input.observations ?? null,
+    };
+  }
+
+  async registrar(context: UserContext, input: RegistrarMovimientoInput): Promise<stock_movements> {
+    const params = await this.resolverYValidar(context, input);
     try {
-      const { movimiento } = await this.movimientoRepository.registrar(context, {
-        companyId: almacen.company_id,
-        branchId: almacen.branch_id,
-        productId: input.productId,
-        warehouseId: input.warehouseId,
-        locationId: input.locationId ?? null,
-        movementTypeId: input.movementTypeId,
-        direction,
-        quantity: input.quantity,
-        unitCost: input.unitCost ?? null,
-        sourceModule: input.sourceModule ?? null,
-        sourceEntityId: input.sourceEntityId ?? null,
-        observations: input.observations ?? null,
-      });
+      const { movimiento } = await this.movimientoRepository.registrar(context, params);
       return movimiento;
+    } catch (error) {
+      if (error instanceof StockInsuficienteError) {
+        throw new StockInsuficienteException(error.disponible, error.solicitado);
+      }
+      throw error;
+    }
+  }
+
+  /** Igual que `registrar`, pero atómico para varios movimientos — usado por `TransferenciasService`. */
+  async registrarLote(
+    context: UserContext,
+    inputs: RegistrarMovimientoInput[],
+  ): Promise<stock_movements[]> {
+    const items = await Promise.all(inputs.map((input) => this.resolverYValidar(context, input)));
+    try {
+      const resultados = await this.movimientoRepository.registrarLote(context, items);
+      return resultados.map((r) => r.movimiento);
     } catch (error) {
       if (error instanceof StockInsuficienteError) {
         throw new StockInsuficienteException(error.disponible, error.solicitado);
