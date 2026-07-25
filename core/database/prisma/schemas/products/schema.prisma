@@ -2,7 +2,6 @@ generator client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -35,6 +34,7 @@ model bill_of_materials {
   products                                  products            @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   bom_components                            bom_components[]
 
+  @@index([product_id], map: "idx_products_bill_of_materials_product_id")
   @@schema("products")
 }
 
@@ -62,6 +62,7 @@ model bom_components {
   bill_of_materials                      bill_of_materials @relation(fields: [bom_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   products                               products          @relation(fields: [component_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([component_product_id], map: "idx_products_bom_components_component_product_id")
   @@schema("products")
 }
 
@@ -193,6 +194,7 @@ model product_attribute_values {
   product_attributes                               product_attributes                     @relation(fields: [attribute_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   product_variant_attribute_values                 product_variant_attribute_values[]
 
+  @@index([attribute_id], map: "idx_products_product_attribute_values_attribute_id")
   @@schema("products")
 }
 
@@ -200,7 +202,7 @@ model product_attributes {
   id                                         String                           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   local_id                                   BigInt                           @unique @default(autoincrement())
   tenant_id                                  String                           @db.Uuid
-  company_id                                 String                           @db.Uuid
+  company_id                                 String?                          @db.Uuid
   branch_id                                  String?                          @db.Uuid
   created_at                                 DateTime                         @default(now()) @db.Timestamptz(6)
   updated_at                                 DateTime                         @default(now()) @db.Timestamptz(6)
@@ -244,6 +246,7 @@ model product_barcodes {
   barcode_type                             String     @default("gtin")
   products                                 products   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_products_product_barcodes_product_id")
   @@schema("products")
 }
 
@@ -272,6 +275,7 @@ model product_categories {
   product_category_translations              product_category_translations[]
   products                                   products[]
 
+  @@index([parent_category_id], map: "idx_products_product_categories_parent_category_id")
   @@schema("products")
 }
 
@@ -350,6 +354,8 @@ model product_combo_components {
   product_combos                                   product_combos @relation(fields: [combo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   products                                         products       @relation(fields: [component_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([combo_id], map: "idx_products_product_combo_components_combo_id")
+  @@index([component_product_id], map: "idx_products_product_combo_components_component_product_id")
   @@schema("products")
 }
 
@@ -426,6 +432,8 @@ model product_images {
   display_order                          Int        @default(0) @db.SmallInt
   products                               products   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([file_id], map: "idx_products_product_images_file_id")
+  @@index([product_id], map: "idx_products_product_images_product_id")
   @@schema("products")
 }
 
@@ -453,6 +461,8 @@ model product_kit_components {
   products                                       products     @relation(fields: [component_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   product_kits                                   product_kits @relation(fields: [kit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([component_product_id], map: "idx_products_product_kit_components_component_product_id")
+  @@index([kit_id], map: "idx_products_product_kit_components_kit_id")
   @@schema("products")
 }
 
@@ -529,6 +539,7 @@ model product_models {
   brands                                 brands     @relation(fields: [brand_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   products                               products[]
 
+  @@index([brand_id], map: "idx_products_product_models_brand_id")
   @@schema("products")
 }
 
@@ -557,6 +568,8 @@ model product_presentations {
   products                                      products         @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   units_of_measure                              units_of_measure @relation(fields: [unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_products_product_presentations_product_id")
+  @@index([unit_id], map: "idx_products_product_presentations_unit_id")
   @@schema("products")
 }
 
@@ -584,6 +597,7 @@ model product_price_history {
   new_value                                     Decimal    @db.Decimal(18, 4)
   products                                      products   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_products_product_price_history_product_id")
   @@schema("products")
 }
 
@@ -611,6 +625,7 @@ model product_related_products {
   products_product_related_products_product_idToproducts         products   @relation("product_related_products_product_idToproducts", fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   products_product_related_products_related_product_idToproducts products   @relation("product_related_products_related_product_idToproducts", fields: [related_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([related_product_id], map: "idx_products_product_related_products_related_product_id")
   @@schema("products")
 }
 
@@ -638,6 +653,8 @@ model product_reviews {
   comment                                 String?
   products                                products   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([customer_id], map: "idx_products_product_reviews_customer_id")
+  @@index([product_id], map: "idx_products_product_reviews_product_id")
   @@schema("products")
 }
 
@@ -667,6 +684,7 @@ model product_suppliers {
   last_purchase_cost                        Decimal?   @db.Decimal(18, 4)
   products                                  products   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([supplier_id], map: "idx_products_product_suppliers_supplier_id")
   @@schema("products")
 }
 
@@ -692,6 +710,8 @@ model product_tax_profiles {
   tax_id                                       String     @db.Uuid
   products                                     products   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_products_product_tax_profiles_product_id")
+  @@index([tax_id], map: "idx_products_product_tax_profiles_tax_id")
   @@schema("products")
 }
 
@@ -745,6 +765,7 @@ model product_variant_attribute_values {
   product_attribute_values                                 product_attribute_values @relation(fields: [attribute_value_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   products                                                 products                 @relation(fields: [variant_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([attribute_value_id], map: "idx_products_product_variant_attribute_values_attribute_value_i")
   @@schema("products")
 }
 
@@ -770,6 +791,8 @@ model product_videos {
   file_id                                String     @db.Uuid
   products                               products   @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([file_id], map: "idx_products_product_videos_file_id")
+  @@index([product_id], map: "idx_products_product_videos_product_id")
   @@schema("products")
 }
 
@@ -806,6 +829,10 @@ model products {
   tracks_lot                                                                     Boolean                            @default(false)
   standard_cost                                                                  Decimal?                           @db.Decimal(18, 4)
   list_price                                                                     Decimal?                           @db.Decimal(18, 4)
+  is_hazardous_material                                                          Boolean                            @default(false)
+  hazmat_classification                                                          String?
+  safety_data_sheet_file_id                                                      String?                            @db.Uuid
+  lifecycle_status                                                               String                             @default("active")
   bill_of_materials                                                              bill_of_materials[]
   bom_components                                                                 bom_components[]
   product_barcodes                                                               product_barcodes[]
@@ -814,6 +841,7 @@ model products {
   product_images                                                                 product_images[]
   product_kit_components                                                         product_kit_components[]
   product_kits                                                                   product_kits[]
+  product_physical_attributes                                                    product_physical_attributes?
   product_presentations                                                          product_presentations[]
   product_price_history                                                          product_price_history[]
   product_related_products_product_related_products_product_idToproducts         product_related_products[]         @relation("product_related_products_product_idToproducts")
@@ -838,6 +866,14 @@ model products {
   unit_conversions                                                               unit_conversions[]
 
   @@index([metadata(ops: JsonbPathOps)], map: "idx_products_products_metadata", type: Gin)
+  @@index([base_unit_id], map: "idx_products_products_base_unit_id")
+  @@index([brand_id], map: "idx_products_products_brand_id")
+  @@index([category_id], map: "idx_products_products_category_id")
+  @@index([collection_id], map: "idx_products_products_collection_id")
+  @@index([family_id], map: "idx_products_products_family_id")
+  @@index([line_id], map: "idx_products_products_line_id")
+  @@index([model_id], map: "idx_products_products_model_id")
+  @@index([parent_product_id], map: "idx_products_products_parent_product_id")
   @@schema("products")
 }
 
@@ -865,6 +901,8 @@ model recipe_ingredients {
   products                                   products   @relation(fields: [ingredient_product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   recipes                                    recipes    @relation(fields: [recipe_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([ingredient_product_id], map: "idx_products_recipe_ingredients_ingredient_product_id")
+  @@index([recipe_id], map: "idx_products_recipe_ingredients_recipe_id")
   @@schema("products")
 }
 
@@ -893,6 +931,8 @@ model recipes {
   products                        products             @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   units_of_measure                units_of_measure?    @relation(fields: [yield_unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_products_recipes_product_id")
+  @@index([yield_unit_id], map: "idx_products_recipes_yield_unit_id")
   @@schema("products")
 }
 
@@ -922,6 +962,9 @@ model unit_conversions {
   products                                                         products         @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   units_of_measure_unit_conversions_to_unit_idTounits_of_measure   units_of_measure @relation("unit_conversions_to_unit_idTounits_of_measure", fields: [to_unit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([from_unit_id], map: "idx_products_unit_conversions_from_unit_id")
+  @@index([product_id], map: "idx_products_unit_conversions_product_id")
+  @@index([to_unit_id], map: "idx_products_unit_conversions_to_unit_id")
   @@schema("products")
 }
 
@@ -977,6 +1020,36 @@ model units_of_measure {
   unit_conversions_unit_conversions_from_unit_idTounits_of_measure unit_conversions[]             @relation("unit_conversions_from_unit_idTounits_of_measure")
   unit_conversions_unit_conversions_to_unit_idTounits_of_measure   unit_conversions[]             @relation("unit_conversions_to_unit_idTounits_of_measure")
   unit_of_measure_translations                                     unit_of_measure_translations[]
+
+  @@schema("products")
+}
+
+model product_physical_attributes {
+  id                                                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                            BigInt    @unique @default(autoincrement())
+  tenant_id                                           String    @db.Uuid
+  company_id                                          String    @db.Uuid
+  branch_id                                           String?   @db.Uuid
+  created_at                                          DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                                          DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at                                          DateTime? @db.Timestamptz(6)
+  created_by                                          String?   @db.Uuid
+  updated_by                                          String?   @db.Uuid
+  deleted_by                                          String?   @db.Uuid
+  version                                             Int       @default(1)
+  row_version                                         BigInt    @default(0)
+  is_active                                           Boolean   @default(true)
+  is_deleted                                          Boolean?  @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                        String?
+  metadata                                            Json      @default("{}")
+  product_id                                          String    @unique @db.Uuid
+  requires_manufacture_date                           Boolean   @default(false)
+  weight_kg                                           Decimal?  @db.Decimal(12, 4)
+  length_cm                                           Decimal?  @db.Decimal(12, 4)
+  width_cm                                            Decimal?  @db.Decimal(12, 4)
+  height_cm                                           Decimal?  @db.Decimal(12, 4)
+  volume_m3                                           Decimal?  @db.Decimal(12, 6)
+  products                                            products  @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@schema("products")
 }

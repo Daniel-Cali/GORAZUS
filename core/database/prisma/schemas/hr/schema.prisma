@@ -2,7 +2,6 @@ generator client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -63,6 +62,8 @@ model attendance_records {
 
   @@id([id, checked_at])
   @@unique([local_id, checked_at])
+  @@index([device_id], map: "idx_hr_attendance_records_device_id")
+  @@index([employee_id], map: "idx_hr_attendance_records_employee_id")
   @@schema("hr")
 }
 
@@ -89,6 +90,8 @@ model candidate_stage_history {
   candidates                                      candidates       @relation(fields: [candidate_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   candidate_stages                                candidate_stages @relation(fields: [stage_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([candidate_id], map: "idx_hr_candidate_stage_history_candidate_id")
+  @@index([stage_id], map: "idx_hr_candidate_stage_history_stage_id")
   @@schema("hr")
 }
 
@@ -145,6 +148,9 @@ model candidates {
   candidate_stages                   candidate_stages?         @relation(fields: [current_stage_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   job_vacancies                      job_vacancies             @relation(fields: [vacancy_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([current_stage_id], map: "idx_hr_candidates_current_stage_id")
+  @@index([resume_file_id], map: "idx_hr_candidates_resume_file_id")
+  @@index([vacancy_id], map: "idx_hr_candidates_vacancy_id")
   @@schema("hr")
 }
 
@@ -220,6 +226,8 @@ model disciplinary_actions {
   disciplinary_action_types                    disciplinary_action_types @relation(fields: [action_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   employees                                    employees                 @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([action_type_id], map: "idx_hr_disciplinary_actions_action_type_id")
+  @@index([employee_id], map: "idx_hr_disciplinary_actions_employee_id")
   @@schema("hr")
 }
 
@@ -245,6 +253,8 @@ model employee_asset_assignments {
   asset_id                                           String       @db.Uuid
   employees                                          employees    @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([asset_id], map: "idx_hr_employee_asset_assignments_asset_id")
+  @@index([employee_id], map: "idx_hr_employee_asset_assignments_employee_id")
   @@schema("hr")
 }
 
@@ -271,6 +281,7 @@ model employee_bank_accounts {
   account_number_encrypted                       String
   employees                                      employees  @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([employee_id], map: "idx_hr_employee_bank_accounts_employee_id")
   @@schema("hr")
 }
 
@@ -302,6 +313,9 @@ model employee_contracts {
   employees                                  employees      @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   job_positions                              job_positions  @relation(fields: [job_position_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([contract_type_id], map: "idx_hr_employee_contracts_contract_type_id")
+  @@index([employee_id], map: "idx_hr_employee_contracts_employee_id")
+  @@index([job_position_id], map: "idx_hr_employee_contracts_job_position_id")
   @@schema("hr")
 }
 
@@ -329,6 +343,7 @@ model employee_dependents {
   relationship                                String
   employees                                   employees  @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([employee_id], map: "idx_hr_employee_dependents_employee_id")
   @@schema("hr")
 }
 
@@ -356,6 +371,7 @@ model employee_emergency_contacts {
   relationship                                        String?
   employees                                           employees  @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([employee_id], map: "idx_hr_employee_emergency_contacts_employee_id")
   @@schema("hr")
 }
 
@@ -383,6 +399,7 @@ model employee_skills {
   employees                               employees      @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   skills_catalog                          skills_catalog @relation(fields: [skill_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([skill_id], map: "idx_hr_employee_skills_skill_id")
   @@schema("hr")
 }
 
@@ -423,6 +440,8 @@ model employees {
   training_enrollments              training_enrollments[]
   vacation_balances                 vacation_balances[]
 
+  @@index([department_id], map: "idx_hr_employees_department_id")
+  @@index([user_id], map: "idx_hr_employees_user_id")
   @@schema("hr")
 }
 
@@ -451,6 +470,7 @@ model job_positions {
   employee_contracts                    employee_contracts[]
   job_vacancies                         job_vacancies[]
 
+  @@index([department_id], map: "idx_hr_job_positions_department_id")
   @@schema("hr")
 }
 
@@ -477,6 +497,7 @@ model job_vacancies {
   candidates                            candidates[]
   job_positions                         job_positions @relation(fields: [job_position_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([job_position_id], map: "idx_hr_job_vacancies_job_position_id")
   @@schema("hr")
 }
 
@@ -529,6 +550,9 @@ model leave_request_status_history {
   leave_requests                                               leave_requests       @relation(fields: [leave_request_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   leave_request_status                                         leave_request_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([decided_by_user_id], map: "idx_hr_leave_request_status_history_decided_by_user_id")
+  @@index([leave_request_id], map: "idx_hr_leave_request_status_history_leave_request_id")
+  @@index([status_id], map: "idx_hr_leave_request_status_history_status_id")
   @@schema("hr")
 }
 
@@ -560,6 +584,8 @@ model leave_requests {
   leave_types                            leave_types                    @relation(fields: [leave_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   leave_request_status                   leave_request_status           @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([leave_type_id], map: "idx_hr_leave_requests_leave_type_id")
+  @@index([status_id], map: "idx_hr_leave_requests_status_id")
   @@schema("hr")
 }
 
@@ -637,6 +663,8 @@ model performance_evaluation_scores {
   performance_evaluation_criteria                       performance_evaluation_criteria @relation(fields: [criteria_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   performance_evaluations                               performance_evaluations         @relation(fields: [evaluation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([criteria_id], map: "idx_hr_performance_evaluation_scores_criteria_id")
+  @@index([evaluation_id], map: "idx_hr_performance_evaluation_scores_evaluation_id")
   @@schema("hr")
 }
 
@@ -664,6 +692,8 @@ model performance_evaluations {
   performance_evaluation_scores                             performance_evaluation_scores[]
   employees                                                 employees                       @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([employee_id], map: "idx_hr_performance_evaluations_employee_id")
+  @@index([evaluated_by_user_id], map: "idx_hr_performance_evaluations_evaluated_by_user_id")
   @@schema("hr")
 }
 
@@ -715,6 +745,8 @@ model training_enrollments {
   employees                                    employees  @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   trainings                                    trainings  @relation(fields: [training_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([employee_id], map: "idx_hr_training_enrollments_employee_id")
+  @@index([training_id], map: "idx_hr_training_enrollments_training_id")
   @@schema("hr")
 }
 

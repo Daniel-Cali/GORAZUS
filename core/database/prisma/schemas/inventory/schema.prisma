@@ -2,7 +2,6 @@ generator client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -34,6 +33,8 @@ model average_cost_history {
   new_average_cost                             Decimal    @db.Decimal(18, 4)
   warehouses                                   warehouses @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_inventory_average_cost_history_product_id")
+  @@index([warehouse_id], map: "idx_inventory_average_cost_history_warehouse_id")
   @@schema("inventory")
 }
 
@@ -60,6 +61,7 @@ model cycle_count_schedules {
   next_run_date                                 DateTime?       @db.Date
   warehouse_zones                               warehouse_zones @relation(fields: [zone_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([zone_id], map: "idx_inventory_cycle_count_schedules_zone_id")
   @@schema("inventory")
 }
 
@@ -90,6 +92,9 @@ model fifo_cost_layers {
   goods_receipt_lines                      goods_receipt_lines? @relation(fields: [source_receipt_line_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   warehouses                               warehouses           @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_inventory_fifo_cost_layers_product_id")
+  @@index([source_receipt_line_id], map: "idx_inventory_fifo_cost_layers_source_receipt_line_id")
+  @@index([warehouse_id], map: "idx_inventory_fifo_cost_layers_warehouse_id")
   @@schema("inventory")
 }
 
@@ -116,6 +121,8 @@ model goods_issue_lines {
   quantity                                  Decimal      @db.Decimal(18, 6)
   goods_issues                              goods_issues @relation(fields: [issue_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([issue_id], map: "idx_inventory_goods_issue_lines_issue_id")
+  @@index([product_id], map: "idx_inventory_goods_issue_lines_product_id")
   @@schema("inventory")
 }
 
@@ -169,6 +176,8 @@ model goods_issues {
   goods_issue_reasons                  goods_issue_reasons? @relation(fields: [reason_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   warehouses                           warehouses           @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([reason_id], map: "idx_inventory_goods_issues_reason_id")
+  @@index([warehouse_id], map: "idx_inventory_goods_issues_warehouse_id")
   @@schema("inventory")
 }
 
@@ -197,6 +206,8 @@ model goods_receipt_lines {
   fifo_cost_layers                            fifo_cost_layers[]
   goods_receipts                              goods_receipts     @relation(fields: [receipt_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_inventory_goods_receipt_lines_product_id")
+  @@index([receipt_id], map: "idx_inventory_goods_receipt_lines_receipt_id")
   @@schema("inventory")
 }
 
@@ -224,6 +235,7 @@ model goods_receipts {
   goods_receipt_lines                    goods_receipt_lines[]
   warehouses                             warehouses            @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([warehouse_id], map: "idx_inventory_goods_receipts_warehouse_id")
   @@schema("inventory")
 }
 
@@ -252,6 +264,7 @@ model inventory_lots {
   remaining_quantity                     Decimal     @default(0) @db.Decimal(18, 6)
   warehouses                             warehouses? @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([warehouse_id], map: "idx_inventory_inventory_lots_warehouse_id")
   @@schema("inventory")
 }
 
@@ -277,8 +290,10 @@ model inventory_serials {
   warehouse_id                              String?     @db.Uuid
   serial_number                             String
   status                                    String      @default("in_stock")
+  unit_cost                                 Decimal?    @db.Decimal(18, 4)
   warehouses                                warehouses? @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([warehouse_id], map: "idx_inventory_inventory_serials_warehouse_id")
   @@schema("inventory")
 }
 
@@ -307,6 +322,8 @@ model lifo_cost_layers {
   unit_cost                                Decimal    @db.Decimal(18, 4)
   warehouses                               warehouses @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_inventory_lifo_cost_layers_product_id")
+  @@index([warehouse_id], map: "idx_inventory_lifo_cost_layers_warehouse_id")
   @@schema("inventory")
 }
 
@@ -334,6 +351,8 @@ model physical_count_lines {
   counted_quantity                             Decimal?        @db.Decimal(18, 6)
   physical_counts                              physical_counts @relation(fields: [physical_count_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([physical_count_id], map: "idx_inventory_physical_count_lines_physical_count_id")
+  @@index([product_id], map: "idx_inventory_physical_count_lines_product_id")
   @@schema("inventory")
 }
 
@@ -361,6 +380,7 @@ model physical_counts {
   physical_count_lines                    physical_count_lines[]
   warehouses                              warehouses             @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([warehouse_id], map: "idx_inventory_physical_counts_warehouse_id")
   @@schema("inventory")
 }
 
@@ -386,6 +406,7 @@ model picking_rules {
   strategy                              String
   warehouses                            warehouses @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([warehouse_id], map: "idx_inventory_picking_rules_warehouse_id")
   @@schema("inventory")
 }
 
@@ -414,6 +435,8 @@ model production_consumptions {
 
   @@id([id, created_at])
   @@unique([local_id, created_at])
+  @@index([component_product_id], map: "idx_inventory_production_consumptions_component_product_id")
+  @@index([production_order_id], map: "idx_inventory_production_consumptions_production_order_id")
   @@schema("inventory")
 }
 
@@ -440,6 +463,8 @@ model production_order_components {
   planned_quantity                                    Decimal           @db.Decimal(18, 6)
   production_orders                                   production_orders @relation(fields: [production_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([component_product_id], map: "idx_inventory_production_order_components_component_product_id")
+  @@index([production_order_id], map: "idx_inventory_production_order_components_production_order_id")
   @@schema("inventory")
 }
 
@@ -466,6 +491,8 @@ model production_order_outputs {
   quantity                                         Decimal           @db.Decimal(18, 6)
   production_orders                                production_orders @relation(fields: [production_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_inventory_production_order_outputs_product_id")
+  @@index([production_order_id], map: "idx_inventory_production_order_outputs_production_order_id")
   @@schema("inventory")
 }
 
@@ -518,6 +545,8 @@ model production_order_status_history {
   production_orders                                       production_orders       @relation(fields: [production_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   production_order_status                                 production_order_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([production_order_id], map: "idx_inventory_production_order_status_history_production_order_")
+  @@index([status_id], map: "idx_inventory_production_order_status_history_status_id")
   @@schema("inventory")
 }
 
@@ -551,6 +580,9 @@ model production_orders {
   production_order_status                   production_order_status           @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   warehouses                                warehouses                        @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([bom_id], map: "idx_inventory_production_orders_bom_id")
+  @@index([status_id], map: "idx_inventory_production_orders_status_id")
+  @@index([warehouse_id], map: "idx_inventory_production_orders_warehouse_id")
   @@schema("inventory")
 }
 
@@ -579,6 +611,9 @@ model putaway_rules {
   warehouse_zones                       warehouse_zones     @relation(fields: [target_zone_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   warehouses                            warehouses          @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_category_id], map: "idx_inventory_putaway_rules_product_category_id")
+  @@index([target_zone_id], map: "idx_inventory_putaway_rules_target_zone_id")
+  @@index([warehouse_id], map: "idx_inventory_putaway_rules_warehouse_id")
   @@schema("inventory")
 }
 
@@ -606,6 +641,8 @@ model replenishment_rules {
   max_quantity                                Decimal    @db.Decimal(18, 6)
   warehouses                                  warehouses @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_inventory_replenishment_rules_product_id")
+  @@index([warehouse_id], map: "idx_inventory_replenishment_rules_warehouse_id")
   @@schema("inventory")
 }
 
@@ -635,6 +672,8 @@ model stock {
   warehouse_locations           warehouse_locations? @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   warehouses                    warehouses           @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([location_id], map: "idx_inventory_stock_location_id")
+  @@index([warehouse_id], map: "idx_inventory_stock_warehouse_id")
   @@schema("inventory")
 }
 
@@ -662,6 +701,8 @@ model stock_adjustment_lines {
   new_quantity                                   Decimal           @db.Decimal(18, 6)
   stock_adjustments                              stock_adjustments @relation(fields: [adjustment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([adjustment_id], map: "idx_inventory_stock_adjustment_lines_adjustment_id")
+  @@index([product_id], map: "idx_inventory_stock_adjustment_lines_product_id")
   @@schema("inventory")
 }
 
@@ -714,6 +755,8 @@ model stock_adjustments {
   stock_adjustment_reasons                  stock_adjustment_reasons @relation(fields: [reason_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   warehouses                                warehouses               @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([reason_id], map: "idx_inventory_stock_adjustments_reason_id")
+  @@index([warehouse_id], map: "idx_inventory_stock_adjustments_warehouse_id")
   @@schema("inventory")
 }
 
@@ -773,6 +816,9 @@ model stock_movements {
   @@id([id, created_at])
   @@unique([local_id, created_at])
   @@index([product_id, warehouse_id, created_at], map: "idx_inventory_stock_movements_product")
+  @@index([created_at], map: "idx_inventory_stock_movements_created_brin", type: Brin)
+  @@index([movement_type_id], map: "idx_inventory_stock_movements_movement_type_id")
+  @@index([warehouse_id], map: "idx_inventory_stock_movements_warehouse_id")
   @@schema("inventory")
 }
 
@@ -802,6 +848,8 @@ model stock_reservations {
   released_at                                DateTime?  @db.Timestamptz(6)
   warehouses                                 warehouses @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_inventory_stock_reservations_product_id")
+  @@index([warehouse_id], map: "idx_inventory_stock_reservations_warehouse_id")
   @@schema("inventory")
 }
 
@@ -828,6 +876,8 @@ model stock_transfer_lines {
   quantity                                     Decimal         @db.Decimal(18, 6)
   stock_transfers                              stock_transfers @relation(fields: [transfer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_inventory_stock_transfer_lines_product_id")
+  @@index([transfer_id], map: "idx_inventory_stock_transfer_lines_transfer_id")
   @@schema("inventory")
 }
 
@@ -857,6 +907,8 @@ model stock_transfers {
   warehouses_stock_transfers_destination_warehouse_idTowarehouses warehouses             @relation("stock_transfers_destination_warehouse_idTowarehouses", fields: [destination_warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   warehouses_stock_transfers_source_warehouse_idTowarehouses      warehouses             @relation("stock_transfers_source_warehouse_idTowarehouses", fields: [source_warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([destination_warehouse_id], map: "idx_inventory_stock_transfers_destination_warehouse_id")
+  @@index([source_warehouse_id], map: "idx_inventory_stock_transfers_source_warehouse_id")
   @@schema("inventory")
 }
 
@@ -886,6 +938,8 @@ model warehouse_locations {
   other_warehouse_locations                   warehouse_locations[] @relation("warehouse_locationsTowarehouse_locations")
   warehouse_zones                             warehouse_zones       @relation(fields: [zone_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([parent_location_id], map: "idx_inventory_warehouse_locations_parent_location_id")
+  @@index([zone_id], map: "idx_inventory_warehouse_locations_zone_id")
   @@schema("inventory")
 }
 
@@ -915,6 +969,7 @@ model warehouse_zones {
   warehouse_locations                     warehouse_locations[]
   warehouses                              warehouses              @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([warehouse_id], map: "idx_inventory_warehouse_zones_warehouse_id")
   @@schema("inventory")
 }
 

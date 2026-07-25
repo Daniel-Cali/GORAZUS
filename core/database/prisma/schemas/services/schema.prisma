@@ -2,7 +2,6 @@ generator client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -37,6 +36,8 @@ model equipment {
   maintenance_plans                 maintenance_plans[]
   service_orders                    service_orders[]
 
+  @@index([customer_id], map: "idx_services_equipment_customer_id")
+  @@index([equipment_type_id], map: "idx_services_equipment_equipment_type_id")
   @@schema("services")
 }
 
@@ -89,6 +90,8 @@ model maintenance_plans {
   equipment                                 equipment                @relation(fields: [equipment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   scheduled_maintenances                    scheduled_maintenances[]
 
+  @@index([contract_id], map: "idx_services_maintenance_plans_contract_id")
+  @@index([equipment_id], map: "idx_services_maintenance_plans_equipment_id")
   @@schema("services")
 }
 
@@ -116,6 +119,8 @@ model scheduled_maintenances {
   maintenance_plans                              maintenance_plans @relation(fields: [plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   service_orders                                 service_orders?   @relation(fields: [service_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([plan_id], map: "idx_services_scheduled_maintenances_plan_id")
+  @@index([service_order_id], map: "idx_services_scheduled_maintenances_service_order_id")
   @@schema("services")
 }
 
@@ -169,6 +174,8 @@ model service_contracts {
   service_contract_types                    service_contract_types @relation(fields: [contract_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sla_definitions                           sla_definitions[]
 
+  @@index([contract_type_id], map: "idx_services_service_contracts_contract_type_id")
+  @@index([customer_id], map: "idx_services_service_contracts_customer_id")
   @@schema("services")
 }
 
@@ -196,6 +203,8 @@ model service_order_lines {
   unit_price                                  Decimal        @db.Decimal(18, 4)
   service_orders                              service_orders @relation(fields: [service_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_services_service_order_lines_product_id")
+  @@index([service_order_id], map: "idx_services_service_order_lines_service_order_id")
   @@schema("services")
 }
 
@@ -272,6 +281,8 @@ model service_order_status_history {
   service_orders                                       service_orders       @relation(fields: [service_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   service_order_status                                 service_order_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([service_order_id], map: "idx_services_service_order_status_history_service_order_id")
+  @@index([status_id], map: "idx_services_service_order_status_history_status_id")
   @@schema("services")
 }
 
@@ -311,6 +322,12 @@ model service_orders {
   service_visits                         service_visits[]
   technician_assignments                 technician_assignments[]
 
+  @@index([customer_id], map: "idx_services_service_orders_customer_id")
+  @@index([equipment_id], map: "idx_services_service_orders_equipment_id")
+  @@index([reason_id], map: "idx_services_service_orders_reason_id")
+  @@index([service_type_id], map: "idx_services_service_orders_service_type_id")
+  @@index([status_id], map: "idx_services_service_orders_status_id")
+  @@index([warranty_id], map: "idx_services_service_orders_warranty_id")
   @@schema("services")
 }
 
@@ -339,6 +356,8 @@ model service_parts_consumed {
 
   @@id([id, created_at])
   @@unique([local_id, created_at])
+  @@index([product_id], map: "idx_services_service_parts_consumed_product_id")
+  @@index([service_order_id], map: "idx_services_service_parts_consumed_service_order_id")
   @@schema("services")
 }
 
@@ -396,6 +415,8 @@ model service_visits {
 
   @@id([id, created_at])
   @@unique([local_id, created_at])
+  @@index([service_order_id], map: "idx_services_service_visits_service_order_id")
+  @@index([technician_id], map: "idx_services_service_visits_technician_id")
   @@schema("services")
 }
 
@@ -421,6 +442,7 @@ model service_work_reports {
   findings                                     String?
   customer_signature_file_id                   String?    @db.Uuid
 
+  @@index([customer_signature_file_id], map: "idx_services_service_work_reports_customer_signature_file_id")
   @@schema("services")
 }
 
@@ -447,6 +469,7 @@ model sla_definitions {
   resolution_time_hours                   Int
   service_contracts                       service_contracts @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([contract_id], map: "idx_services_sla_definitions_contract_id")
   @@schema("services")
 }
 
@@ -474,6 +497,8 @@ model technician_assignments {
   service_orders                                 service_orders @relation(fields: [service_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   technicians                                    technicians    @relation(fields: [technician_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([service_order_id], map: "idx_services_technician_assignments_service_order_id")
+  @@index([technician_id], map: "idx_services_technician_assignments_technician_id")
   @@schema("services")
 }
 
@@ -500,5 +525,6 @@ model technicians {
   service_visits                      service_visits[]
   technician_assignments              technician_assignments[]
 
+  @@index([employee_id], map: "idx_services_technicians_employee_id")
   @@schema("services")
 }

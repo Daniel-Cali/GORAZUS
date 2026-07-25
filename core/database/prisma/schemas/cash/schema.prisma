@@ -2,7 +2,6 @@ generator client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -34,6 +33,7 @@ model cash_count_lines {
   quantity                                 Int
   cash_counts                              cash_counts @relation(fields: [cash_count_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([cash_count_id], map: "idx_cash_cash_count_lines_cash_count_id")
   @@schema("cash")
 }
 
@@ -59,6 +59,7 @@ model cash_counts {
   cash_count_lines                    cash_count_lines[]
   cash_register_closings              cash_register_closings @relation(fields: [closing_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([closing_id], map: "idx_cash_cash_counts_closing_id")
   @@schema("cash")
 }
 
@@ -117,6 +118,9 @@ model cash_movements {
 
   @@id([id, created_at])
   @@unique([local_id, created_at])
+  @@index([movement_type_id], map: "idx_cash_cash_movements_movement_type_id")
+  @@index([opening_id], map: "idx_cash_cash_movements_opening_id")
+  @@index([register_id], map: "idx_cash_cash_movements_register_id")
   @@schema("cash")
 }
 
@@ -143,6 +147,8 @@ model cash_refunds {
   amount                               Decimal        @db.Decimal(18, 4)
   cash_registers                       cash_registers @relation(fields: [register_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([register_id], map: "idx_cash_cash_refunds_register_id")
+  @@index([sales_return_id], map: "idx_cash_cash_refunds_sales_return_id")
   @@schema("cash")
 }
 
@@ -172,6 +178,7 @@ model cash_register_closings {
   cash_counts                                           cash_counts[]
   cash_register_openings                                cash_register_openings @relation(fields: [opening_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([closed_by_user_id], map: "idx_cash_cash_register_closings_closed_by_user_id")
   @@schema("cash")
 }
 
@@ -201,6 +208,7 @@ model cash_register_openings {
   cash_register_closings                                cash_register_closings[]
   cash_registers                                        cash_registers           @relation(fields: [register_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([opened_by_user_id], map: "idx_cash_cash_register_openings_opened_by_user_id")
   @@schema("cash")
 }
 
@@ -257,6 +265,8 @@ model cash_transfers {
   cash_registers_cash_transfers_destination_register_idTocash_registers cash_registers @relation("cash_transfers_destination_register_idTocash_registers", fields: [destination_register_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   cash_registers_cash_transfers_source_register_idTocash_registers      cash_registers @relation("cash_transfers_source_register_idTocash_registers", fields: [source_register_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([destination_register_id], map: "idx_cash_cash_transfers_destination_register_id")
+  @@index([source_register_id], map: "idx_cash_cash_transfers_source_register_id")
   @@schema("cash")
 }
 
@@ -282,6 +292,7 @@ model petty_cash_funds {
   fund_amount                                     Decimal               @db.Decimal(18, 4)
   petty_cash_vouchers                             petty_cash_vouchers[]
 
+  @@index([custodian_user_id], map: "idx_cash_petty_cash_funds_custodian_user_id")
   @@schema("cash")
 }
 
@@ -308,5 +319,6 @@ model petty_cash_vouchers {
   is_reconciled                               Boolean          @default(false)
   petty_cash_funds                            petty_cash_funds @relation(fields: [fund_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([fund_id], map: "idx_cash_petty_cash_vouchers_fund_id")
   @@schema("cash")
 }

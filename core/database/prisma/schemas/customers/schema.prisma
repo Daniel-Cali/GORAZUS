@@ -2,7 +2,6 @@ generator client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -38,6 +37,8 @@ model customer_addresses {
   is_default                                 Boolean         @default(false)
   customers                                  customers       @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([customer_id], map: "idx_customers_customer_addresses_customer_id")
+  @@index([municipality_id], map: "idx_customers_customer_addresses_municipality_id")
   @@schema("customers")
 }
 
@@ -64,6 +65,7 @@ model customer_bank_accounts {
   encrypted_account_number                       String
   customers                                      customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([customer_id], map: "idx_customers_customer_bank_accounts_customer_id")
   @@schema("customers")
 }
 
@@ -90,6 +92,7 @@ model customer_block_history {
   reason                                         String?
   customers                                      customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([customer_id], map: "idx_customers_customer_block_history_customer_id")
   @@schema("customers")
 }
 
@@ -167,6 +170,7 @@ model customer_contacts {
   is_primary                                Boolean   @default(false)
   customers                                 customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([customer_id], map: "idx_customers_customer_contacts_customer_id")
   @@schema("customers")
 }
 
@@ -194,6 +198,8 @@ model customer_credit_limit_history {
   approved_by_user_id                                            String?   @db.Uuid
   customers                                                      customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([approved_by_user_id], map: "idx_customers_customer_credit_limit_history_approved_by_user_id")
+  @@index([customer_id], map: "idx_customers_customer_credit_limit_history_customer_id")
   @@schema("customers")
 }
 
@@ -247,6 +253,7 @@ model customer_discounts {
   product_category_id                        String?   @db.Uuid
   customers                                  customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([customer_id], map: "idx_customers_customer_discounts_customer_id")
   @@schema("customers")
 }
 
@@ -274,6 +281,7 @@ model customer_loyalty_accounts {
   tier_code                                         String?
   customers                                         customers                     @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([loyalty_program_id], map: "idx_customers_customer_loyalty_accounts_loyalty_program_id")
   @@schema("customers")
 }
 
@@ -299,6 +307,7 @@ model customer_price_lists {
   price_list_id                                String      @db.Uuid
   customers                                    customers   @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([price_list_id], map: "idx_customers_customer_price_lists_price_list_id")
   @@schema("customers")
 }
 
@@ -326,6 +335,7 @@ model customer_references {
   phone                                       String?
   customers                                   customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([customer_id], map: "idx_customers_customer_references_customer_id")
   @@schema("customers")
 }
 
@@ -354,6 +364,7 @@ model customer_statements {
   snapshot_data                               Json
   customers                                   customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([customer_id], map: "idx_customers_customer_statements_customer_id")
   @@schema("customers")
 }
 
@@ -385,6 +396,9 @@ model customer_visits {
   customers                                       customers     @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sales_routes                                    sales_routes? @relation(fields: [route_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([customer_id], map: "idx_customers_customer_visits_customer_id")
+  @@index([route_id], map: "idx_customers_customer_visits_route_id")
+  @@index([visited_by_user_id], map: "idx_customers_customer_visits_visited_by_user_id")
   @@schema("customers")
 }
 
@@ -410,6 +424,7 @@ model customer_wishlist_items {
   product_id                                      String    @db.Uuid
   customers                                       customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([customer_id], map: "idx_customers_customer_wishlist_items_customer_id")
   @@schema("customers")
 }
 
@@ -458,6 +473,9 @@ model customers {
   customer_classifications          customer_classifications?       @relation(fields: [classification_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sales_route_customers             sales_route_customers[]
 
+  @@index([assigned_salesperson_id], map: "idx_customers_customers_assigned_salesperson_id")
+  @@index([category_id], map: "idx_customers_customers_category_id")
+  @@index([classification_id], map: "idx_customers_customers_classification_id")
   @@schema("customers")
 }
 
@@ -485,6 +503,7 @@ model sales_route_customers {
   customers                                     customers    @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sales_routes                                  sales_routes @relation(fields: [route_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([customer_id], map: "idx_customers_sales_route_customers_customer_id")
   @@schema("customers")
 }
 
@@ -511,5 +530,6 @@ model sales_routes {
   customer_visits                      customer_visits[]
   sales_route_customers                sales_route_customers[]
 
+  @@index([assigned_salesperson_id], map: "idx_customers_sales_routes_assigned_salesperson_id")
   @@schema("customers")
 }

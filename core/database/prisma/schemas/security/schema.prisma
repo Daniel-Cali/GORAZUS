@@ -2,7 +2,6 @@ generator client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -61,6 +60,7 @@ model acl_entries {
   effect                              String
   access_control_lists                access_control_lists @relation(fields: [acl_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([acl_id], map: "idx_security_acl_entries_acl_id")
   @@schema("security")
 }
 
@@ -137,6 +137,8 @@ model encryption_key_rotations {
   rotated_by_user_id                                       String?              @db.Uuid
   data_encryption_keys                                     data_encryption_keys @relation(fields: [encryption_key_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([encryption_key_id], map: "idx_security_encryption_key_rotations_encryption_key_id")
+  @@index([rotated_by_user_id], map: "idx_security_encryption_key_rotations_rotated_by_user_id")
   @@schema("security")
 }
 
@@ -212,6 +214,8 @@ model login_attempts {
 
   @@id([id, created_at])
   @@unique([local_id, created_at])
+  @@index([created_at], map: "idx_security_login_attempts_created_brin", type: Brin)
+  @@index([user_id], map: "idx_security_login_attempts_user_id")
   @@schema("security")
 }
 
@@ -238,6 +242,7 @@ model oauth_client_scopes {
   oauth_clients                               oauth_clients @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   oauth_scopes                                oauth_scopes  @relation(fields: [scope_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([scope_id], map: "idx_security_oauth_client_scopes_scope_id")
   @@schema("security")
 }
 
@@ -320,6 +325,8 @@ model oauth_tokens {
   revoked_at                           DateTime?     @db.Timestamptz(6)
   oauth_clients                        oauth_clients @relation(fields: [client_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([client_id], map: "idx_security_oauth_tokens_client_id")
+  @@index([user_id], map: "idx_security_oauth_tokens_user_id")
   @@schema("security")
 }
 
@@ -344,6 +351,7 @@ model password_history {
   user_id                                  String     @db.Uuid
   password_hash                            String
 
+  @@index([user_id], map: "idx_security_password_history_user_id")
   @@schema("security")
 }
 
@@ -400,6 +408,9 @@ model permission_delegations {
   starts_at                                             DateTime    @default(now()) @db.Timestamptz(6)
   ends_at                                               DateTime    @db.Timestamptz(6)
 
+  @@index([delegate_user_id], map: "idx_security_permission_delegations_delegate_user_id")
+  @@index([delegator_user_id], map: "idx_security_permission_delegations_delegator_user_id")
+  @@index([permission_id], map: "idx_security_permission_delegations_permission_id")
   @@schema("security")
 }
 
@@ -426,6 +437,7 @@ model security_audit_logs {
   ip_address                                     String?    @db.Inet
   details                                        Json       @default("{}")
 
+  @@index([actor_user_id], map: "idx_security_security_audit_logs_actor_user_id")
   @@schema("security")
 }
 
@@ -452,6 +464,7 @@ model security_incident_events {
   occurred_at                                      DateTime           @default(now()) @db.Timestamptz(6)
   security_incidents                               security_incidents @relation(fields: [incident_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([incident_id], map: "idx_security_security_incident_events_incident_id")
   @@schema("security")
 }
 
@@ -506,6 +519,7 @@ model security_policies {
   session_timeout_minutes                   Int                @default(30) @db.SmallInt
   password_policies                         password_policies? @relation(fields: [password_policy_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([password_policy_id], map: "idx_security_security_policies_password_policy_id")
   @@schema("security")
 }
 
@@ -532,6 +546,7 @@ model session_activity_logs {
 
   @@id([id, created_at])
   @@unique([local_id, created_at])
+  @@index([session_id], map: "idx_security_session_activity_logs_session_id")
   @@schema("security")
 }
 
@@ -557,6 +572,8 @@ model trusted_devices {
   device_id                               String       @db.Uuid
   trusted_until                           DateTime     @db.Timestamptz(6)
 
+  @@index([device_id], map: "idx_security_trusted_devices_device_id")
+  @@index([user_id], map: "idx_security_trusted_devices_user_id")
   @@schema("security")
 }
 
@@ -582,6 +599,7 @@ model two_factor_backup_codes {
   code_hash                                       String
   used_at                                         DateTime?  @db.Timestamptz(6)
 
+  @@index([user_id], map: "idx_security_two_factor_backup_codes_user_id")
   @@schema("security")
 }
 
@@ -607,6 +625,7 @@ model two_factor_challenges {
   succeeded                                     Boolean
   ip_address                                    String?    @db.Inet
 
+  @@index([user_id], map: "idx_security_two_factor_challenges_user_id")
   @@schema("security")
 }
 
@@ -633,5 +652,6 @@ model two_factor_credentials {
   encrypted_secret                               String
   confirmed_at                                   DateTime?  @db.Timestamptz(6)
 
+  @@index([user_id], map: "idx_security_two_factor_credentials_user_id")
   @@schema("security")
 }

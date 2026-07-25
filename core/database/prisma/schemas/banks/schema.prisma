@@ -2,7 +2,6 @@ generator client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -43,6 +42,7 @@ model bank_accounts {
   checkbooks                            checkbooks[]
   checks_received                       checks_received[]
 
+  @@index([bank_id], map: "idx_banks_bank_accounts_bank_id")
   @@schema("banks")
 }
 
@@ -69,6 +69,7 @@ model bank_cards {
   last_four_digits                   String?       @db.Char(4)
   bank_accounts                      bank_accounts @relation(fields: [bank_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([bank_account_id], map: "idx_banks_bank_cards_bank_account_id")
   @@schema("banks")
 }
 
@@ -95,6 +96,8 @@ model bank_deposits {
   amount                                Decimal         @db.Decimal(18, 4)
   bank_accounts                         bank_accounts   @relation(fields: [bank_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([bank_account_id], map: "idx_banks_bank_deposits_bank_account_id")
+  @@index([cash_register_id], map: "idx_banks_bank_deposits_cash_register_id")
   @@schema("banks")
 }
 
@@ -123,6 +126,7 @@ model bank_payment_batch_lines {
   source_entity_id                                 String?              @db.Uuid
   bank_payment_batches                             bank_payment_batches @relation(fields: [batch_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([batch_id], map: "idx_banks_bank_payment_batch_lines_batch_id")
   @@schema("banks")
 }
 
@@ -151,6 +155,8 @@ model bank_payment_batches {
   bank_payment_batch_lines                     bank_payment_batch_lines[]
   bank_accounts                                bank_accounts              @relation(fields: [bank_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([bank_account_id], map: "idx_banks_bank_payment_batches_bank_account_id")
+  @@index([file_id], map: "idx_banks_bank_payment_batches_file_id")
   @@schema("banks")
 }
 
@@ -176,6 +182,7 @@ model bank_pos_terminals {
   terminal_code                              String
   bank_accounts                              bank_accounts @relation(fields: [bank_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([bank_account_id], map: "idx_banks_bank_pos_terminals_bank_account_id")
   @@schema("banks")
 }
 
@@ -204,6 +211,9 @@ model bank_reconciliation_lines {
   bank_reconciliations                              bank_reconciliations  @relation(fields: [reconciliation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   bank_statement_lines                              bank_statement_lines? @relation(fields: [statement_line_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([matched_transfer_id], map: "idx_banks_bank_reconciliation_lines_matched_transfer_id")
+  @@index([reconciliation_id], map: "idx_banks_bank_reconciliation_lines_reconciliation_id")
+  @@index([statement_line_id], map: "idx_banks_bank_reconciliation_lines_statement_line_id")
   @@schema("banks")
 }
 
@@ -232,6 +242,8 @@ model bank_reconciliations {
   bank_accounts                                bank_accounts               @relation(fields: [bank_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   bank_statements                              bank_statements             @relation(fields: [statement_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([bank_account_id], map: "idx_banks_bank_reconciliations_bank_account_id")
+  @@index([statement_id], map: "idx_banks_bank_reconciliations_statement_id")
   @@schema("banks")
 }
 
@@ -260,6 +272,7 @@ model bank_statement_lines {
   bank_reconciliation_lines                    bank_reconciliation_lines[]
   bank_statements                              bank_statements             @relation(fields: [statement_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([statement_id], map: "idx_banks_bank_statement_lines_statement_id")
   @@schema("banks")
 }
 
@@ -289,6 +302,8 @@ model bank_statements {
   bank_statement_lines                    bank_statement_lines[]
   bank_accounts                           bank_accounts          @relation(fields: [bank_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([bank_account_id], map: "idx_banks_bank_statements_bank_account_id")
+  @@index([source_file_id], map: "idx_banks_bank_statements_source_file_id")
   @@schema("banks")
 }
 
@@ -318,6 +333,7 @@ model bank_transfers {
   bank_reconciliation_lines              bank_reconciliation_lines[]
   bank_accounts                          bank_accounts               @relation(fields: [bank_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([bank_account_id], map: "idx_banks_bank_transfers_bank_account_id")
   @@schema("banks")
 }
 
@@ -346,6 +362,7 @@ model checkbooks {
   bank_accounts                      bank_accounts   @relation(fields: [bank_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   checks_issued                      checks_issued[]
 
+  @@index([bank_account_id], map: "idx_banks_checkbooks_bank_account_id")
   @@schema("banks")
 }
 
@@ -374,6 +391,8 @@ model checks_issued {
   status                                String     @default("issued")
   checkbooks                            checkbooks @relation(fields: [checkbook_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([checkbook_id], map: "idx_banks_checks_issued_checkbook_id")
+  @@index([supplier_id], map: "idx_banks_checks_issued_supplier_id")
   @@schema("banks")
 }
 
@@ -401,5 +420,7 @@ model checks_received {
   status                                  String         @default("in_portfolio")
   bank_accounts                           bank_accounts? @relation(fields: [bank_account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([bank_account_id], map: "idx_banks_checks_received_bank_account_id")
+  @@index([customer_id], map: "idx_banks_checks_received_customer_id")
   @@schema("banks")
 }

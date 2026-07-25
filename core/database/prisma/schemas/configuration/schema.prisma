@@ -2,7 +2,6 @@ generator client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -61,29 +60,29 @@ model correlatives {
 }
 
 model countries {
-  id                                String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  local_id                          BigInt                  @unique @default(autoincrement())
-  tenant_id                         String                  @db.Uuid
-  company_id                        String?                 @db.Uuid
-  branch_id                         String?                 @db.Uuid
-  created_at                        DateTime                @default(now()) @db.Timestamptz(6)
-  updated_at                        DateTime                @default(now()) @db.Timestamptz(6)
-  deleted_at                        DateTime?               @db.Timestamptz(6)
-  created_by                        String?                 @db.Uuid
-  updated_by                        String?                 @db.Uuid
-  deleted_by                        String?                 @db.Uuid
-  version                           Int                     @default(1)
-  row_version                       BigInt                  @default(0)
-  is_active                         Boolean                 @default(true)
-  is_deleted                        Boolean?                @default(dbgenerated("(deleted_at IS NOT NULL)"))
-  observations                      String?
-  metadata                          Json                    @default("{}")
-  iso_code                          String                  @db.Char(2)
-  country_translations              country_translations[]
-  fiscal_document_types             fiscal_document_types[]
-  fiscal_regimes                    fiscal_regimes[]
-  holidays                          holidays[]
-  state_provinces                   state_provinces[]
+  id                                        String                  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt                  @unique @default(autoincrement())
+  tenant_id                                 String                  @db.Uuid
+  company_id                                String?                 @db.Uuid
+  branch_id                                 String?                 @db.Uuid
+  created_at                                DateTime                @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime                @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime?               @db.Timestamptz(6)
+  created_by                                String?                 @db.Uuid
+  updated_by                                String?                 @db.Uuid
+  deleted_by                                String?                 @db.Uuid
+  version                                   Int                     @default(1)
+  row_version                               BigInt                  @default(0)
+  is_active                                 Boolean                 @default(true)
+  is_deleted                                Boolean?                @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json                    @default("{}")
+  iso_code                                  String                  @db.Char(2)
+  country_translations                      country_translations[]
+  fiscal_document_types                     fiscal_document_types[]
+  fiscal_regimes                            fiscal_regimes[]
+  holidays                                  holidays[]
+  state_provinces                           state_provinces[]
 
   @@schema("configuration")
 }
@@ -193,6 +192,7 @@ model document_number_formats {
   suffix                                          String?
   numbering_series                                numbering_series @relation(fields: [series_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([series_id], map: "idx_configuration_document_number_formats_series_id")
   @@schema("configuration")
 }
 
@@ -247,6 +247,8 @@ model exchange_rates {
   exchange_rate_types                                    exchange_rate_types? @relation(fields: [rate_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   currencies_exchange_rates_to_currency_idTocurrencies   currencies           @relation("exchange_rates_to_currency_idTocurrencies", fields: [to_currency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([rate_type_id], map: "idx_configuration_exchange_rates_rate_type_id")
+  @@index([to_currency_id], map: "idx_configuration_exchange_rates_to_currency_id")
   @@schema("configuration")
 }
 
@@ -273,6 +275,7 @@ model fiscal_document_types {
   name                                          String
   countries                                     countries  @relation(fields: [country_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([country_id], map: "idx_configuration_fiscal_document_types_country_id")
   @@schema("configuration")
 }
 
@@ -298,6 +301,7 @@ model fiscal_regimes {
   name                                   String
   countries                              countries   @relation(fields: [country_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([country_id], map: "idx_configuration_fiscal_regimes_country_id")
   @@schema("configuration")
 }
 
@@ -324,28 +328,29 @@ model holidays {
   holiday_date                     DateTime   @db.Date
   countries                        countries  @relation(fields: [country_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([country_id], map: "idx_configuration_holidays_country_id")
   @@schema("configuration")
 }
 
 model languages {
-  id                                String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  local_id                          BigInt     @unique @default(autoincrement())
-  tenant_id                         String     @db.Uuid
-  company_id                        String?    @db.Uuid
-  branch_id                         String?    @db.Uuid
-  created_at                        DateTime   @default(now()) @db.Timestamptz(6)
-  updated_at                        DateTime   @default(now()) @db.Timestamptz(6)
-  deleted_at                        DateTime?  @db.Timestamptz(6)
-  created_by                        String?    @db.Uuid
-  updated_by                        String?    @db.Uuid
-  deleted_by                        String?    @db.Uuid
-  version                           Int        @default(1)
-  row_version                       BigInt     @default(0)
-  is_active                         Boolean    @default(true)
-  is_deleted                        Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
-  observations                      String?
-  metadata                          Json       @default("{}")
-  iso_code                          String
+  id                                         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                   BigInt      @unique @default(autoincrement())
+  tenant_id                                  String      @db.Uuid
+  company_id                                 String?     @db.Uuid
+  branch_id                                  String?     @db.Uuid
+  created_at                                 DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime    @default(now()) @db.Timestamptz(6)
+  deleted_at                                 DateTime?   @db.Timestamptz(6)
+  created_by                                 String?     @db.Uuid
+  updated_by                                 String?     @db.Uuid
+  deleted_by                                 String?     @db.Uuid
+  version                                    Int         @default(1)
+  row_version                                BigInt      @default(0)
+  is_active                                  Boolean     @default(true)
+  is_deleted                                 Boolean?    @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                               String?
+  metadata                                   Json        @default("{}")
+  iso_code                                   String
 
   @@schema("configuration")
 }
@@ -373,6 +378,7 @@ model municipalities {
   state_provinces                        state_provinces      @relation(fields: [state_province_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sectors                                sectors[]
 
+  @@index([state_province_id], map: "idx_configuration_municipalities_state_province_id")
   @@schema("configuration")
 }
 
@@ -448,6 +454,8 @@ model payment_methods {
   name                                    String
   payment_forms                           payment_forms  @relation(fields: [payment_form_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([bank_account_id], map: "idx_configuration_payment_methods_bank_account_id")
+  @@index([payment_form_id], map: "idx_configuration_payment_methods_payment_form_id")
   @@schema("configuration")
 }
 
@@ -474,6 +482,8 @@ model price_list_items {
   unit_price                               Decimal     @db.Decimal(18, 4)
   price_lists                              price_lists @relation(fields: [price_list_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([metadata(ops: JsonbPathOps)], map: "idx_configuration_price_list_items_metadata", type: Gin)
+  @@index([product_id], map: "idx_configuration_price_list_items_product_id")
   @@schema("configuration")
 }
 
@@ -500,6 +510,7 @@ model price_lists {
   price_list_items                    price_list_items[]
   currencies                          currencies             @relation(fields: [currency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([currency_id], map: "idx_configuration_price_lists_currency_id")
   @@schema("configuration")
 }
 
@@ -525,6 +536,7 @@ model sectors {
   name                            String
   municipalities                  municipalities @relation(fields: [municipality_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([municipality_id], map: "idx_configuration_sectors_municipality_id")
   @@schema("configuration")
 }
 
@@ -551,6 +563,7 @@ model state_province_translations {
   name                                                String
   state_provinces                                     state_provinces @relation(fields: [state_province_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([state_province_id], map: "idx_configuration_state_province_translations_state_province_id")
   @@schema("configuration")
 }
 
@@ -578,28 +591,29 @@ model state_provinces {
   state_province_translations             state_province_translations[]
   countries                               countries                     @relation(fields: [country_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([country_id], map: "idx_configuration_state_provinces_country_id")
   @@schema("configuration")
 }
 
 model timezones {
-  id                                String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  local_id                          BigInt     @unique @default(autoincrement())
-  tenant_id                         String     @db.Uuid
-  company_id                        String?    @db.Uuid
-  branch_id                         String?    @db.Uuid
-  created_at                        DateTime   @default(now()) @db.Timestamptz(6)
-  updated_at                        DateTime   @default(now()) @db.Timestamptz(6)
-  deleted_at                        DateTime?  @db.Timestamptz(6)
-  created_by                        String?    @db.Uuid
-  updated_by                        String?    @db.Uuid
-  deleted_by                        String?    @db.Uuid
-  version                           Int        @default(1)
-  row_version                       BigInt     @default(0)
-  is_active                         Boolean    @default(true)
-  is_deleted                        Boolean?   @default(dbgenerated("(deleted_at IS NOT NULL)"))
-  observations                      String?
-  metadata                          Json       @default("{}")
-  iana_name                         String
+  id                                         String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                   BigInt      @unique @default(autoincrement())
+  tenant_id                                  String      @db.Uuid
+  company_id                                 String?     @db.Uuid
+  branch_id                                  String?     @db.Uuid
+  created_at                                 DateTime    @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime    @default(now()) @db.Timestamptz(6)
+  deleted_at                                 DateTime?   @db.Timestamptz(6)
+  created_by                                 String?     @db.Uuid
+  updated_by                                 String?     @db.Uuid
+  deleted_by                                 String?     @db.Uuid
+  version                                    Int         @default(1)
+  row_version                                BigInt      @default(0)
+  is_active                                  Boolean     @default(true)
+  is_deleted                                 Boolean?    @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                               String?
+  metadata                                   Json        @default("{}")
+  iana_name                                  String
 
   @@schema("configuration")
 }

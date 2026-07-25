@@ -2,7 +2,6 @@ generator client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -35,6 +34,8 @@ model tax_declaration_lines {
   tax_declarations                              tax_declarations @relation(fields: [declaration_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   taxes                                         taxes            @relation(fields: [tax_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([declaration_id], map: "idx_taxes_tax_declaration_lines_declaration_id")
+  @@index([tax_id], map: "idx_taxes_tax_declaration_lines_tax_id")
   @@schema("taxes")
 }
 
@@ -61,6 +62,7 @@ model tax_declarations {
   total_amount                             Decimal                 @db.Decimal(18, 4)
   tax_declaration_lines                    tax_declaration_lines[]
 
+  @@index([fiscal_period_id], map: "idx_taxes_tax_declarations_fiscal_period_id")
   @@schema("taxes")
 }
 
@@ -86,6 +88,8 @@ model tax_exemption_certificates {
   document_id                                        String         @db.Uuid
   tax_exemptions                                     tax_exemptions @relation(fields: [exemption_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([document_id], map: "idx_taxes_tax_exemption_certificates_document_id")
+  @@index([exemption_id], map: "idx_taxes_tax_exemption_certificates_exemption_id")
   @@schema("taxes")
 }
 
@@ -113,6 +117,8 @@ model tax_exemptions {
   tax_exemption_certificates             tax_exemption_certificates[]
   taxes                                  taxes                        @relation(fields: [tax_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([customer_id], map: "idx_taxes_tax_exemptions_customer_id")
+  @@index([tax_id], map: "idx_taxes_tax_exemptions_tax_id")
   @@schema("taxes")
 }
 
@@ -140,6 +146,7 @@ model tax_jurisdictions {
   taxes                                     taxes[]
   withholding_rules                         withholding_rules[]
 
+  @@index([country_id], map: "idx_taxes_tax_jurisdictions_country_id")
   @@schema("taxes")
 }
 
@@ -165,6 +172,7 @@ model tax_perception_rules {
   rate_percentage                              Decimal         @db.Decimal(6, 3)
   tax_perceptions                              tax_perceptions @relation(fields: [perception_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([perception_id], map: "idx_taxes_tax_perception_rules_perception_id")
   @@schema("taxes")
 }
 
@@ -191,6 +199,7 @@ model tax_perceptions {
   tax_perception_rules                    tax_perception_rules[]
   tax_jurisdictions                       tax_jurisdictions      @relation(fields: [jurisdiction_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([jurisdiction_id], map: "idx_taxes_tax_perceptions_jurisdiction_id")
   @@schema("taxes")
 }
 
@@ -218,6 +227,7 @@ model tax_rates {
   effective_to                      DateTime?  @db.Date
   taxes                             taxes      @relation(fields: [tax_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([tax_id], map: "idx_taxes_tax_rates_tax_id")
   @@schema("taxes")
 }
 
@@ -244,6 +254,9 @@ model tax_rules {
   fiscal_regime_id                  String?             @db.Uuid
   taxes                             taxes               @relation(fields: [tax_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([fiscal_regime_id], map: "idx_taxes_tax_rules_fiscal_regime_id")
+  @@index([product_category_id], map: "idx_taxes_tax_rules_product_category_id")
+  @@index([tax_id], map: "idx_taxes_tax_rules_tax_id")
   @@schema("taxes")
 }
 
@@ -301,6 +314,7 @@ model taxes {
   tax_translations              tax_translations[]
   tax_jurisdictions             tax_jurisdictions        @relation(fields: [jurisdiction_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([jurisdiction_id], map: "idx_taxes_taxes_jurisdiction_id")
   @@schema("taxes")
 }
 
@@ -330,6 +344,7 @@ model withholding_certificates {
 
   @@id([id, created_at])
   @@unique([local_id, created_at])
+  @@index([withholding_rule_id], map: "idx_taxes_withholding_certificates_withholding_rule_id")
   @@schema("taxes")
 }
 
@@ -357,5 +372,6 @@ model withholding_rules {
   withholding_certificates                  withholding_certificates[]
   tax_jurisdictions                         tax_jurisdictions               @relation(fields: [jurisdiction_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([jurisdiction_id], map: "idx_taxes_withholding_rules_jurisdiction_id")
   @@schema("taxes")
 }

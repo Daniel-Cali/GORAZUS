@@ -2,7 +2,6 @@ generator client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -35,6 +34,7 @@ model project_billing_milestones {
   invoice_id                                         String?               @db.Uuid
   project_billing_plans                              project_billing_plans @relation(fields: [billing_plan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([billing_plan_id], map: "idx_projects_project_billing_milestones_billing_plan_id")
   @@schema("projects")
 }
 
@@ -61,6 +61,7 @@ model project_billing_plans {
   project_billing_milestones                    project_billing_milestones[]
   projects                                      projects                     @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([project_id], map: "idx_projects_project_billing_plans_project_id")
   @@schema("projects")
 }
 
@@ -87,6 +88,7 @@ model project_budget_lines {
   budgeted_amount                              Decimal         @db.Decimal(18, 4)
   project_budgets                              project_budgets @relation(fields: [budget_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([budget_id], map: "idx_projects_project_budget_lines_budget_id")
   @@schema("projects")
 }
 
@@ -112,6 +114,7 @@ model project_budgets {
   project_budget_lines                    project_budget_lines[]
   projects                                projects               @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([project_id], map: "idx_projects_project_budgets_project_id")
   @@schema("projects")
 }
 
@@ -142,6 +145,8 @@ model project_costs {
 
   @@id([id, created_at])
   @@unique([local_id, created_at])
+  @@index([project_id], map: "idx_projects_project_costs_project_id")
+  @@index([task_id], map: "idx_projects_project_costs_task_id")
   @@schema("projects")
 }
 
@@ -169,6 +174,8 @@ model project_resource_assignments {
   hourly_rate                                          Decimal?      @db.Decimal(18, 4)
   project_tasks                                        project_tasks @relation(fields: [task_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([employee_id], map: "idx_projects_project_resource_assignments_employee_id")
+  @@index([task_id], map: "idx_projects_project_resource_assignments_task_id")
   @@schema("projects")
 }
 
@@ -196,6 +203,7 @@ model project_risks {
   impact                                String
   projects                              projects   @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([project_id], map: "idx_projects_project_risks_project_id")
   @@schema("projects")
 }
 
@@ -272,6 +280,8 @@ model project_status_history {
   projects                                       projects       @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   project_status                                 project_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([project_id], map: "idx_projects_project_status_history_project_id")
+  @@index([status_id], map: "idx_projects_project_status_history_status_id")
   @@schema("projects")
 }
 
@@ -298,6 +308,8 @@ model project_task_dependencies {
   project_tasks_project_task_dependencies_depends_on_task_idToproject_tasks project_tasks @relation("project_task_dependencies_depends_on_task_idToproject_tasks", fields: [depends_on_task_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   project_tasks_project_task_dependencies_task_idToproject_tasks            project_tasks @relation("project_task_dependencies_task_idToproject_tasks", fields: [task_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([depends_on_task_id], map: "idx_projects_project_task_dependencies_depends_on_task_id")
+  @@index([task_id], map: "idx_projects_project_task_dependencies_task_id")
   @@schema("projects")
 }
 
@@ -360,6 +372,9 @@ model project_tasks {
   project_task_status                                                                   project_task_status            @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   project_timesheets                                                                    project_timesheets[]
 
+  @@index([parent_task_id], map: "idx_projects_project_tasks_parent_task_id")
+  @@index([project_id], map: "idx_projects_project_tasks_project_id")
+  @@index([status_id], map: "idx_projects_project_tasks_status_id")
   @@schema("projects")
 }
 
@@ -415,6 +430,9 @@ model project_timesheets {
 
   @@id([id, created_at])
   @@unique([local_id, created_at])
+  @@index([employee_id], map: "idx_projects_project_timesheets_employee_id")
+  @@index([status_id], map: "idx_projects_project_timesheets_status_id")
+  @@index([task_id], map: "idx_projects_project_timesheets_task_id")
   @@schema("projects")
 }
 
@@ -476,5 +494,10 @@ model projects {
   project_types                         project_types            @relation(fields: [project_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   project_status                        project_status           @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([cost_center_id], map: "idx_projects_projects_cost_center_id")
+  @@index([customer_id], map: "idx_projects_projects_customer_id")
+  @@index([manager_user_id], map: "idx_projects_projects_manager_user_id")
+  @@index([project_type_id], map: "idx_projects_projects_project_type_id")
+  @@index([status_id], map: "idx_projects_projects_status_id")
   @@schema("projects")
 }

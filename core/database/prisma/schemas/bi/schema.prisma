@@ -2,7 +2,6 @@ generator client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -33,6 +32,7 @@ model bi_alert_triggers {
   observed_value                            Decimal    @db.Decimal(18, 4)
   bi_alerts                                 bi_alerts  @relation(fields: [alert_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([alert_id], map: "idx_bi_bi_alert_triggers_alert_id")
   @@schema("bi")
 }
 
@@ -64,6 +64,9 @@ model bi_alerts {
   kpis                              kpis?               @relation(fields: [kpi_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   metrics                           metrics?            @relation(fields: [metric_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([indicator_id], map: "idx_bi_bi_alerts_indicator_id")
+  @@index([kpi_id], map: "idx_bi_bi_alerts_kpi_id")
+  @@index([metric_id], map: "idx_bi_bi_alerts_metric_id")
   @@schema("bi")
 }
 
@@ -90,6 +93,7 @@ model data_cube_dimensions {
   display_name                                 String
   data_cubes                                   data_cubes @relation(fields: [cube_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([cube_id], map: "idx_bi_data_cube_dimensions_cube_id")
   @@schema("bi")
 }
 
@@ -116,6 +120,7 @@ model data_cube_measures {
   aggregation                                String
   data_cubes                                 data_cubes @relation(fields: [cube_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([cube_id], map: "idx_bi_data_cube_measures_cube_id")
   @@schema("bi")
 }
 
@@ -143,6 +148,7 @@ model data_cubes {
   data_cube_measures                 data_cube_measures[]
   data_mart_tables                   data_mart_tables       @relation(fields: [data_mart_table_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([data_mart_table_id], map: "idx_bi_data_cubes_data_mart_table_id")
   @@schema("bi")
 }
 
@@ -219,6 +225,7 @@ model forecasts {
   predicted_value                   Decimal         @db.Decimal(18, 4)
   forecast_models                   forecast_models @relation(fields: [model_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([model_id], map: "idx_bi_forecasts_model_id")
   @@schema("bi")
 }
 
@@ -247,6 +254,7 @@ model indicator_snapshots {
 
   @@id([id, snapshot_date])
   @@unique([local_id, snapshot_date])
+  @@index([indicator_id], map: "idx_bi_indicator_snapshots_indicator_id")
   @@schema("bi")
 }
 
@@ -301,6 +309,7 @@ model kpi_snapshots {
 
   @@id([id, snapshot_date])
   @@unique([local_id, snapshot_date])
+  @@index([kpi_id], map: "idx_bi_kpi_snapshots_kpi_id")
   @@schema("bi")
 }
 
@@ -356,6 +365,7 @@ model metric_snapshots {
 
   @@id([id, snapshot_date])
   @@unique([local_id, snapshot_date])
+  @@index([metric_id], map: "idx_bi_metric_snapshots_metric_id")
   @@schema("bi")
 }
 

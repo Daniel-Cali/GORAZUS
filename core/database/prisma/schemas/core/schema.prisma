@@ -2,7 +2,6 @@ generator client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -43,6 +42,8 @@ model activity_logs {
 
   @@id([id, created_at])
   @@unique([local_id, created_at])
+  @@index([created_at], map: "idx_core_activity_logs_created_brin", type: Brin)
+  @@index([user_id], map: "idx_core_activity_logs_user_id")
   @@schema("core")
 }
 
@@ -75,6 +76,7 @@ model api_key_scopes {
   tenants                                tenants     @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_api_key_scopes_updated_byTousers users?      @relation("api_key_scopes_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([permission_id], map: "idx_core_api_key_scopes_permission_id")
   @@schema("core")
 }
 
@@ -141,6 +143,7 @@ model approval_matrices {
   tenants                                   tenants    @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_approval_matrices_updated_byTousers users?     @relation("approval_matrices_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([required_role_id], map: "idx_core_approval_matrices_required_role_id")
   @@schema("core")
 }
 
@@ -175,6 +178,8 @@ model approval_steps {
   tenants                                      tenants    @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_approval_steps_updated_byTousers       users?     @relation("approval_steps_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([approval_id], map: "idx_core_approval_steps_approval_id")
+  @@index([approver_user_id], map: "idx_core_approval_steps_approver_user_id")
   @@schema("core")
 }
 
@@ -209,6 +214,7 @@ model approvals {
   tenants                                     tenants          @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_approvals_updated_byTousers           users?           @relation("approvals_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([requested_by_user_id], map: "idx_core_approvals_requested_by_user_id")
   @@schema("core")
 }
 
@@ -249,6 +255,8 @@ model audit_logs {
 
   @@id([id, occurred_at])
   @@unique([local_id, occurred_at])
+  @@index([actor_user_id], map: "idx_core_audit_logs_actor_user_id")
+  @@index([occurred_at], map: "idx_core_audit_logs_occurred_brin", type: Brin)
   @@schema("core")
 }
 
@@ -319,6 +327,9 @@ model branches {
   is_main_branch                                           Boolean                                @default(false)
   address_line                                             String?
   phone                                                    String?
+  country_id                                               String?                                @db.Uuid
+  language_id                                              String?                                @db.Uuid
+  timezone_id                                              String?                                @db.Uuid
   activity_logs                                            activity_logs[]
   api_key_scopes                                           api_key_scopes[]
   api_keys                                                 api_keys[]
@@ -531,6 +542,7 @@ model comments {
   tenants                              tenants    @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_comments_updated_byTousers     users?     @relation("comments_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([author_user_id], map: "idx_core_comments_author_user_id")
   @@schema("core")
 }
 
@@ -558,6 +570,9 @@ model companies {
   tax_regime                                                                       String?
   functional_currency_code                                                         String                                 @db.Char(3)
   fiscal_year_start_month                                                          Int                                    @default(1) @db.SmallInt
+  country_id                                                                       String?                                @db.Uuid
+  language_id                                                                      String?                                @db.Uuid
+  timezone_id                                                                      String?                                @db.Uuid
   activity_logs                                                                    activity_logs[]
   api_key_scopes                                                                   api_key_scopes[]
   api_keys                                                                         api_keys[]
@@ -762,6 +777,7 @@ model departments {
   tenants                             tenants         @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_departments_updated_byTousers users?          @relation("departments_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([parent_department_id], map: "idx_core_departments_parent_department_id")
   @@schema("core")
 }
 
@@ -826,6 +842,8 @@ model document_versions {
   tenants                                   tenants    @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_document_versions_updated_byTousers users?     @relation("document_versions_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([document_id], map: "idx_core_document_versions_document_id")
+  @@index([file_id], map: "idx_core_document_versions_file_id")
   @@schema("core")
 }
 
@@ -864,6 +882,8 @@ model documents {
   signature_requests                signature_requests[]
   signatures                        signatures[]
 
+  @@index([document_type_id], map: "idx_core_documents_document_type_id")
+  @@index([file_id], map: "idx_core_documents_file_id")
   @@schema("core")
 }
 
@@ -900,6 +920,7 @@ model edi_transactions {
   tenants                                  tenants      @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_edi_transactions_updated_byTousers users?       @relation("edi_transactions_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([integration_id], map: "idx_core_edi_transactions_integration_id")
   @@schema("core")
 }
 
@@ -932,6 +953,7 @@ model entity_tags {
   tenants                             tenants    @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_entity_tags_updated_byTousers users?     @relation("entity_tags_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([tag_id], map: "idx_core_entity_tags_tag_id")
   @@schema("core")
 }
 
@@ -966,6 +988,8 @@ model export_batches {
   tenants                                         tenants    @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_export_batches_updated_byTousers          users?     @relation("export_batches_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([executed_by_user_id], map: "idx_core_export_batches_executed_by_user_id")
+  @@index([output_file_id], map: "idx_core_export_batches_output_file_id")
   @@schema("core")
 }
 
@@ -1069,6 +1093,7 @@ model group_members {
   users_group_members_updated_byTousers users?     @relation("group_members_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_group_members_user_idTousers    users      @relation("group_members_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([user_id], map: "idx_core_group_members_user_id")
   @@schema("core")
 }
 
@@ -1132,6 +1157,7 @@ model import_batch_errors {
   tenants                                     tenants        @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_import_batch_errors_updated_byTousers users?         @relation("import_batch_errors_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([import_batch_id], map: "idx_core_import_batch_errors_import_batch_id")
   @@schema("core")
 }
 
@@ -1169,6 +1195,8 @@ model import_batches {
   tenants                                         tenants               @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_import_batches_updated_byTousers          users?                @relation("import_batches_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([executed_by_user_id], map: "idx_core_import_batches_executed_by_user_id")
+  @@index([source_file_id], map: "idx_core_import_batches_source_file_id")
   @@schema("core")
 }
 
@@ -1201,6 +1229,7 @@ model integration_credentials {
   tenants                                         tenants      @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_integration_credentials_updated_byTousers users?       @relation("integration_credentials_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([integration_id], map: "idx_core_integration_credentials_integration_id")
   @@schema("core")
 }
 
@@ -1305,6 +1334,8 @@ model notification_delivery_logs {
 
   @@id([id, created_at])
   @@unique([local_id, created_at])
+  @@index([channel_id], map: "idx_core_notification_delivery_logs_channel_id")
+  @@index([notification_id], map: "idx_core_notification_delivery_logs_notification_id")
   @@schema("core")
 }
 
@@ -1339,6 +1370,7 @@ model notification_preferences {
   users_notification_preferences_updated_byTousers users?                @relation("notification_preferences_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_notification_preferences_user_idTousers    users                 @relation("notification_preferences_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([channel_id], map: "idx_core_notification_preferences_channel_id")
   @@schema("core")
 }
 
@@ -1371,6 +1403,8 @@ model notification_recipients {
   users_notification_recipients_updated_byTousers users?        @relation("notification_recipients_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_notification_recipients_user_idTousers    users         @relation("notification_recipients_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([notification_id], map: "idx_core_notification_recipients_notification_id")
+  @@index([user_id], map: "idx_core_notification_recipients_user_id")
   @@schema("core")
 }
 
@@ -1437,6 +1471,7 @@ model notification_templates {
   users_notification_templates_updated_byTousers users?                               @relation("notification_templates_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   notifications                                  notifications[]
 
+  @@index([default_channel_id], map: "idx_core_notification_templates_default_channel_id")
   @@schema("core")
 }
 
@@ -1474,6 +1509,7 @@ model notifications {
   tenants                                      tenants                      @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_notifications_updated_byTousers        users?                       @relation("notifications_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([template_id], map: "idx_core_notifications_template_id")
   @@schema("core")
 }
 
@@ -1540,6 +1576,7 @@ model role_permissions {
   tenants                                  tenants     @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_role_permissions_updated_byTousers users?      @relation("role_permissions_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([permission_id], map: "idx_core_role_permissions_permission_id")
   @@schema("core")
 }
 
@@ -1607,6 +1644,7 @@ model scheduled_job_runs {
   tenants                                    tenants        @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_scheduled_job_runs_updated_byTousers users?         @relation("scheduled_job_runs_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([scheduled_job_id], map: "idx_core_scheduled_job_runs_scheduled_job_id")
   @@schema("core")
 }
 
@@ -1674,6 +1712,7 @@ model sessions {
   users_sessions_updated_byTousers users?                  @relation("sessions_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_sessions_user_idTousers    users                   @relation("sessions_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([user_id], map: "idx_core_sessions_user_id")
   @@schema("core")
 }
 
@@ -1706,6 +1745,7 @@ model signature_requests {
   tenants                                    tenants    @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_signature_requests_updated_byTousers users?     @relation("signature_requests_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([document_id], map: "idx_core_signature_requests_document_id")
   @@schema("core")
 }
 
@@ -1742,6 +1782,9 @@ model signatures {
   tenants                                tenants    @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_signatures_updated_byTousers     users?     @relation("signatures_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([document_id], map: "idx_core_signatures_document_id")
+  @@index([signature_image_file_id], map: "idx_core_signatures_signature_image_file_id")
+  @@index([signer_user_id], map: "idx_core_signatures_signer_user_id")
   @@schema("core")
 }
 
@@ -1775,6 +1818,7 @@ model system_logs {
 
   @@id([id, created_at])
   @@unique([local_id, created_at])
+  @@index([created_at], map: "idx_core_system_logs_created_brin", type: Brin)
   @@schema("core")
 }
 
@@ -1838,6 +1882,8 @@ model system_settings {
   tenants                                 tenants           @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_system_settings_updated_byTousers users?            @relation("system_settings_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([metadata(ops: JsonbPathOps)], map: "idx_core_system_settings_metadata", type: Gin)
+  @@index([parameter_id], map: "idx_core_system_settings_parameter_id")
   @@schema("core")
 }
 
@@ -2134,6 +2180,7 @@ model tokens {
   users_tokens_updated_byTousers users?     @relation("tokens_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_tokens_user_idTousers    users      @relation("tokens_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([user_id], map: "idx_core_tokens_user_id")
   @@schema("core")
 }
 
@@ -2167,6 +2214,7 @@ model user_companies {
   users_user_companies_updated_byTousers                users?     @relation("user_companies_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_user_companies_user_idTousers                   users      @relation("user_companies_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([target_company_id], map: "idx_core_user_companies_target_company_id")
   @@schema("core")
 }
 
@@ -2200,6 +2248,7 @@ model user_devices {
   users_user_devices_updated_byTousers users?            @relation("user_devices_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_user_devices_user_idTousers    users             @relation("user_devices_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([user_id], map: "idx_core_user_devices_user_id")
   @@schema("core")
 }
 
@@ -2234,6 +2283,7 @@ model user_profiles {
   users_user_profiles_updated_byTousers users?     @relation("user_profiles_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_user_profiles_user_idTousers    users      @relation("user_profiles_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([avatar_file_id], map: "idx_core_user_profiles_avatar_file_id")
   @@schema("core")
 }
 
@@ -2266,6 +2316,7 @@ model user_roles {
   users_user_roles_updated_byTousers users?     @relation("user_roles_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_user_roles_user_idTousers    users      @relation("user_roles_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([role_id], map: "idx_core_user_roles_role_id")
   @@schema("core")
 }
 
@@ -2423,6 +2474,9 @@ model users {
   permissions_permissions_created_byTousers                                                   permissions[]                          @relation("permissions_created_byTousers")
   permissions_permissions_deleted_byTousers                                                   permissions[]                          @relation("permissions_deleted_byTousers")
   permissions_permissions_updated_byTousers                                                   permissions[]                          @relation("permissions_updated_byTousers")
+  restore_test_logs_restore_test_logs_created_byTousers                                       restore_test_logs[]                    @relation("restore_test_logs_created_byTousers")
+  restore_test_logs_restore_test_logs_deleted_byTousers                                       restore_test_logs[]                    @relation("restore_test_logs_deleted_byTousers")
+  restore_test_logs_restore_test_logs_updated_byTousers                                       restore_test_logs[]                    @relation("restore_test_logs_updated_byTousers")
   role_permissions_role_permissions_created_byTousers                                         role_permissions[]                     @relation("role_permissions_created_byTousers")
   role_permissions_role_permissions_deleted_byTousers                                         role_permissions[]                     @relation("role_permissions_deleted_byTousers")
   role_permissions_role_permissions_updated_byTousers                                         role_permissions[]                     @relation("role_permissions_updated_byTousers")
@@ -2556,6 +2610,7 @@ model webhook_delivery_logs {
   tenants                                       tenants               @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_webhook_delivery_logs_updated_byTousers users?                @relation("webhook_delivery_logs_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([subscription_id], map: "idx_core_webhook_delivery_logs_subscription_id")
   @@schema("core")
 }
 
@@ -2590,6 +2645,7 @@ model webhook_subscriptions {
   tenants                                       tenants                 @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_webhook_subscriptions_updated_byTousers users?                  @relation("webhook_subscriptions_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([integration_id], map: "idx_core_webhook_subscriptions_integration_id")
   @@schema("core")
 }
 
@@ -2626,6 +2682,9 @@ model workflow_instance_steps {
   workflow_instances                                      workflow_instances @relation(fields: [workflow_instance_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   workflow_steps                                          workflow_steps     @relation(fields: [workflow_step_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([decided_by_user_id], map: "idx_core_workflow_instance_steps_decided_by_user_id")
+  @@index([workflow_instance_id], map: "idx_core_workflow_instance_steps_workflow_instance_id")
+  @@index([workflow_step_id], map: "idx_core_workflow_instance_steps_workflow_step_id")
   @@schema("core")
 }
 
@@ -2660,6 +2719,7 @@ model workflow_instances {
   users_workflow_instances_updated_byTousers users?                    @relation("workflow_instances_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   workflows                                  workflows                 @relation(fields: [workflow_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([workflow_id], map: "idx_core_workflow_instances_workflow_id")
   @@schema("core")
 }
 
@@ -2697,6 +2757,9 @@ model workflow_steps {
   users_workflow_steps_updated_byTousers       users?                    @relation("workflow_steps_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   workflows                                    workflows                 @relation(fields: [workflow_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([approver_role_id], map: "idx_core_workflow_steps_approver_role_id")
+  @@index([approver_user_id], map: "idx_core_workflow_steps_approver_user_id")
+  @@index([workflow_id], map: "idx_core_workflow_steps_workflow_id")
   @@schema("core")
 }
 
@@ -2729,6 +2792,36 @@ model workflows {
   users_workflows_deleted_byTousers users?               @relation("workflows_deleted_byTousers", fields: [deleted_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants                           tenants              @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_workflows_updated_byTousers users?               @relation("workflows_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("core")
+}
+
+model restore_test_logs {
+  id                                        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                  BigInt    @unique @default(autoincrement())
+  tenant_id                                 String    @default(dbgenerated("'00000000-0000-0000-0000-000000000000'::uuid")) @db.Uuid
+  company_id                                String?   @db.Uuid
+  branch_id                                 String?   @db.Uuid
+  created_at                                DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                                DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at                                DateTime? @db.Timestamptz(6)
+  created_by                                String?   @db.Uuid
+  updated_by                                String?   @db.Uuid
+  deleted_by                                String?   @db.Uuid
+  version                                   Int       @default(1)
+  row_version                               BigInt    @default(0)
+  is_active                                 Boolean   @default(true)
+  is_deleted                                Boolean?  @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                              String?
+  metadata                                  Json      @default("{}")
+  backup_source                             String
+  restore_started_at                        DateTime  @db.Timestamptz(6)
+  restore_finished_at                       DateTime? @db.Timestamptz(6)
+  all_checks_passed                         Boolean?
+  check_results                             Json?
+  users_restore_test_logs_created_byTousers users?    @relation("restore_test_logs_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_restore_test_logs_deleted_byTousers users?    @relation("restore_test_logs_deleted_byTousers", fields: [deleted_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_restore_test_logs_updated_byTousers users?    @relation("restore_test_logs_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@schema("core")
 }

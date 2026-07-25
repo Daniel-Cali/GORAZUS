@@ -2,7 +2,6 @@ generator client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -35,6 +34,7 @@ model asset_categories {
   depreciation_methods                     depreciation_methods? @relation(fields: [default_depreciation_method_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   fixed_assets                             fixed_assets[]
 
+  @@index([default_depreciation_method_id], map: "idx_assets_asset_categories_default_depreciation_method_id")
   @@schema("assets")
 }
 
@@ -60,6 +60,8 @@ model asset_custodian_history {
   custodian_user_id                                      String       @db.Uuid
   fixed_assets                                           fixed_assets @relation(fields: [asset_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([asset_id], map: "idx_assets_asset_custodian_history_asset_id")
+  @@index([custodian_user_id], map: "idx_assets_asset_custodian_history_custodian_user_id")
   @@schema("assets")
 }
 
@@ -88,6 +90,7 @@ model asset_depreciation_entries {
 
   @@id([id, created_at])
   @@unique([local_id, created_at])
+  @@index([fiscal_period_id], map: "idx_assets_asset_depreciation_entries_fiscal_period_id")
   @@schema("assets")
 }
 
@@ -114,6 +117,7 @@ model asset_disposals {
   residual_value                          Decimal      @default(0) @db.Decimal(18, 4)
   fixed_assets                            fixed_assets @relation(fields: [asset_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([asset_id], map: "idx_assets_asset_disposals_asset_id")
   @@schema("assets")
 }
 
@@ -165,6 +169,8 @@ model asset_maintenances {
   fixed_assets                               fixed_assets            @relation(fields: [asset_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   asset_maintenance_types                    asset_maintenance_types @relation(fields: [maintenance_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([asset_id], map: "idx_assets_asset_maintenances_asset_id")
+  @@index([maintenance_type_id], map: "idx_assets_asset_maintenances_maintenance_type_id")
   @@schema("assets")
 }
 
@@ -191,6 +197,8 @@ model asset_revaluations {
   approved_by_user_id                                 String       @db.Uuid
   fixed_assets                                        fixed_assets @relation(fields: [asset_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([approved_by_user_id], map: "idx_assets_asset_revaluations_approved_by_user_id")
+  @@index([asset_id], map: "idx_assets_asset_revaluations_asset_id")
   @@schema("assets")
 }
 
@@ -217,6 +225,9 @@ model asset_transfers {
   to_branch_id                                      String?      @db.Uuid
   fixed_assets                                      fixed_assets @relation(fields: [asset_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([asset_id], map: "idx_assets_asset_transfers_asset_id")
+  @@index([from_branch_id], map: "idx_assets_asset_transfers_from_branch_id")
+  @@index([to_branch_id], map: "idx_assets_asset_transfers_to_branch_id")
   @@schema("assets")
 }
 
@@ -276,5 +287,8 @@ model fixed_assets {
   asset_transfers                                     asset_transfers[]
   asset_categories                                    asset_categories             @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([category_id], map: "idx_assets_fixed_assets_category_id")
+  @@index([current_custodian_user_id], map: "idx_assets_fixed_assets_current_custodian_user_id")
+  @@index([source_purchase_invoice_line_id], map: "idx_assets_fixed_assets_source_purchase_invoice_line_id")
   @@schema("assets")
 }

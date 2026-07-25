@@ -2,7 +2,6 @@ generator client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -57,6 +56,7 @@ model deductions {
   description                        String
   amount                             Decimal   @db.Decimal(18, 4)
 
+  @@index([employee_id], map: "idx_payroll_deductions_employee_id")
   @@schema("payroll")
 }
 
@@ -82,6 +82,8 @@ model employee_benefit_assignments {
   employee_id                                          String            @db.Uuid
   employee_benefits                                    employee_benefits @relation(fields: [benefit_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([benefit_id], map: "idx_payroll_employee_benefit_assignments_benefit_id")
+  @@index([employee_id], map: "idx_payroll_employee_benefit_assignments_employee_id")
   @@schema("payroll")
 }
 
@@ -134,6 +136,8 @@ model loan_installments {
   loans                                     loans            @relation(fields: [loan_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   payroll_entries                           payroll_entries? @relation(fields: [payroll_entry_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([loan_id], map: "idx_payroll_loan_installments_loan_id")
+  @@index([payroll_entry_id], map: "idx_payroll_loan_installments_payroll_entry_id")
   @@schema("payroll")
 }
 
@@ -161,6 +165,7 @@ model loans {
   remaining_balance             Decimal             @db.Decimal(18, 4)
   loan_installments             loan_installments[]
 
+  @@index([employee_id], map: "idx_payroll_loans_employee_id")
   @@schema("payroll")
 }
 
@@ -188,6 +193,8 @@ model overtime_records {
   rate_multiplier                          Decimal         @default(1.5) @db.Decimal(4, 2)
   payroll_periods                          payroll_periods @relation(fields: [period_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([employee_id], map: "idx_payroll_overtime_records_employee_id")
+  @@index([period_id], map: "idx_payroll_overtime_records_period_id")
   @@schema("payroll")
 }
 
@@ -213,6 +220,8 @@ model payroll_commission_entries {
   source_commission_entry_id                         String             @db.Uuid
   payroll_entries                                    payroll_entries    @relation(fields: [payroll_entry_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([payroll_entry_id], map: "idx_payroll_payroll_commission_entries_payroll_entry_id")
+  @@index([source_commission_entry_id], map: "idx_payroll_payroll_commission_entries_source_commission_entry_")
   @@schema("payroll")
 }
 
@@ -243,6 +252,7 @@ model payroll_concepts {
   payroll_novelties                        payroll_novelties[]
   salary_structure_concepts                salary_structure_concepts[]
 
+  @@index([concept_type_id], map: "idx_payroll_payroll_concepts_concept_type_id")
   @@schema("payroll")
 }
 
@@ -273,6 +283,7 @@ model payroll_entries {
   payroll_runs                            payroll_runs                 @relation(fields: [run_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   payroll_entry_lines                     payroll_entry_lines[]
 
+  @@index([run_id], map: "idx_payroll_payroll_entries_run_id")
   @@schema("payroll")
 }
 
@@ -300,6 +311,8 @@ model payroll_entry_lines {
   payroll_concepts                            payroll_concepts @relation(fields: [concept_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   payroll_entries                             payroll_entries  @relation(fields: [entry_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([concept_id], map: "idx_payroll_payroll_entry_lines_concept_id")
+  @@index([entry_id], map: "idx_payroll_payroll_entry_lines_entry_id")
   @@schema("payroll")
 }
 
@@ -328,6 +341,9 @@ model payroll_novelties {
   payroll_concepts                          payroll_concepts @relation(fields: [concept_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   payroll_periods                           payroll_periods  @relation(fields: [period_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([concept_id], map: "idx_payroll_payroll_novelties_concept_id")
+  @@index([employee_id], map: "idx_payroll_payroll_novelties_employee_id")
+  @@index([period_id], map: "idx_payroll_payroll_novelties_period_id")
   @@schema("payroll")
 }
 
@@ -407,6 +423,8 @@ model payroll_run_status_history {
   payroll_runs                                       payroll_runs       @relation(fields: [run_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   payroll_run_status                                 payroll_run_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([run_id], map: "idx_payroll_payroll_run_status_history_run_id")
+  @@index([status_id], map: "idx_payroll_payroll_run_status_history_status_id")
   @@schema("payroll")
 }
 
@@ -435,6 +453,8 @@ model payroll_runs {
   payroll_periods                      payroll_periods              @relation(fields: [period_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   payroll_run_status                   payroll_run_status           @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([period_id], map: "idx_payroll_payroll_runs_period_id")
+  @@index([status_id], map: "idx_payroll_payroll_runs_status_id")
   @@schema("payroll")
 }
 
@@ -462,6 +482,8 @@ model salary_structure_concepts {
   payroll_concepts                                  payroll_concepts  @relation(fields: [concept_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   salary_structures                                 salary_structures @relation(fields: [structure_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([concept_id], map: "idx_payroll_salary_structure_concepts_concept_id")
+  @@index([structure_id], map: "idx_payroll_salary_structure_concepts_structure_id")
   @@schema("payroll")
 }
 
@@ -487,6 +509,7 @@ model salary_structures {
   name                                      String
   salary_structure_concepts                 salary_structure_concepts[]
 
+  @@index([job_position_id], map: "idx_payroll_salary_structures_job_position_id")
   @@schema("payroll")
 }
 
@@ -512,6 +535,7 @@ model severance_calculations {
   total_amount                                   Decimal   @db.Decimal(18, 4)
   calculation_detail                             Json
 
+  @@index([employee_id], map: "idx_payroll_severance_calculations_employee_id")
   @@schema("payroll")
 }
 
@@ -587,5 +611,7 @@ model thirteenth_month_calculations {
   fiscal_year_id                                        String       @db.Uuid
   amount                                                Decimal      @db.Decimal(18, 4)
 
+  @@index([employee_id], map: "idx_payroll_thirteenth_month_calculations_employee_id")
+  @@index([fiscal_year_id], map: "idx_payroll_thirteenth_month_calculations_fiscal_year_id")
   @@schema("payroll")
 }

@@ -2,7 +2,6 @@ generator client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -34,6 +33,8 @@ model goods_receipt_note_lines {
   quantity                                         Decimal             @db.Decimal(18, 6)
   goods_receipt_notes                              goods_receipt_notes @relation(fields: [receipt_note_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_purchases_goods_receipt_note_lines_product_id")
+  @@index([receipt_note_id], map: "idx_purchases_goods_receipt_note_lines_receipt_note_id")
   @@schema("purchases")
 }
 
@@ -61,6 +62,8 @@ model goods_receipt_notes {
   purchase_orders                             purchase_orders             @relation(fields: [purchase_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   purchase_invoice_matching                   purchase_invoice_matching[]
 
+  @@index([inventory_receipt_id], map: "idx_purchases_goods_receipt_notes_inventory_receipt_id")
+  @@index([purchase_order_id], map: "idx_purchases_goods_receipt_notes_purchase_order_id")
   @@schema("purchases")
 }
 
@@ -87,6 +90,7 @@ model import_expenses {
   amount                                  Decimal    @db.Decimal(18, 4)
   imports                                 imports    @relation(fields: [import_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([import_id], map: "idx_purchases_import_expenses_import_id")
   @@schema("purchases")
 }
 
@@ -138,6 +142,8 @@ model import_status_history {
   imports                                       imports       @relation(fields: [import_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   import_status                                 import_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([import_id], map: "idx_purchases_import_status_history_import_id")
+  @@index([status_id], map: "idx_purchases_import_status_history_status_id")
   @@schema("purchases")
 }
 
@@ -166,6 +172,8 @@ model imports {
   purchase_orders                 purchase_orders         @relation(fields: [purchase_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   import_status                   import_status           @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([purchase_order_id], map: "idx_purchases_imports_purchase_order_id")
+  @@index([status_id], map: "idx_purchases_imports_status_id")
   @@schema("purchases")
 }
 
@@ -192,6 +200,8 @@ model purchase_credit_note_lines {
   quantity                                           Decimal               @db.Decimal(18, 6)
   purchase_credit_notes                              purchase_credit_notes @relation(fields: [credit_note_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([credit_note_id], map: "idx_purchases_purchase_credit_note_lines_credit_note_id")
+  @@index([product_id], map: "idx_purchases_purchase_credit_note_lines_product_id")
   @@schema("purchases")
 }
 
@@ -243,6 +253,7 @@ model purchase_expenses {
   amount                                    Decimal          @db.Decimal(18, 4)
   purchase_orders                           purchase_orders? @relation(fields: [purchase_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([purchase_order_id], map: "idx_purchases_purchase_expenses_purchase_order_id")
   @@schema("purchases")
 }
 
@@ -271,6 +282,8 @@ model purchase_invoice_lines {
   unit_cost                                      Decimal        @db.Decimal(18, 4)
   is_capitalizable                               Boolean        @default(false)
 
+  @@index([product_id], map: "idx_purchases_purchase_invoice_lines_product_id")
+  @@index([tax_id], map: "idx_purchases_purchase_invoice_lines_tax_id")
   @@schema("purchases")
 }
 
@@ -300,6 +313,8 @@ model purchase_invoice_matching {
   purchase_orders                                   purchase_orders     @relation(fields: [purchase_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   goods_receipt_notes                               goods_receipt_notes @relation(fields: [receipt_note_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([purchase_order_id], map: "idx_purchases_purchase_invoice_matching_purchase_order_id")
+  @@index([receipt_note_id], map: "idx_purchases_purchase_invoice_matching_receipt_note_id")
   @@schema("purchases")
 }
 
@@ -351,6 +366,7 @@ model purchase_invoice_status_history {
   status_id                                               String                  @db.Uuid
   purchase_invoice_status                                 purchase_invoice_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([status_id], map: "idx_purchases_purchase_invoice_status_history_status_id")
   @@schema("purchases")
 }
 
@@ -386,6 +402,8 @@ model purchase_invoices {
 
   @@id([id, received_at])
   @@unique([local_id, received_at])
+  @@index([purchase_order_id], map: "idx_purchases_purchase_invoices_purchase_order_id")
+  @@index([status_id], map: "idx_purchases_purchase_invoices_status_id")
   @@schema("purchases")
 }
 
@@ -413,6 +431,8 @@ model purchase_order_lines {
   unit_price                                   Decimal         @db.Decimal(18, 4)
   purchase_orders                              purchase_orders @relation(fields: [purchase_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_purchases_purchase_order_lines_product_id")
+  @@index([purchase_order_id], map: "idx_purchases_purchase_order_lines_purchase_order_id")
   @@schema("purchases")
 }
 
@@ -465,6 +485,8 @@ model purchase_order_status_history {
   purchase_orders                                       purchase_orders       @relation(fields: [purchase_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   purchase_order_status                                 purchase_order_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([purchase_order_id], map: "idx_purchases_purchase_order_status_history_purchase_order_id")
+  @@index([status_id], map: "idx_purchases_purchase_order_status_history_status_id")
   @@schema("purchases")
 }
 
@@ -502,6 +524,9 @@ model purchase_orders {
   purchase_requisitions                   purchase_requisitions?          @relation(fields: [requisition_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   purchase_order_status                   purchase_order_status           @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([requisition_id], map: "idx_purchases_purchase_orders_requisition_id")
+  @@index([status_id], map: "idx_purchases_purchase_orders_status_id")
+  @@index([supplier_id], map: "idx_purchases_purchase_orders_supplier_id")
   @@schema("purchases")
 }
 
@@ -528,6 +553,8 @@ model purchase_quote_lines {
   unit_price                                   Decimal         @db.Decimal(18, 4)
   purchase_quotes                              purchase_quotes @relation(fields: [quote_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_purchases_purchase_quote_lines_product_id")
+  @@index([quote_id], map: "idx_purchases_purchase_quote_lines_quote_id")
   @@schema("purchases")
 }
 
@@ -554,6 +581,8 @@ model purchase_quotes {
   purchase_quote_lines                    purchase_quote_lines[]
   purchase_requisitions                   purchase_requisitions? @relation(fields: [requisition_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([requisition_id], map: "idx_purchases_purchase_quotes_requisition_id")
+  @@index([supplier_id], map: "idx_purchases_purchase_quotes_supplier_id")
   @@schema("purchases")
 }
 
@@ -580,6 +609,8 @@ model purchase_requisition_lines {
   quantity                                           Decimal               @db.Decimal(18, 6)
   purchase_requisitions                              purchase_requisitions @relation(fields: [requisition_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_purchases_purchase_requisition_lines_product_id")
+  @@index([requisition_id], map: "idx_purchases_purchase_requisition_lines_requisition_id")
   @@schema("purchases")
 }
 
@@ -632,6 +663,8 @@ model purchase_requisition_status_history {
   purchase_requisitions                                       purchase_requisitions       @relation(fields: [requisition_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   purchase_requisition_status                                 purchase_requisition_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([requisition_id], map: "idx_purchases_purchase_requisition_status_history_requisition_i")
+  @@index([status_id], map: "idx_purchases_purchase_requisition_status_history_status_id")
   @@schema("purchases")
 }
 
@@ -662,6 +695,8 @@ model purchase_requisitions {
   purchase_requisition_status_history                     purchase_requisition_status_history[]
   purchase_requisition_status                             purchase_requisition_status           @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([requested_by_user_id], map: "idx_purchases_purchase_requisitions_requested_by_user_id")
+  @@index([status_id], map: "idx_purchases_purchase_requisitions_status_id")
   @@schema("purchases")
 }
 
@@ -688,6 +723,8 @@ model purchase_return_lines {
   quantity                                      Decimal          @db.Decimal(18, 6)
   purchase_returns                              purchase_returns @relation(fields: [return_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_purchases_purchase_return_lines_product_id")
+  @@index([return_id], map: "idx_purchases_purchase_return_lines_return_id")
   @@schema("purchases")
 }
 
@@ -738,5 +775,6 @@ model purchase_withholdings {
   withholding_rule_id                           String?            @db.Uuid
   amount                                        Decimal            @db.Decimal(18, 4)
 
+  @@index([withholding_rule_id], map: "idx_purchases_purchase_withholdings_withholding_rule_id")
   @@schema("purchases")
 }

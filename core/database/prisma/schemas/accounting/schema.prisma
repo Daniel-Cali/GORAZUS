@@ -2,7 +2,6 @@ generator client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -34,6 +33,7 @@ model account_reconciliations {
   subledger_balance                               Decimal           @db.Decimal(18, 4)
   chart_of_accounts                               chart_of_accounts @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([account_id], map: "idx_accounting_account_reconciliations_account_id")
   @@schema("accounting")
 }
 
@@ -85,6 +85,7 @@ model accounting_dimension_values {
   accounting_dimensions                               accounting_dimensions            @relation(fields: [dimension_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   journal_entry_dimension_values                      journal_entry_dimension_values[]
 
+  @@index([dimension_id], map: "idx_accounting_accounting_dimension_values_dimension_id")
   @@schema("accounting")
 }
 
@@ -137,6 +138,8 @@ model accounting_rule_lines {
   chart_of_accounts                             chart_of_accounts @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   accounting_rules                              accounting_rules  @relation(fields: [rule_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([account_id], map: "idx_accounting_accounting_rule_lines_account_id")
+  @@index([rule_id], map: "idx_accounting_accounting_rule_lines_rule_id")
   @@schema("accounting")
 }
 
@@ -186,6 +189,7 @@ model balance_sheet_snapshots {
   snapshot_data                                   Json
   fiscal_periods                                  fiscal_periods @relation(fields: [fiscal_period_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([fiscal_period_id], map: "idx_accounting_balance_sheet_snapshots_fiscal_period_id")
   @@schema("accounting")
 }
 
@@ -214,6 +218,8 @@ model budget_lines {
   chart_of_accounts                    chart_of_accounts @relation(fields: [account_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   budgets                              budgets           @relation(fields: [budget_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([account_id], map: "idx_accounting_budget_lines_account_id")
+  @@index([budget_id], map: "idx_accounting_budget_lines_budget_id")
   @@schema("accounting")
 }
 
@@ -242,6 +248,8 @@ model budgets {
   cost_centers                    cost_centers?  @relation(fields: [cost_center_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   fiscal_years                    fiscal_years   @relation(fields: [fiscal_year_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([cost_center_id], map: "idx_accounting_budgets_cost_center_id")
+  @@index([fiscal_year_id], map: "idx_accounting_budgets_fiscal_year_id")
   @@schema("accounting")
 }
 
@@ -267,6 +275,7 @@ model cash_flow_snapshots {
   snapshot_data                               Json
   fiscal_periods                              fiscal_periods @relation(fields: [fiscal_period_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([fiscal_period_id], map: "idx_accounting_cash_flow_snapshots_fiscal_period_id")
   @@schema("accounting")
 }
 
@@ -301,6 +310,8 @@ model chart_of_accounts {
   other_chart_of_accounts                   chart_of_accounts[]       @relation("chart_of_accountsTochart_of_accounts")
   journal_entry_lines                       journal_entry_lines[]
 
+  @@index([account_type_id], map: "idx_accounting_chart_of_accounts_account_type_id")
+  @@index([parent_account_id], map: "idx_accounting_chart_of_accounts_parent_account_id")
   @@schema("accounting")
 }
 
@@ -376,6 +387,7 @@ model currency_revaluations {
   journal_entry_id                              String?        @db.Uuid
   fiscal_periods                                fiscal_periods @relation(fields: [fiscal_period_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([fiscal_period_id], map: "idx_accounting_currency_revaluations_fiscal_period_id")
   @@schema("accounting")
 }
 
@@ -410,6 +422,7 @@ model fiscal_periods {
   journal_entries                        journal_entries[]
   period_closing_logs                    period_closing_logs[]
 
+  @@index([fiscal_year_id], map: "idx_accounting_fiscal_periods_fiscal_year_id")
   @@schema("accounting")
 }
 
@@ -487,6 +500,7 @@ model income_statement_snapshots {
   snapshot_data                                      Json
   fiscal_periods                                     fiscal_periods @relation(fields: [fiscal_period_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([fiscal_period_id], map: "idx_accounting_income_statement_snapshots_fiscal_period_id")
   @@schema("accounting")
 }
 
@@ -514,6 +528,8 @@ model intercompany_transactions {
   target_journal_entry_id                                          String?    @db.Uuid
   amount                                                           Decimal    @db.Decimal(18, 4)
 
+  @@index([source_company_id], map: "idx_accounting_intercompany_transactions_source_company_id")
+  @@index([target_company_id], map: "idx_accounting_intercompany_transactions_target_company_id")
   @@schema("accounting")
 }
 
@@ -547,6 +563,9 @@ model journal_entries {
 
   @@id([id, posting_date])
   @@unique([local_id, posting_date])
+  @@index([fiscal_period_id], map: "idx_accounting_journal_entries_fiscal_period_id")
+  @@index([posting_date], map: "idx_accounting_journal_entries_posting_brin", type: Brin)
+  @@index([status_id], map: "idx_accounting_journal_entries_status_id")
   @@schema("accounting")
 }
 
@@ -573,6 +592,8 @@ model journal_entry_dimension_values {
   accounting_dimension_values                            accounting_dimension_values @relation(fields: [dimension_value_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   journal_entry_lines                                    journal_entry_lines         @relation(fields: [journal_entry_line_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([dimension_value_id], map: "idx_accounting_journal_entry_dimension_values_dimension_value_i")
+  @@index([journal_entry_line_id], map: "idx_accounting_journal_entry_dimension_values_journal_entry_lin")
   @@schema("accounting")
 }
 
@@ -605,6 +626,9 @@ model journal_entry_lines {
   cost_centers                                cost_centers?                    @relation(fields: [cost_center_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   profit_centers                              profit_centers?                  @relation(fields: [profit_center_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([account_id], map: "idx_accounting_journal_entry_lines_account_id")
+  @@index([cost_center_id], map: "idx_accounting_journal_entry_lines_cost_center_id")
+  @@index([profit_center_id], map: "idx_accounting_journal_entry_lines_profit_center_id")
   @@schema("accounting")
 }
 
@@ -655,6 +679,7 @@ model journal_entry_status_history {
   status_id                                            String               @db.Uuid
   journal_entry_status                                 journal_entry_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([status_id], map: "idx_accounting_journal_entry_status_history_status_id")
   @@schema("accounting")
 }
 
@@ -681,6 +706,8 @@ model period_closing_logs {
   performed_by_user_id                                  String         @db.Uuid
   fiscal_periods                                        fiscal_periods @relation(fields: [fiscal_period_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([fiscal_period_id], map: "idx_accounting_period_closing_logs_fiscal_period_id")
+  @@index([performed_by_user_id], map: "idx_accounting_period_closing_logs_performed_by_user_id")
   @@schema("accounting")
 }
 
@@ -731,6 +758,7 @@ model recurring_journal_entry_generations {
   journal_entry_id                                            String                            @db.Uuid
   recurring_journal_entry_templates                           recurring_journal_entry_templates @relation(fields: [template_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([template_id], map: "idx_accounting_recurring_journal_entry_generations_template_id")
   @@schema("accounting")
 }
 

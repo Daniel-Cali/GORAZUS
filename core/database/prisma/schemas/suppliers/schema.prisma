@@ -2,7 +2,6 @@ generator client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -38,6 +37,8 @@ model supplier_addresses {
   is_default                                 Boolean         @default(false)
   suppliers                                  suppliers       @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([municipality_id], map: "idx_suppliers_supplier_addresses_municipality_id")
+  @@index([supplier_id], map: "idx_suppliers_supplier_addresses_supplier_id")
   @@schema("suppliers")
 }
 
@@ -64,6 +65,7 @@ model supplier_bank_accounts {
   encrypted_account_number                       String
   suppliers                                      suppliers @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([supplier_id], map: "idx_suppliers_supplier_bank_accounts_supplier_id")
   @@schema("suppliers")
 }
 
@@ -90,6 +92,7 @@ model supplier_block_history {
   reason                                         String?
   suppliers                                      suppliers @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([supplier_id], map: "idx_suppliers_supplier_block_history_supplier_id")
   @@schema("suppliers")
 }
 
@@ -142,6 +145,7 @@ model supplier_contacts {
   is_primary                                Boolean   @default(false)
   suppliers                                 suppliers @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([supplier_id], map: "idx_suppliers_supplier_contacts_supplier_id")
   @@schema("suppliers")
 }
 
@@ -168,6 +172,7 @@ model supplier_credit_limit_history {
   new_limit                                             Decimal?  @db.Decimal(18, 4)
   suppliers                                             suppliers @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([supplier_id], map: "idx_suppliers_supplier_credit_limit_history_supplier_id")
   @@schema("suppliers")
 }
 
@@ -246,6 +251,8 @@ model supplier_evaluation_scores {
   supplier_evaluation_criteria                       supplier_evaluation_criteria @relation(fields: [criteria_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   supplier_evaluations                               supplier_evaluations         @relation(fields: [evaluation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([criteria_id], map: "idx_suppliers_supplier_evaluation_scores_criteria_id")
+  @@index([evaluation_id], map: "idx_suppliers_supplier_evaluation_scores_evaluation_id")
   @@schema("suppliers")
 }
 
@@ -274,6 +281,8 @@ model supplier_evaluations {
   supplier_evaluation_scores                             supplier_evaluation_scores[]
   suppliers                                              suppliers                    @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([evaluated_by_user_id], map: "idx_suppliers_supplier_evaluations_evaluated_by_user_id")
+  @@index([supplier_id], map: "idx_suppliers_supplier_evaluations_supplier_id")
   @@schema("suppliers")
 }
 
@@ -300,6 +309,7 @@ model supplier_history {
   occurred_at                              DateTime  @default(now()) @db.Timestamptz(6)
   suppliers                                suppliers @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([supplier_id], map: "idx_suppliers_supplier_history_supplier_id")
   @@schema("suppliers")
 }
 
@@ -325,6 +335,8 @@ model supplier_withholding_profiles {
   withholding_rule_id                                   String?            @db.Uuid
   suppliers                                             suppliers          @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([supplier_id], map: "idx_suppliers_supplier_withholding_profiles_supplier_id")
+  @@index([withholding_rule_id], map: "idx_suppliers_supplier_withholding_profiles_withholding_rule_id")
   @@schema("suppliers")
 }
 
@@ -357,6 +369,7 @@ model suppliers {
   supplier_bank_accounts            supplier_bank_accounts[]
   supplier_block_history            supplier_block_history[]
   supplier_contacts                 supplier_contacts[]
+  supplier_contracts                supplier_contracts[]
   supplier_credit_limit_history     supplier_credit_limit_history[]
   supplier_credit_profiles          supplier_credit_profiles[]
   supplier_evaluations              supplier_evaluations[]
@@ -364,5 +377,38 @@ model suppliers {
   supplier_withholding_profiles     supplier_withholding_profiles[]
   supplier_classifications          supplier_classifications?       @relation(fields: [classification_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([classification_id], map: "idx_suppliers_suppliers_classification_id")
+  @@schema("suppliers")
+}
+
+model supplier_contracts {
+  id                                         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                   BigInt    @unique @default(autoincrement())
+  tenant_id                                  String    @db.Uuid
+  company_id                                 String    @db.Uuid
+  branch_id                                  String?   @db.Uuid
+  created_at                                 DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at                                 DateTime? @db.Timestamptz(6)
+  created_by                                 String?   @db.Uuid
+  updated_by                                 String?   @db.Uuid
+  deleted_by                                 String?   @db.Uuid
+  version                                    Int       @default(1)
+  row_version                                BigInt    @default(0)
+  is_active                                  Boolean   @default(true)
+  is_deleted                                 Boolean?  @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                               String?
+  metadata                                   Json      @default("{}")
+  supplier_id                                String    @db.Uuid
+  contract_number                            String?
+  starts_on                                  DateTime  @db.Date
+  ends_on                                    DateTime? @db.Date
+  payment_terms_days                         Int?
+  delivery_sla_days                          Int?
+  framework_pricing_notes                    String?
+  status                                     String    @default("active")
+  suppliers                                  suppliers @relation(fields: [supplier_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([supplier_id], map: "idx_suppliers_supplier_contracts_supplier_id")
   @@schema("suppliers")
 }

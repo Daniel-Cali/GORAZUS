@@ -2,7 +2,6 @@ generator client {
   provider        = "prisma-client-js"
   output          = "./generated"
   previewFeatures = ["multiSchema"]
-  binaryTargets   = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -34,6 +33,7 @@ model commission_entries {
   amount                                     Decimal                      @db.Decimal(18, 4)
   commission_rules                           commission_rules             @relation(fields: [commission_rule_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([commission_rule_id], map: "idx_sales_commission_entries_salesperson")
   @@schema("sales")
 }
 
@@ -60,6 +60,7 @@ model commission_rules {
   commission_entries                       commission_entries[]
   salespeople                              salespeople?         @relation(fields: [salesperson_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([salesperson_id], map: "idx_sales_commission_rules_salesperson_id")
   @@schema("sales")
 }
 
@@ -85,6 +86,7 @@ model coupon_redemptions {
   invoice_id                                 String     @db.Uuid
   coupons                                    coupons    @relation(fields: [coupon_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([coupon_id], map: "idx_sales_coupon_redemptions_coupon_id")
   @@schema("sales")
 }
 
@@ -140,6 +142,8 @@ model credit_note_lines {
   unit_price                                Decimal      @db.Decimal(18, 4)
   credit_notes                              credit_notes @relation(fields: [credit_note_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([credit_note_id], map: "idx_sales_credit_note_lines_credit_note_id")
+  @@index([product_id], map: "idx_sales_credit_note_lines_product_id")
   @@schema("sales")
 }
 
@@ -193,6 +197,7 @@ model debit_note_lines {
   amount                                   Decimal     @db.Decimal(18, 4)
   debit_notes                              debit_notes @relation(fields: [debit_note_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([debit_note_id], map: "idx_sales_debit_note_lines_debit_note_id")
   @@schema("sales")
 }
 
@@ -246,6 +251,8 @@ model delivery_note_lines {
   quantity                                    Decimal        @db.Decimal(18, 6)
   delivery_notes                              delivery_notes @relation(fields: [delivery_note_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([delivery_note_id], map: "idx_sales_delivery_note_lines_delivery_note_id")
+  @@index([product_id], map: "idx_sales_delivery_note_lines_product_id")
   @@schema("sales")
 }
 
@@ -272,6 +279,7 @@ model delivery_notes {
   delivery_note_lines                    delivery_note_lines[]
   sales_orders                           sales_orders          @relation(fields: [sales_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([sales_order_id], map: "idx_sales_delivery_notes_sales_order_id")
   @@schema("sales")
 }
 
@@ -296,6 +304,7 @@ model discounts {
   product_category_id               String?             @db.Uuid
   discount_percentage               Decimal             @db.Decimal(5, 2)
 
+  @@index([product_category_id], map: "idx_sales_discounts_product_category_id")
   @@schema("sales")
 }
 
@@ -348,6 +357,7 @@ model gift_card_transactions {
   amount_delta                                   Decimal    @db.Decimal(18, 4)
   gift_cards                                     gift_cards @relation(fields: [gift_card_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([gift_card_id], map: "idx_sales_gift_card_transactions_gift_card_id")
   @@schema("sales")
 }
 
@@ -405,6 +415,8 @@ model invoice_lines {
   line_total                            Decimal      @db.Decimal(18, 4)
   warranties                            warranties[]
 
+  @@index([product_id], map: "idx_sales_invoice_lines_product_id")
+  @@index([tax_id], map: "idx_sales_invoice_lines_tax_id")
   @@schema("sales")
 }
 
@@ -456,6 +468,7 @@ model invoice_status_history {
   status_id                                      String         @db.Uuid
   invoice_status                                 invoice_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([status_id], map: "idx_sales_invoice_status_history_status_id")
   @@schema("sales")
 }
 
@@ -493,6 +506,10 @@ model invoices {
 
   @@id([id, issued_at])
   @@unique([local_id, issued_at])
+  @@index([fiscal_document_type_id], map: "idx_sales_invoices_fiscal_document_type_id")
+  @@index([issued_at], map: "idx_sales_invoices_issued_brin", type: Brin)
+  @@index([sales_order_id], map: "idx_sales_invoices_sales_order_id")
+  @@index([status_id], map: "idx_sales_invoices_status_id")
   @@schema("sales")
 }
 
@@ -520,6 +537,8 @@ model layaway_lines {
   unit_price                            Decimal    @db.Decimal(18, 4)
   layaways                              layaways   @relation(fields: [layaway_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([layaway_id], map: "idx_sales_layaway_lines_layaway_id")
+  @@index([product_id], map: "idx_sales_layaway_lines_product_id")
   @@schema("sales")
 }
 
@@ -545,6 +564,7 @@ model layaway_payments {
   amount                                   Decimal    @db.Decimal(18, 4)
   layaways                                 layaways   @relation(fields: [layaway_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([layaway_id], map: "idx_sales_layaway_payments_layaway_id")
   @@schema("sales")
 }
 
@@ -573,6 +593,7 @@ model layaways {
   layaway_lines                    layaway_lines[]
   layaway_payments                 layaway_payments[]
 
+  @@index([customer_id], map: "idx_sales_layaways_customer_id")
   @@schema("sales")
 }
 
@@ -599,6 +620,7 @@ model loyalty_points_transactions {
   points_delta                                        Int
   transaction_type                                    String
 
+  @@index([loyalty_account_id], map: "idx_sales_loyalty_points_transactions_loyalty_account_id")
   @@schema("sales")
 }
 
@@ -625,6 +647,7 @@ model loyalty_program_tiers {
   min_points                                    Int
   loyalty_programs                              loyalty_programs @relation(fields: [program_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([program_id], map: "idx_sales_loyalty_program_tiers_program_id")
   @@schema("sales")
 }
 
@@ -674,6 +697,7 @@ model online_store_configs {
   domain                                       String
   payment_gateway_integration_id               String?       @db.Uuid
 
+  @@index([payment_gateway_integration_id], map: "idx_sales_online_store_configs_payment_gateway_integration_id")
   @@schema("sales")
 }
 
@@ -702,6 +726,8 @@ model promotion_rules {
   discount_percentage                     Decimal?   @db.Decimal(5, 2)
   promotions                              promotions @relation(fields: [promotion_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_sales_promotion_rules_product_id")
+  @@index([promotion_id], map: "idx_sales_promotion_rules_promotion_id")
   @@schema("sales")
 }
 
@@ -756,6 +782,8 @@ model quote_lines {
   discount_percentage                 Decimal    @default(0) @db.Decimal(5, 2)
   quotes                              quotes     @relation(fields: [quote_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_sales_quote_lines_product_id")
+  @@index([quote_id], map: "idx_sales_quote_lines_quote_id")
   @@schema("sales")
 }
 
@@ -808,6 +836,8 @@ model quote_status_history {
   quotes                                       quotes       @relation(fields: [quote_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   quote_status                                 quote_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([quote_id], map: "idx_sales_quote_status_history_quote_id")
+  @@index([status_id], map: "idx_sales_quote_status_history_status_id")
   @@schema("sales")
 }
 
@@ -842,6 +872,9 @@ model quotes {
   quote_status                   quote_status           @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sales_orders                   sales_orders[]
 
+  @@index([customer_id], map: "idx_sales_quotes_customer_id")
+  @@index([salesperson_id], map: "idx_sales_quotes_salesperson_id")
+  @@index([status_id], map: "idx_sales_quotes_status_id")
   @@schema("sales")
 }
 
@@ -868,6 +901,7 @@ model receipt_allocations {
   amount_applied                              Decimal    @db.Decimal(18, 4)
   receipts                                    receipts   @relation(fields: [receipt_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([receipt_id], map: "idx_sales_receipt_allocations_receipt_id")
   @@schema("sales")
 }
 
@@ -895,6 +929,8 @@ model receipts {
   payment_method_id                String?               @db.Uuid
   receipt_allocations              receipt_allocations[]
 
+  @@index([customer_id], map: "idx_sales_receipts_customer_id")
+  @@index([payment_method_id], map: "idx_sales_receipts_payment_method_id")
   @@schema("sales")
 }
 
@@ -920,6 +956,7 @@ model recurring_sale_generations {
   invoice_id                                         String                   @db.Uuid
   recurring_sale_templates                           recurring_sale_templates @relation(fields: [template_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([template_id], map: "idx_sales_recurring_sale_generations_template_id")
   @@schema("sales")
 }
 
@@ -946,6 +983,7 @@ model recurring_sale_templates {
   next_generation_date                             DateTime                     @db.Date
   recurring_sale_generations                       recurring_sale_generations[]
 
+  @@index([customer_id], map: "idx_sales_recurring_sale_templates_customer_id")
   @@schema("sales")
 }
 
@@ -972,6 +1010,8 @@ model sales_contract_lines {
   agreed_price                                 Decimal         @db.Decimal(18, 4)
   sales_contracts                              sales_contracts @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([contract_id], map: "idx_sales_sales_contract_lines_contract_id")
+  @@index([product_id], map: "idx_sales_sales_contract_lines_product_id")
   @@schema("sales")
 }
 
@@ -998,6 +1038,7 @@ model sales_contracts {
   ends_at                                 DateTime?              @db.Date
   sales_contract_lines                    sales_contract_lines[]
 
+  @@index([customer_id], map: "idx_sales_sales_contracts_customer_id")
   @@schema("sales")
 }
 
@@ -1026,6 +1067,8 @@ model sales_order_lines {
   discount_percentage                       Decimal      @default(0) @db.Decimal(5, 2)
   sales_orders                              sales_orders @relation(fields: [sales_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_sales_sales_order_lines_product_id")
+  @@index([sales_order_id], map: "idx_sales_sales_order_lines_sales_order_id")
   @@schema("sales")
 }
 
@@ -1078,6 +1121,8 @@ model sales_order_status_history {
   sales_orders                                       sales_orders       @relation(fields: [sales_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sales_order_status                                 sales_order_status @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([sales_order_id], map: "idx_sales_sales_order_status_history_sales_order_id")
+  @@index([status_id], map: "idx_sales_sales_order_status_history_status_id")
   @@schema("sales")
 }
 
@@ -1115,6 +1160,10 @@ model sales_orders {
   salespeople                          salespeople?                 @relation(fields: [salesperson_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sales_order_status                   sales_order_status           @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([customer_id], map: "idx_sales_sales_orders_customer_id")
+  @@index([quote_id], map: "idx_sales_sales_orders_quote_id")
+  @@index([salesperson_id], map: "idx_sales_sales_orders_salesperson_id")
+  @@index([status_id], map: "idx_sales_sales_orders_status_id")
   @@schema("sales")
 }
 
@@ -1141,6 +1190,8 @@ model sales_return_lines {
   quantity                                   Decimal       @db.Decimal(18, 6)
   sales_returns                              sales_returns @relation(fields: [sales_return_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_sales_sales_return_lines_product_id")
+  @@index([sales_return_id], map: "idx_sales_sales_return_lines_sales_return_id")
   @@schema("sales")
 }
 
@@ -1195,6 +1246,8 @@ model sales_targets {
   salespeople                           salespeople? @relation(fields: [salesperson_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sales_teams                           sales_teams? @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([salesperson_id], map: "idx_sales_sales_targets_salesperson_id")
+  @@index([team_id], map: "idx_sales_sales_targets_team_id")
   @@schema("sales")
 }
 
@@ -1221,6 +1274,7 @@ model sales_team_members {
   salespeople                                salespeople @relation(fields: [salesperson_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sales_teams                                sales_teams @relation(fields: [team_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([salesperson_id], map: "idx_sales_sales_team_members_salesperson_id")
   @@schema("sales")
 }
 
@@ -1301,6 +1355,8 @@ model salespeople {
   sales_team_members                  sales_team_members[]
   sales_territories                   sales_territories?   @relation(fields: [territory_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([territory_id], map: "idx_sales_salespeople_territory_id")
+  @@index([user_id], map: "idx_sales_salespeople_user_id")
   @@schema("sales")
 }
 
@@ -1327,6 +1383,8 @@ model shopping_cart_items {
   quantity                                    Decimal        @db.Decimal(18, 6)
   shopping_carts                              shopping_carts @relation(fields: [cart_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([cart_id], map: "idx_sales_shopping_cart_items_cart_id")
+  @@index([product_id], map: "idx_sales_shopping_cart_items_product_id")
   @@schema("sales")
 }
 
@@ -1352,6 +1410,7 @@ model shopping_carts {
   status                                 String                @default("active")
   shopping_cart_items                    shopping_cart_items[]
 
+  @@index([customer_id], map: "idx_sales_shopping_carts_customer_id")
   @@schema("sales")
 }
 
@@ -1379,6 +1438,7 @@ model subscription_billing_cycles {
   invoice_id                                          String?       @db.Uuid
   subscriptions                                       subscriptions @relation(fields: [subscription_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([subscription_id], map: "idx_sales_subscription_billing_cycles_subscription_id")
   @@schema("sales")
 }
 
@@ -1405,6 +1465,8 @@ model subscription_lines {
   unit_price                                 Decimal       @db.Decimal(18, 4)
   subscriptions                              subscriptions @relation(fields: [subscription_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([product_id], map: "idx_sales_subscription_lines_product_id")
+  @@index([subscription_id], map: "idx_sales_subscription_lines_subscription_id")
   @@schema("sales")
 }
 
@@ -1432,6 +1494,7 @@ model subscriptions {
   subscription_billing_cycles           subscription_billing_cycles[]
   subscription_lines                    subscription_lines[]
 
+  @@index([customer_id], map: "idx_sales_subscriptions_customer_id")
   @@schema("sales")
 }
 
@@ -1460,6 +1523,8 @@ model warranties {
   invoice_lines                      invoice_lines     @relation(fields: [invoice_line_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   warranty_claims                    warranty_claims[]
 
+  @@index([invoice_line_id], map: "idx_sales_warranties_invoice_line_id")
+  @@index([product_id], map: "idx_sales_warranties_product_id")
   @@schema("sales")
 }
 
@@ -1486,5 +1551,6 @@ model warranty_claims {
   status                                  String     @default("open")
   warranties                              warranties @relation(fields: [warranty_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@index([warranty_id], map: "idx_sales_warranty_claims_warranty_id")
   @@schema("sales")
 }
