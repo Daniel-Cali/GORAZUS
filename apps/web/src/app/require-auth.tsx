@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { getAccessToken, initSession, Loader } from '@gorazus/ui-kit';
+import { apiClient, getAccessToken, initSession, useAppStore, Loader } from '@gorazus/ui-kit';
 
 /**
  * Envuelve el árbol completo de rutas autenticadas (docs/frontend/ROUTING.md
@@ -15,23 +15,58 @@ import { getAccessToken, initSession, Loader } from '@gorazus/ui-kit';
  * intentar restaurarlo desde la cookie httpOnly de refresh antes de decidir
  * si redirige, el usuario pierde la sesión en cada F5/link directo aunque su
  * cookie siga siendo válida.
+ *
+ * `restoreUser()` — bug visual real corregido en FASE 06 (auditoría de UI,
+ * encontrado con Playwright real: tras un `page.goto` a una ruta protegida,
+ * "Hola, {nombre}" del Dashboard y el nombre del Topbar desaparecían).
+ * `useAppStore` excluye `user` de `partialize` a propósito (nunca queda
+ * `fullName`/`email` en `localStorage`), así que `initSession()` reponía el
+ * access token pero nadie repoblaba el store — la sesión seguía activa pero
+ * la personalización quedaba en blanco hasta un logout/login manual. Usa
+ * `GET /auth/me`, ya existente desde FASE 03 Parte 02, sin tocar el backend.
  */
 export function RequireAuth() {
   const location = useLocation();
   const [checking, setChecking] = useState(!getAccessToken());
+  const user = useAppStore((s) => s.user);
+  const setSession = useAppStore((s) => s.setSession);
 
   useEffect(() => {
+    async function restoreUser() {
+      try {
+        const response = await apiClient.get<{
+          id: string;
+          fullName: string;
+          email: string;
+          activeCompanyId: string | null;
+          activeBranchId: string | null;
+        }>('/auth/me');
+        setSession(
+          { id: response.data.id, name: response.data.fullName, email: response.data.email },
+          response.data.activeCompanyId,
+          response.data.activeBranchId,
+        );
+      } catch {
+        // Best-effort — si falla, el usuario sigue autenticado, solo sin
+        // personalización hasta la próxima navegación o login manual.
+      }
+    }
+
     if (getAccessToken()) {
+      if (!user) void restoreUser();
       setChecking(false);
       return;
     }
     let cancelled = false;
-    void initSession().finally(() => {
-      if (!cancelled) setChecking(false);
+    void initSession().then(async (restored) => {
+      if (cancelled) return;
+      if (restored) await restoreUser();
+      setChecking(false);
     });
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- solo debe correr al montar, `user`/`setSession` se leen del store en el momento de ejecutarse
   }, []);
 
   if (checking) {
