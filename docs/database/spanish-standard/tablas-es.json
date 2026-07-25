@@ -1,0 +1,3008 @@
+[
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "account_reconciliations",
+    "tabla_es": "conciliaciones_de_cuenta"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "account_types",
+    "tabla_es": "tipos_de_cuenta"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "accounting_dimension_values",
+    "tabla_es": "valores_de_dimension_contable"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "accounting_dimensions",
+    "tabla_es": "dimensiones_contables"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "accounting_rule_lines",
+    "tabla_es": "lineas_de_regla_contable"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "accounting_rules",
+    "tabla_es": "reglas_contables"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "balance_sheet_snapshots",
+    "tabla_es": "instantaneas_de_balance_general"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "budget_lines",
+    "tabla_es": "lineas_de_presupuesto"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "budgets",
+    "tabla_es": "presupuestos"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "cash_flow_snapshots",
+    "tabla_es": "instantaneas_de_flujo_de_caja"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "chart_of_accounts",
+    "tabla_es": "plan_de_cuentas"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "consolidated_financial_snapshots",
+    "tabla_es": "instantaneas_financieras_consolidadas"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "cost_centers",
+    "tabla_es": "centros_de_costo"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "currency_revaluations",
+    "tabla_es": "revaluaciones_de_moneda"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "fiscal_periods",
+    "tabla_es": "periodos_fiscales"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "fiscal_years",
+    "tabla_es": "ejercicios_fiscales"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "ifrs_adjustments",
+    "tabla_es": "ajustes_niif"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "income_statement_snapshots",
+    "tabla_es": "instantaneas_de_estado_de_resultados"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "intercompany_transactions",
+    "tabla_es": "transacciones_entre_empresas"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "journal_entries",
+    "tabla_es": "asientos_contables"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "journal_entry_dimension_values",
+    "tabla_es": "valores_de_dimension_de_asiento"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "journal_entry_lines",
+    "tabla_es": "lineas_de_asiento_contable"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "journal_entry_status",
+    "tabla_es": "estados_de_asiento_contable"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "journal_entry_status_history",
+    "tabla_es": "historial_de_estado_de_asiento_contable"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "period_closing_logs",
+    "tabla_es": "registros_de_cierre_de_periodo"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "profit_centers",
+    "tabla_es": "centros_de_utilidad"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "recurring_journal_entry_generations",
+    "tabla_es": "generaciones_de_asiento_recurrente"
+  },
+  {
+    "esquema_en": "accounting",
+    "esquema_es": "contabilidad",
+    "tabla_en": "recurring_journal_entry_templates",
+    "tabla_es": "plantillas_de_asiento_recurrente"
+  },
+  {
+    "esquema_en": "assets",
+    "esquema_es": "activos",
+    "tabla_en": "asset_categories",
+    "tabla_es": "categorias_de_activo"
+  },
+  {
+    "esquema_en": "assets",
+    "esquema_es": "activos",
+    "tabla_en": "asset_custodian_history",
+    "tabla_es": "historial_de_custodio_de_activo"
+  },
+  {
+    "esquema_en": "assets",
+    "esquema_es": "activos",
+    "tabla_en": "asset_depreciation_entries",
+    "tabla_es": "entradas_de_depreciacion_de_activo"
+  },
+  {
+    "esquema_en": "assets",
+    "esquema_es": "activos",
+    "tabla_en": "asset_disposals",
+    "tabla_es": "bajas_de_activo"
+  },
+  {
+    "esquema_en": "assets",
+    "esquema_es": "activos",
+    "tabla_en": "asset_maintenance_types",
+    "tabla_es": "tipos_de_mantenimiento_de_activo"
+  },
+  {
+    "esquema_en": "assets",
+    "esquema_es": "activos",
+    "tabla_en": "asset_maintenances",
+    "tabla_es": "mantenimientos_de_activo"
+  },
+  {
+    "esquema_en": "assets",
+    "esquema_es": "activos",
+    "tabla_en": "asset_revaluations",
+    "tabla_es": "revaluaciones_de_activo"
+  },
+  {
+    "esquema_en": "assets",
+    "esquema_es": "activos",
+    "tabla_en": "asset_transfers",
+    "tabla_es": "transferencias_de_activo"
+  },
+  {
+    "esquema_en": "assets",
+    "esquema_es": "activos",
+    "tabla_en": "depreciation_methods",
+    "tabla_es": "metodos_de_depreciacion"
+  },
+  {
+    "esquema_en": "assets",
+    "esquema_es": "activos",
+    "tabla_en": "fixed_assets",
+    "tabla_es": "activos_fijos"
+  },
+  {
+    "esquema_en": "banks",
+    "esquema_es": "bancos",
+    "tabla_en": "bank_accounts",
+    "tabla_es": "cuentas_bancarias"
+  },
+  {
+    "esquema_en": "banks",
+    "esquema_es": "bancos",
+    "tabla_en": "bank_cards",
+    "tabla_es": "tarjetas_bancarias"
+  },
+  {
+    "esquema_en": "banks",
+    "esquema_es": "bancos",
+    "tabla_en": "bank_deposits",
+    "tabla_es": "depositos_bancarios"
+  },
+  {
+    "esquema_en": "banks",
+    "esquema_es": "bancos",
+    "tabla_en": "bank_payment_batch_lines",
+    "tabla_es": "lineas_de_lote_de_pago_bancario"
+  },
+  {
+    "esquema_en": "banks",
+    "esquema_es": "bancos",
+    "tabla_en": "bank_payment_batches",
+    "tabla_es": "lotes_de_pago_bancario"
+  },
+  {
+    "esquema_en": "banks",
+    "esquema_es": "bancos",
+    "tabla_en": "bank_pos_terminals",
+    "tabla_es": "terminales_pos_bancarios"
+  },
+  {
+    "esquema_en": "banks",
+    "esquema_es": "bancos",
+    "tabla_en": "bank_reconciliation_lines",
+    "tabla_es": "lineas_de_conciliacion_bancaria"
+  },
+  {
+    "esquema_en": "banks",
+    "esquema_es": "bancos",
+    "tabla_en": "bank_reconciliations",
+    "tabla_es": "conciliaciones_bancarias"
+  },
+  {
+    "esquema_en": "banks",
+    "esquema_es": "bancos",
+    "tabla_en": "bank_statement_lines",
+    "tabla_es": "lineas_de_extracto_bancario"
+  },
+  {
+    "esquema_en": "banks",
+    "esquema_es": "bancos",
+    "tabla_en": "bank_statements",
+    "tabla_es": "extractos_bancarios"
+  },
+  {
+    "esquema_en": "banks",
+    "esquema_es": "bancos",
+    "tabla_en": "bank_transfers",
+    "tabla_es": "transferencias_bancarias"
+  },
+  {
+    "esquema_en": "banks",
+    "esquema_es": "bancos",
+    "tabla_en": "checkbooks",
+    "tabla_es": "chequeras"
+  },
+  {
+    "esquema_en": "banks",
+    "esquema_es": "bancos",
+    "tabla_en": "checks_issued",
+    "tabla_es": "cheques_emitidos"
+  },
+  {
+    "esquema_en": "banks",
+    "esquema_es": "bancos",
+    "tabla_en": "checks_received",
+    "tabla_es": "cheques_recibidos"
+  },
+  {
+    "esquema_en": "bi",
+    "esquema_es": "bi",
+    "tabla_en": "bi_alert_triggers",
+    "tabla_es": "disparadores_de_alerta_bi"
+  },
+  {
+    "esquema_en": "bi",
+    "esquema_es": "bi",
+    "tabla_en": "bi_alerts",
+    "tabla_es": "alertas_bi"
+  },
+  {
+    "esquema_en": "bi",
+    "esquema_es": "bi",
+    "tabla_en": "data_cube_dimensions",
+    "tabla_es": "dimensiones_de_cubo_de_datos"
+  },
+  {
+    "esquema_en": "bi",
+    "esquema_es": "bi",
+    "tabla_en": "data_cube_measures",
+    "tabla_es": "medidas_de_cubo_de_datos"
+  },
+  {
+    "esquema_en": "bi",
+    "esquema_es": "bi",
+    "tabla_en": "data_cubes",
+    "tabla_es": "cubos_de_datos"
+  },
+  {
+    "esquema_en": "bi",
+    "esquema_es": "bi",
+    "tabla_en": "data_mart_tables",
+    "tabla_es": "tablas_de_datamart"
+  },
+  {
+    "esquema_en": "bi",
+    "esquema_es": "bi",
+    "tabla_en": "forecast_models",
+    "tabla_es": "modelos_de_pronostico"
+  },
+  {
+    "esquema_en": "bi",
+    "esquema_es": "bi",
+    "tabla_en": "forecasts",
+    "tabla_es": "pronosticos"
+  },
+  {
+    "esquema_en": "bi",
+    "esquema_es": "bi",
+    "tabla_en": "indicator_snapshots",
+    "tabla_es": "instantaneas_de_indicador"
+  },
+  {
+    "esquema_en": "bi",
+    "esquema_es": "bi",
+    "tabla_en": "indicators",
+    "tabla_es": "indicadores"
+  },
+  {
+    "esquema_en": "bi",
+    "esquema_es": "bi",
+    "tabla_en": "kpi_snapshots",
+    "tabla_es": "instantaneas_de_kpi"
+  },
+  {
+    "esquema_en": "bi",
+    "esquema_es": "bi",
+    "tabla_en": "kpis",
+    "tabla_es": "kpis"
+  },
+  {
+    "esquema_en": "bi",
+    "esquema_es": "bi",
+    "tabla_en": "metric_snapshots",
+    "tabla_es": "instantaneas_de_metrica"
+  },
+  {
+    "esquema_en": "bi",
+    "esquema_es": "bi",
+    "tabla_en": "metrics",
+    "tabla_es": "metricas"
+  },
+  {
+    "esquema_en": "cash",
+    "esquema_es": "caja",
+    "tabla_en": "cash_count_lines",
+    "tabla_es": "lineas_de_arqueo_de_caja"
+  },
+  {
+    "esquema_en": "cash",
+    "esquema_es": "caja",
+    "tabla_en": "cash_counts",
+    "tabla_es": "arqueos_de_caja"
+  },
+  {
+    "esquema_en": "cash",
+    "esquema_es": "caja",
+    "tabla_en": "cash_movement_types",
+    "tabla_es": "tipos_de_movimiento_de_caja"
+  },
+  {
+    "esquema_en": "cash",
+    "esquema_es": "caja",
+    "tabla_en": "cash_movements",
+    "tabla_es": "movimientos_de_caja"
+  },
+  {
+    "esquema_en": "cash",
+    "esquema_es": "caja",
+    "tabla_en": "cash_refunds",
+    "tabla_es": "reembolsos_de_caja"
+  },
+  {
+    "esquema_en": "cash",
+    "esquema_es": "caja",
+    "tabla_en": "cash_register_closings",
+    "tabla_es": "cierres_de_caja"
+  },
+  {
+    "esquema_en": "cash",
+    "esquema_es": "caja",
+    "tabla_en": "cash_register_openings",
+    "tabla_es": "aperturas_de_caja"
+  },
+  {
+    "esquema_en": "cash",
+    "esquema_es": "caja",
+    "tabla_en": "cash_registers",
+    "tabla_es": "cajas"
+  },
+  {
+    "esquema_en": "cash",
+    "esquema_es": "caja",
+    "tabla_en": "cash_transfers",
+    "tabla_es": "transferencias_de_caja"
+  },
+  {
+    "esquema_en": "cash",
+    "esquema_es": "caja",
+    "tabla_en": "petty_cash_funds",
+    "tabla_es": "fondos_de_caja_chica"
+  },
+  {
+    "esquema_en": "cash",
+    "esquema_es": "caja",
+    "tabla_en": "petty_cash_vouchers",
+    "tabla_es": "vales_de_caja_chica"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "banks",
+    "tabla_es": "bancos"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "correlatives",
+    "tabla_es": "correlativos"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "countries",
+    "tabla_es": "paises"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "country_translations",
+    "tabla_es": "traducciones_de_pais"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "currencies",
+    "tabla_es": "monedas"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "currency_translations",
+    "tabla_es": "traducciones_de_moneda"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "document_number_formats",
+    "tabla_es": "formatos_de_numero_de_documento"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "exchange_rate_types",
+    "tabla_es": "tipos_de_tasa_de_cambio"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "exchange_rates",
+    "tabla_es": "tasas_de_cambio"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "fiscal_document_types",
+    "tabla_es": "tipos_de_documento_fiscal"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "fiscal_regimes",
+    "tabla_es": "regimenes_fiscales"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "holidays",
+    "tabla_es": "feriados"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "languages",
+    "tabla_es": "idiomas"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "municipalities",
+    "tabla_es": "municipios"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "numbering_series",
+    "tabla_es": "series_de_numeracion"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "payment_forms",
+    "tabla_es": "formas_de_pago"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "payment_methods",
+    "tabla_es": "metodos_de_pago"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "price_list_items",
+    "tabla_es": "items_de_lista_de_precios"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "price_lists",
+    "tabla_es": "listas_de_precios"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "sectors",
+    "tabla_es": "sectores"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "state_province_translations",
+    "tabla_es": "traducciones_de_provincia"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "state_provinces",
+    "tabla_es": "provincias"
+  },
+  {
+    "esquema_en": "configuration",
+    "esquema_es": "configuracion",
+    "tabla_en": "timezones",
+    "tabla_es": "zonas_horarias"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "activity_logs",
+    "tabla_es": "registros_de_actividad"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "api_key_scopes",
+    "tabla_es": "alcances_de_clave_de_api"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "api_keys",
+    "tabla_es": "claves_de_api"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "approval_matrices",
+    "tabla_es": "matrices_de_aprobacion"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "approval_steps",
+    "tabla_es": "pasos_de_aprobacion"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "approvals",
+    "tabla_es": "aprobaciones"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "audit_logs",
+    "tabla_es": "registros_de_auditoria"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "background_jobs",
+    "tabla_es": "trabajos_en_segundo_plano"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "branches",
+    "tabla_es": "sucursales"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "business_rule_evaluations",
+    "tabla_es": "evaluaciones_de_regla_de_negocio"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "business_rules",
+    "tabla_es": "reglas_de_negocio"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "change_history",
+    "tabla_es": "historial_de_cambios"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "comments",
+    "tabla_es": "comentarios"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "companies",
+    "tabla_es": "empresas"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "consent_records",
+    "tabla_es": "registros_de_consentimiento"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "data_retention_policies",
+    "tabla_es": "politicas_de_retencion_de_datos"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "data_subject_requests",
+    "tabla_es": "solicitudes_de_titular_de_datos"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "departments",
+    "tabla_es": "departamentos"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "document_types",
+    "tabla_es": "tipos_de_documento"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "document_versions",
+    "tabla_es": "versiones_de_documento"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "documents",
+    "tabla_es": "documentos"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "edi_transactions",
+    "tabla_es": "transacciones_edi"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "entity_tags",
+    "tabla_es": "etiquetas_de_entidad"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "export_batches",
+    "tabla_es": "lotes_de_exportacion"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "feature_flags",
+    "tabla_es": "banderas_de_funcionalidad"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "files",
+    "tabla_es": "archivos"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "group_members",
+    "tabla_es": "miembros_de_grupo"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "groups",
+    "tabla_es": "grupos"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "import_batch_errors",
+    "tabla_es": "errores_de_lote_de_importacion"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "import_batches",
+    "tabla_es": "lotes_de_importacion"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "integration_credentials",
+    "tabla_es": "credenciales_de_integracion"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "integrations",
+    "tabla_es": "integraciones"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "notification_channels",
+    "tabla_es": "canales_de_notificacion"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "notification_delivery_logs",
+    "tabla_es": "registros_de_envio_de_notificacion"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "notification_preferences",
+    "tabla_es": "preferencias_de_notificacion"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "notification_recipients",
+    "tabla_es": "destinatarios_de_notificacion"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "notification_template_translations",
+    "tabla_es": "traducciones_de_plantilla_de_notificacion"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "notification_templates",
+    "tabla_es": "plantillas_de_notificacion"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "notifications",
+    "tabla_es": "notificaciones"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "permissions",
+    "tabla_es": "permisos"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "restore_test_logs",
+    "tabla_es": "registros_de_prueba_de_restauracion"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "role_permissions",
+    "tabla_es": "permisos_de_rol"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "roles",
+    "tabla_es": "roles"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "scheduled_job_runs",
+    "tabla_es": "ejecuciones_de_trabajo_programado"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "scheduled_jobs",
+    "tabla_es": "trabajos_programados"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "sessions",
+    "tabla_es": "sesiones"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "signature_requests",
+    "tabla_es": "solicitudes_de_firma"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "signatures",
+    "tabla_es": "firmas"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "system_logs",
+    "tabla_es": "registros_de_sistema"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "system_parameters",
+    "tabla_es": "parametros_de_sistema"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "system_settings",
+    "tabla_es": "configuraciones_de_sistema"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "tags",
+    "tabla_es": "etiquetas"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "template_translations",
+    "tabla_es": "traducciones_de_plantilla"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "templates",
+    "tabla_es": "plantillas"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "tenant_subscription_features",
+    "tabla_es": "funcionalidades_de_suscripcion_de_inquilino"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "tenant_subscriptions",
+    "tabla_es": "suscripciones_de_inquilino"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "tenants",
+    "tabla_es": "inquilinos"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "tokens",
+    "tabla_es": "tokens"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "user_companies",
+    "tabla_es": "empresas_de_usuario"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "user_devices",
+    "tabla_es": "dispositivos_de_usuario"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "user_profiles",
+    "tabla_es": "perfiles_de_usuario"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "user_roles",
+    "tabla_es": "roles_de_usuario"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "users",
+    "tabla_es": "usuarios"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "webhook_delivery_logs",
+    "tabla_es": "registros_de_envio_de_webhook"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "webhook_subscriptions",
+    "tabla_es": "suscripciones_de_webhook"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "workflow_instance_steps",
+    "tabla_es": "pasos_de_instancia_de_flujo"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "workflow_instances",
+    "tabla_es": "instancias_de_flujo"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "workflow_steps",
+    "tabla_es": "pasos_de_flujo"
+  },
+  {
+    "esquema_en": "core",
+    "esquema_es": "nucleo",
+    "tabla_en": "workflows",
+    "tabla_es": "flujos_de_trabajo"
+  },
+  {
+    "esquema_en": "crm",
+    "esquema_es": "crm",
+    "tabla_en": "calendar_event_attendees",
+    "tabla_es": "asistentes_de_evento_de_calendario"
+  },
+  {
+    "esquema_en": "crm",
+    "esquema_es": "crm",
+    "tabla_en": "calendar_events",
+    "tabla_es": "eventos_de_calendario"
+  },
+  {
+    "esquema_en": "crm",
+    "esquema_es": "crm",
+    "tabla_en": "call_logs",
+    "tabla_es": "registros_de_llamada"
+  },
+  {
+    "esquema_en": "crm",
+    "esquema_es": "crm",
+    "tabla_en": "campaign_members",
+    "tabla_es": "miembros_de_campana"
+  },
+  {
+    "esquema_en": "crm",
+    "esquema_es": "crm",
+    "tabla_en": "campaigns",
+    "tabla_es": "campanas"
+  },
+  {
+    "esquema_en": "crm",
+    "esquema_es": "crm",
+    "tabla_en": "email_logs",
+    "tabla_es": "registros_de_correo"
+  },
+  {
+    "esquema_en": "crm",
+    "esquema_es": "crm",
+    "tabla_en": "follow_up_activities",
+    "tabla_es": "actividades_de_seguimiento"
+  },
+  {
+    "esquema_en": "crm",
+    "esquema_es": "crm",
+    "tabla_en": "lead_sources",
+    "tabla_es": "fuentes_de_prospecto"
+  },
+  {
+    "esquema_en": "crm",
+    "esquema_es": "crm",
+    "tabla_en": "lead_status",
+    "tabla_es": "estados_de_prospecto"
+  },
+  {
+    "esquema_en": "crm",
+    "esquema_es": "crm",
+    "tabla_en": "lead_status_history",
+    "tabla_es": "historial_de_estado_de_prospecto"
+  },
+  {
+    "esquema_en": "crm",
+    "esquema_es": "crm",
+    "tabla_en": "leads",
+    "tabla_es": "prospectos"
+  },
+  {
+    "esquema_en": "crm",
+    "esquema_es": "crm",
+    "tabla_en": "opportunities",
+    "tabla_es": "oportunidades"
+  },
+  {
+    "esquema_en": "crm",
+    "esquema_es": "crm",
+    "tabla_en": "opportunity_lines",
+    "tabla_es": "lineas_de_oportunidad"
+  },
+  {
+    "esquema_en": "crm",
+    "esquema_es": "crm",
+    "tabla_en": "opportunity_loss_reasons",
+    "tabla_es": "motivos_de_perdida_de_oportunidad"
+  },
+  {
+    "esquema_en": "crm",
+    "esquema_es": "crm",
+    "tabla_en": "sales_funnel_stages",
+    "tabla_es": "etapas_de_embudo_de_ventas"
+  },
+  {
+    "esquema_en": "crm",
+    "esquema_es": "crm",
+    "tabla_en": "sales_funnels",
+    "tabla_es": "embudos_de_ventas"
+  },
+  {
+    "esquema_en": "crm",
+    "esquema_es": "crm",
+    "tabla_en": "whatsapp_logs",
+    "tabla_es": "registros_de_whatsapp"
+  },
+  {
+    "esquema_en": "customers",
+    "esquema_es": "clientes",
+    "tabla_en": "customer_addresses",
+    "tabla_es": "direcciones_de_cliente"
+  },
+  {
+    "esquema_en": "customers",
+    "esquema_es": "clientes",
+    "tabla_en": "customer_bank_accounts",
+    "tabla_es": "cuentas_bancarias_de_cliente"
+  },
+  {
+    "esquema_en": "customers",
+    "esquema_es": "clientes",
+    "tabla_en": "customer_block_history",
+    "tabla_es": "historial_de_bloqueo_de_cliente"
+  },
+  {
+    "esquema_en": "customers",
+    "esquema_es": "clientes",
+    "tabla_en": "customer_categories",
+    "tabla_es": "categorias_de_cliente"
+  },
+  {
+    "esquema_en": "customers",
+    "esquema_es": "clientes",
+    "tabla_en": "customer_classifications",
+    "tabla_es": "clasificaciones_de_cliente"
+  },
+  {
+    "esquema_en": "customers",
+    "esquema_es": "clientes",
+    "tabla_en": "customer_contacts",
+    "tabla_es": "contactos_de_cliente"
+  },
+  {
+    "esquema_en": "customers",
+    "esquema_es": "clientes",
+    "tabla_en": "customer_credit_limit_history",
+    "tabla_es": "historial_de_limite_de_credito_de_cliente"
+  },
+  {
+    "esquema_en": "customers",
+    "esquema_es": "clientes",
+    "tabla_en": "customer_credit_profiles",
+    "tabla_es": "perfiles_de_credito_de_cliente"
+  },
+  {
+    "esquema_en": "customers",
+    "esquema_es": "clientes",
+    "tabla_en": "customer_discounts",
+    "tabla_es": "descuentos_de_cliente"
+  },
+  {
+    "esquema_en": "customers",
+    "esquema_es": "clientes",
+    "tabla_en": "customer_loyalty_accounts",
+    "tabla_es": "cuentas_de_fidelidad_de_cliente"
+  },
+  {
+    "esquema_en": "customers",
+    "esquema_es": "clientes",
+    "tabla_en": "customer_price_lists",
+    "tabla_es": "listas_de_precios_de_cliente"
+  },
+  {
+    "esquema_en": "customers",
+    "esquema_es": "clientes",
+    "tabla_en": "customer_references",
+    "tabla_es": "referencias_de_cliente"
+  },
+  {
+    "esquema_en": "customers",
+    "esquema_es": "clientes",
+    "tabla_en": "customer_statements",
+    "tabla_es": "estados_de_cuenta_de_cliente"
+  },
+  {
+    "esquema_en": "customers",
+    "esquema_es": "clientes",
+    "tabla_en": "customer_visits",
+    "tabla_es": "visitas_de_cliente"
+  },
+  {
+    "esquema_en": "customers",
+    "esquema_es": "clientes",
+    "tabla_en": "customer_wishlist_items",
+    "tabla_es": "items_de_lista_de_deseos_de_cliente"
+  },
+  {
+    "esquema_en": "customers",
+    "esquema_es": "clientes",
+    "tabla_en": "customers",
+    "tabla_es": "clientes"
+  },
+  {
+    "esquema_en": "customers",
+    "esquema_es": "clientes",
+    "tabla_en": "sales_route_customers",
+    "tabla_es": "clientes_de_ruta_de_venta"
+  },
+  {
+    "esquema_en": "customers",
+    "esquema_es": "clientes",
+    "tabla_en": "sales_routes",
+    "tabla_es": "rutas_de_venta"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "attendance_devices",
+    "tabla_es": "dispositivos_de_asistencia"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "attendance_records",
+    "tabla_es": "registros_de_asistencia"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "candidate_stage_history",
+    "tabla_es": "historial_de_etapa_de_candidato"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "candidate_stages",
+    "tabla_es": "etapas_de_candidato"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "candidates",
+    "tabla_es": "candidatos"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "contract_types",
+    "tabla_es": "tipos_de_contrato"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "disciplinary_action_types",
+    "tabla_es": "tipos_de_accion_disciplinaria"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "disciplinary_actions",
+    "tabla_es": "acciones_disciplinarias"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "employee_asset_assignments",
+    "tabla_es": "asignaciones_de_activo_a_empleado"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "employee_bank_accounts",
+    "tabla_es": "cuentas_bancarias_de_empleado"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "employee_contracts",
+    "tabla_es": "contratos_de_empleado"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "employee_dependents",
+    "tabla_es": "dependientes_de_empleado"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "employee_emergency_contacts",
+    "tabla_es": "contactos_de_emergencia_de_empleado"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "employee_skills",
+    "tabla_es": "habilidades_de_empleado"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "employees",
+    "tabla_es": "empleados"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "job_positions",
+    "tabla_es": "puestos_de_trabajo"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "job_vacancies",
+    "tabla_es": "vacantes_de_trabajo"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "leave_request_status",
+    "tabla_es": "estados_de_solicitud_de_licencia"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "leave_request_status_history",
+    "tabla_es": "historial_de_estado_de_solicitud_de_licencia"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "leave_requests",
+    "tabla_es": "solicitudes_de_licencia"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "leave_types",
+    "tabla_es": "tipos_de_licencia"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "performance_evaluation_criteria",
+    "tabla_es": "criterios_de_evaluacion_de_desempeno"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "performance_evaluation_scores",
+    "tabla_es": "puntajes_de_evaluacion_de_desempeno"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "performance_evaluations",
+    "tabla_es": "evaluaciones_de_desempeno"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "skills_catalog",
+    "tabla_es": "catalogo_de_habilidades"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "training_enrollments",
+    "tabla_es": "inscripciones_a_capacitacion"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "trainings",
+    "tabla_es": "capacitaciones"
+  },
+  {
+    "esquema_en": "hr",
+    "esquema_es": "rrhh",
+    "tabla_en": "vacation_balances",
+    "tabla_es": "saldos_de_vacaciones"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "average_cost_history",
+    "tabla_es": "historial_de_costo_promedio"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "cycle_count_schedules",
+    "tabla_es": "programaciones_de_conteo_ciclico"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "fifo_cost_layers",
+    "tabla_es": "capas_de_costo_fifo"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "goods_issue_lines",
+    "tabla_es": "lineas_de_salida_de_mercaderia"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "goods_issue_reasons",
+    "tabla_es": "motivos_de_salida_de_mercaderia"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "goods_issues",
+    "tabla_es": "salidas_de_mercaderia"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "goods_receipt_lines",
+    "tabla_es": "lineas_de_recepcion_de_mercaderia"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "goods_receipts",
+    "tabla_es": "recepciones_de_mercaderia"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "inventory_lots",
+    "tabla_es": "lotes_de_inventario"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "inventory_serials",
+    "tabla_es": "series_de_inventario"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "lifo_cost_layers",
+    "tabla_es": "capas_de_costo_lifo"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "physical_count_lines",
+    "tabla_es": "lineas_de_conteo_fisico"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "physical_counts",
+    "tabla_es": "conteos_fisicos"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "picking_rules",
+    "tabla_es": "reglas_de_picking"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "production_consumptions",
+    "tabla_es": "consumos_de_produccion"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "production_order_components",
+    "tabla_es": "componentes_de_orden_de_produccion"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "production_order_outputs",
+    "tabla_es": "salidas_de_orden_de_produccion"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "production_order_status",
+    "tabla_es": "estados_de_orden_de_produccion"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "production_order_status_history",
+    "tabla_es": "historial_de_estado_de_orden_de_produccion"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "production_orders",
+    "tabla_es": "ordenes_de_produccion"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "putaway_rules",
+    "tabla_es": "reglas_de_ubicacion"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "replenishment_rules",
+    "tabla_es": "reglas_de_reposicion"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "stock",
+    "tabla_es": "stock"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "stock_adjustment_lines",
+    "tabla_es": "lineas_de_ajuste_de_stock"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "stock_adjustment_reasons",
+    "tabla_es": "motivos_de_ajuste_de_stock"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "stock_adjustments",
+    "tabla_es": "ajustes_de_stock"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "stock_movement_types",
+    "tabla_es": "tipos_de_movimiento_inventario"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "stock_movements",
+    "tabla_es": "movimientos_inventario"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "stock_reservations",
+    "tabla_es": "reservas_de_stock"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "stock_transfer_lines",
+    "tabla_es": "lineas_de_transferencia_de_stock"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "stock_transfers",
+    "tabla_es": "transferencias_de_stock"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "warehouse_locations",
+    "tabla_es": "ubicaciones_de_almacen"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "warehouse_zones",
+    "tabla_es": "zonas_de_almacen"
+  },
+  {
+    "esquema_en": "inventory",
+    "esquema_es": "inventario",
+    "tabla_en": "warehouses",
+    "tabla_es": "almacenes"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "concept_types",
+    "tabla_es": "tipos_de_concepto"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "deductions",
+    "tabla_es": "deducciones"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "employee_benefit_assignments",
+    "tabla_es": "asignaciones_de_beneficio_a_empleado"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "employee_benefits",
+    "tabla_es": "beneficios_de_empleado"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "loan_installments",
+    "tabla_es": "cuotas_de_prestamo"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "loans",
+    "tabla_es": "prestamos"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "overtime_records",
+    "tabla_es": "registros_de_horas_extra"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "payroll_commission_entries",
+    "tabla_es": "entradas_de_comision_de_nomina"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "payroll_concepts",
+    "tabla_es": "conceptos_de_nomina"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "payroll_entries",
+    "tabla_es": "entradas_de_nomina"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "payroll_entry_lines",
+    "tabla_es": "lineas_de_entrada_de_nomina"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "payroll_novelties",
+    "tabla_es": "novedades_de_nomina"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "payroll_periods",
+    "tabla_es": "periodos_de_nomina"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "payroll_run_status",
+    "tabla_es": "estados_de_corrida_de_nomina"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "payroll_run_status_history",
+    "tabla_es": "historial_de_estado_de_corrida_de_nomina"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "payroll_runs",
+    "tabla_es": "corridas_de_nomina"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "salary_structure_concepts",
+    "tabla_es": "conceptos_de_estructura_salarial"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "salary_structures",
+    "tabla_es": "estructuras_salariales"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "severance_calculations",
+    "tabla_es": "calculos_de_indemnizacion"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "social_security_tables",
+    "tabla_es": "tablas_de_seguridad_social"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "tax_withholding_tables",
+    "tabla_es": "tablas_de_retencion_de_impuestos"
+  },
+  {
+    "esquema_en": "payroll",
+    "esquema_es": "nomina",
+    "tabla_en": "thirteenth_month_calculations",
+    "tabla_es": "calculos_de_aguinaldo"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "bill_of_materials",
+    "tabla_es": "listas_de_materiales"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "bom_components",
+    "tabla_es": "componentes_de_lista_de_materiales"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "brand_translations",
+    "tabla_es": "traducciones_de_marca"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "brands",
+    "tabla_es": "marcas"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_attribute_translations",
+    "tabla_es": "traducciones_de_atributo_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_attribute_value_translations",
+    "tabla_es": "traducciones_de_valor_de_atributo_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_attribute_values",
+    "tabla_es": "valores_de_atributo_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_attributes",
+    "tabla_es": "atributos_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_barcodes",
+    "tabla_es": "codigos_de_barra_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_categories",
+    "tabla_es": "categorias_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_category_translations",
+    "tabla_es": "traducciones_de_categoria_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_collections",
+    "tabla_es": "colecciones_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_combo_components",
+    "tabla_es": "componentes_de_combo_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_combos",
+    "tabla_es": "combos_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_families",
+    "tabla_es": "familias_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_images",
+    "tabla_es": "imagenes_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_kit_components",
+    "tabla_es": "componentes_de_kit_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_kits",
+    "tabla_es": "kits_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_lines",
+    "tabla_es": "lineas_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_models",
+    "tabla_es": "modelos_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_presentations",
+    "tabla_es": "presentaciones_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_price_history",
+    "tabla_es": "historial_de_precio_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_related_products",
+    "tabla_es": "productos_relacionados"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_reviews",
+    "tabla_es": "resenas_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_suppliers",
+    "tabla_es": "proveedores_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_tax_profiles",
+    "tabla_es": "perfiles_fiscales_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_translations",
+    "tabla_es": "traducciones_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_variant_attribute_values",
+    "tabla_es": "valores_de_atributo_de_variante_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "product_videos",
+    "tabla_es": "videos_de_producto"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "products",
+    "tabla_es": "productos"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "recipe_ingredients",
+    "tabla_es": "ingredientes_de_receta"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "recipes",
+    "tabla_es": "recetas"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "unit_conversions",
+    "tabla_es": "conversiones_de_unidad"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "unit_of_measure_translations",
+    "tabla_es": "traducciones_de_unidad_de_medida"
+  },
+  {
+    "esquema_en": "products",
+    "esquema_es": "productos",
+    "tabla_en": "units_of_measure",
+    "tabla_es": "unidades_de_medida"
+  },
+  {
+    "esquema_en": "projects",
+    "esquema_es": "proyectos",
+    "tabla_en": "project_billing_milestones",
+    "tabla_es": "hitos_de_facturacion_de_proyecto"
+  },
+  {
+    "esquema_en": "projects",
+    "esquema_es": "proyectos",
+    "tabla_en": "project_billing_plans",
+    "tabla_es": "planes_de_facturacion_de_proyecto"
+  },
+  {
+    "esquema_en": "projects",
+    "esquema_es": "proyectos",
+    "tabla_en": "project_budget_lines",
+    "tabla_es": "lineas_de_presupuesto_de_proyecto"
+  },
+  {
+    "esquema_en": "projects",
+    "esquema_es": "proyectos",
+    "tabla_en": "project_budgets",
+    "tabla_es": "presupuestos_de_proyecto"
+  },
+  {
+    "esquema_en": "projects",
+    "esquema_es": "proyectos",
+    "tabla_en": "project_costs",
+    "tabla_es": "costos_de_proyecto"
+  },
+  {
+    "esquema_en": "projects",
+    "esquema_es": "proyectos",
+    "tabla_en": "project_resource_assignments",
+    "tabla_es": "asignaciones_de_recurso_de_proyecto"
+  },
+  {
+    "esquema_en": "projects",
+    "esquema_es": "proyectos",
+    "tabla_en": "project_risks",
+    "tabla_es": "riesgos_de_proyecto"
+  },
+  {
+    "esquema_en": "projects",
+    "esquema_es": "proyectos",
+    "tabla_en": "project_role_rates",
+    "tabla_es": "tarifas_de_rol_de_proyecto"
+  },
+  {
+    "esquema_en": "projects",
+    "esquema_es": "proyectos",
+    "tabla_en": "project_status",
+    "tabla_es": "estados_de_proyecto"
+  },
+  {
+    "esquema_en": "projects",
+    "esquema_es": "proyectos",
+    "tabla_en": "project_status_history",
+    "tabla_es": "historial_de_estado_de_proyecto"
+  },
+  {
+    "esquema_en": "projects",
+    "esquema_es": "proyectos",
+    "tabla_en": "project_task_dependencies",
+    "tabla_es": "dependencias_de_tarea_de_proyecto"
+  },
+  {
+    "esquema_en": "projects",
+    "esquema_es": "proyectos",
+    "tabla_en": "project_task_status",
+    "tabla_es": "estados_de_tarea_de_proyecto"
+  },
+  {
+    "esquema_en": "projects",
+    "esquema_es": "proyectos",
+    "tabla_en": "project_tasks",
+    "tabla_es": "tareas_de_proyecto"
+  },
+  {
+    "esquema_en": "projects",
+    "esquema_es": "proyectos",
+    "tabla_en": "project_timesheet_status",
+    "tabla_es": "estados_de_parte_de_horas"
+  },
+  {
+    "esquema_en": "projects",
+    "esquema_es": "proyectos",
+    "tabla_en": "project_timesheets",
+    "tabla_es": "partes_de_horas_de_proyecto"
+  },
+  {
+    "esquema_en": "projects",
+    "esquema_es": "proyectos",
+    "tabla_en": "project_types",
+    "tabla_es": "tipos_de_proyecto"
+  },
+  {
+    "esquema_en": "projects",
+    "esquema_es": "proyectos",
+    "tabla_en": "projects",
+    "tabla_es": "proyectos"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "goods_receipt_note_lines",
+    "tabla_es": "lineas_de_nota_de_recepcion"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "goods_receipt_notes",
+    "tabla_es": "notas_de_recepcion"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "import_expenses",
+    "tabla_es": "gastos_de_importacion"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "import_status",
+    "tabla_es": "estados_de_importacion"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "import_status_history",
+    "tabla_es": "historial_de_estado_de_importacion"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "imports",
+    "tabla_es": "importaciones"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_credit_note_lines",
+    "tabla_es": "lineas_de_nota_de_credito_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_credit_notes",
+    "tabla_es": "notas_de_credito_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_expenses",
+    "tabla_es": "gastos_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_invoice_lines",
+    "tabla_es": "lineas_de_factura_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_invoice_matching",
+    "tabla_es": "conciliacion_de_factura_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_invoice_status",
+    "tabla_es": "estados_de_factura_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_invoice_status_history",
+    "tabla_es": "historial_de_estado_de_factura_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_invoices",
+    "tabla_es": "facturas_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_order_lines",
+    "tabla_es": "lineas_de_orden_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_order_status",
+    "tabla_es": "estados_de_orden_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_order_status_history",
+    "tabla_es": "historial_de_estado_de_orden_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_orders",
+    "tabla_es": "ordenes_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_quote_lines",
+    "tabla_es": "lineas_de_cotizacion_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_quotes",
+    "tabla_es": "cotizaciones_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_requisition_lines",
+    "tabla_es": "lineas_de_requisicion_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_requisition_status",
+    "tabla_es": "estados_de_requisicion_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_requisition_status_history",
+    "tabla_es": "historial_de_estado_de_requisicion_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_requisitions",
+    "tabla_es": "requisiciones_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_return_lines",
+    "tabla_es": "lineas_de_devolucion_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_returns",
+    "tabla_es": "devoluciones_de_compra"
+  },
+  {
+    "esquema_en": "purchases",
+    "esquema_es": "compras",
+    "tabla_en": "purchase_withholdings",
+    "tabla_es": "retenciones_de_compra"
+  },
+  {
+    "esquema_en": "reports",
+    "esquema_es": "reportes",
+    "tabla_en": "dashboard_widgets",
+    "tabla_es": "widgets_de_panel"
+  },
+  {
+    "esquema_en": "reports",
+    "esquema_es": "reportes",
+    "tabla_en": "dashboards",
+    "tabla_es": "paneles"
+  },
+  {
+    "esquema_en": "reports",
+    "esquema_es": "reportes",
+    "tabla_en": "report_definitions",
+    "tabla_es": "definiciones_de_reporte"
+  },
+  {
+    "esquema_en": "reports",
+    "esquema_es": "reportes",
+    "tabla_en": "report_executions",
+    "tabla_es": "ejecuciones_de_reporte"
+  },
+  {
+    "esquema_en": "reports",
+    "esquema_es": "reportes",
+    "tabla_en": "report_exports",
+    "tabla_es": "exportaciones_de_reporte"
+  },
+  {
+    "esquema_en": "reports",
+    "esquema_es": "reportes",
+    "tabla_en": "report_favorites",
+    "tabla_es": "reportes_favoritos"
+  },
+  {
+    "esquema_en": "reports",
+    "esquema_es": "reportes",
+    "tabla_en": "report_parameters",
+    "tabla_es": "parametros_de_reporte"
+  },
+  {
+    "esquema_en": "reports",
+    "esquema_es": "reportes",
+    "tabla_en": "report_schedule_recipients",
+    "tabla_es": "destinatarios_de_programacion_de_reporte"
+  },
+  {
+    "esquema_en": "reports",
+    "esquema_es": "reportes",
+    "tabla_en": "report_schedules",
+    "tabla_es": "programaciones_de_reporte"
+  },
+  {
+    "esquema_en": "reports",
+    "esquema_es": "reportes",
+    "tabla_en": "report_template_translations",
+    "tabla_es": "traducciones_de_plantilla_de_reporte"
+  },
+  {
+    "esquema_en": "reports",
+    "esquema_es": "reportes",
+    "tabla_en": "report_templates",
+    "tabla_es": "plantillas_de_reporte"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "commission_entries",
+    "tabla_es": "entradas_de_comision"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "commission_rules",
+    "tabla_es": "reglas_de_comision"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "coupon_redemptions",
+    "tabla_es": "canjes_de_cupon"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "coupons",
+    "tabla_es": "cupones"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "credit_note_lines",
+    "tabla_es": "lineas_de_nota_de_credito"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "credit_notes",
+    "tabla_es": "notas_de_credito"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "debit_note_lines",
+    "tabla_es": "lineas_de_nota_de_debito"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "debit_notes",
+    "tabla_es": "notas_de_debito"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "delivery_note_lines",
+    "tabla_es": "lineas_de_remito"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "delivery_notes",
+    "tabla_es": "remitos"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "discounts",
+    "tabla_es": "descuentos"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "electronic_invoice_logs",
+    "tabla_es": "registros_de_factura_electronica"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "gift_card_transactions",
+    "tabla_es": "transacciones_de_tarjeta_de_regalo"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "gift_cards",
+    "tabla_es": "tarjetas_de_regalo"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "invoice_lines",
+    "tabla_es": "lineas_de_factura"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "invoice_status",
+    "tabla_es": "estados_de_factura"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "invoice_status_history",
+    "tabla_es": "historial_de_estado_de_factura"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "invoices",
+    "tabla_es": "facturas"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "layaway_lines",
+    "tabla_es": "lineas_de_apartado"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "layaway_payments",
+    "tabla_es": "pagos_de_apartado"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "layaways",
+    "tabla_es": "apartados"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "loyalty_points_transactions",
+    "tabla_es": "transacciones_de_puntos_de_fidelidad"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "loyalty_program_tiers",
+    "tabla_es": "niveles_de_programa_de_fidelidad"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "loyalty_programs",
+    "tabla_es": "programas_de_fidelidad"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "online_store_configs",
+    "tabla_es": "configuraciones_de_tienda_en_linea"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "promotion_rules",
+    "tabla_es": "reglas_de_promocion"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "promotions",
+    "tabla_es": "promociones"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "quote_lines",
+    "tabla_es": "lineas_de_cotizacion"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "quote_status",
+    "tabla_es": "estados_de_cotizacion"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "quote_status_history",
+    "tabla_es": "historial_de_estado_de_cotizacion"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "quotes",
+    "tabla_es": "cotizaciones"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "receipt_allocations",
+    "tabla_es": "aplicaciones_de_recibo"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "receipts",
+    "tabla_es": "recibos"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "recurring_sale_generations",
+    "tabla_es": "generaciones_de_venta_recurrente"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "recurring_sale_templates",
+    "tabla_es": "plantillas_de_venta_recurrente"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "sales_contract_lines",
+    "tabla_es": "lineas_de_contrato_de_venta"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "sales_contracts",
+    "tabla_es": "contratos_de_venta"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "sales_order_lines",
+    "tabla_es": "lineas_de_pedido_de_venta"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "sales_order_status",
+    "tabla_es": "estados_de_pedido_de_venta"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "sales_order_status_history",
+    "tabla_es": "historial_de_estado_de_pedido_de_venta"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "sales_orders",
+    "tabla_es": "pedidos_de_venta"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "sales_return_lines",
+    "tabla_es": "lineas_de_devolucion_de_venta"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "sales_returns",
+    "tabla_es": "devoluciones_de_venta"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "sales_targets",
+    "tabla_es": "metas_de_venta"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "sales_team_members",
+    "tabla_es": "miembros_de_equipo_de_venta"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "sales_teams",
+    "tabla_es": "equipos_de_venta"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "sales_territories",
+    "tabla_es": "territorios_de_venta"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "salespeople",
+    "tabla_es": "vendedores"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "shopping_cart_items",
+    "tabla_es": "items_de_carrito_de_compra"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "shopping_carts",
+    "tabla_es": "carritos_de_compra"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "subscription_billing_cycles",
+    "tabla_es": "ciclos_de_facturacion_de_suscripcion"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "subscription_lines",
+    "tabla_es": "lineas_de_suscripcion"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "subscriptions",
+    "tabla_es": "suscripciones"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "warranties",
+    "tabla_es": "garantias"
+  },
+  {
+    "esquema_en": "sales",
+    "esquema_es": "ventas",
+    "tabla_en": "warranty_claims",
+    "tabla_es": "reclamos_de_garantia"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "access_control_lists",
+    "tabla_es": "listas_de_control_de_acceso"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "acl_entries",
+    "tabla_es": "entradas_de_lista_de_control_de_acceso"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "api_key_rate_limits",
+    "tabla_es": "limites_de_tasa_de_clave_de_api"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "data_encryption_keys",
+    "tabla_es": "claves_de_encriptacion_de_datos"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "encryption_key_rotations",
+    "tabla_es": "rotaciones_de_clave_de_encriptacion"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "ip_allowlist_entries",
+    "tabla_es": "entradas_de_lista_blanca_de_ip"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "ip_denylist_entries",
+    "tabla_es": "entradas_de_lista_negra_de_ip"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "login_attempts",
+    "tabla_es": "intentos_de_login"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "oauth_client_scopes",
+    "tabla_es": "alcances_de_aplicacion_cliente_oauth"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "oauth_clients",
+    "tabla_es": "aplicaciones_cliente_oauth"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "oauth_scopes",
+    "tabla_es": "alcances_oauth"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "oauth_tokens",
+    "tabla_es": "tokens_oauth"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "password_history",
+    "tabla_es": "historial_de_contrasena"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "password_policies",
+    "tabla_es": "politicas_de_contrasena"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "permission_delegations",
+    "tabla_es": "delegaciones_de_permiso"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "security_audit_logs",
+    "tabla_es": "registros_de_auditoria_de_seguridad"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "security_incident_events",
+    "tabla_es": "eventos_de_incidente_de_seguridad"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "security_incidents",
+    "tabla_es": "incidentes_de_seguridad"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "security_policies",
+    "tabla_es": "politicas_de_seguridad"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "session_activity_logs",
+    "tabla_es": "registros_de_actividad_de_sesion"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "trusted_devices",
+    "tabla_es": "dispositivos_de_confianza"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "two_factor_backup_codes",
+    "tabla_es": "codigos_de_respaldo_de_doble_factor"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "two_factor_challenges",
+    "tabla_es": "desafios_de_doble_factor"
+  },
+  {
+    "esquema_en": "security",
+    "esquema_es": "seguridad",
+    "tabla_en": "two_factor_credentials",
+    "tabla_es": "credenciales_de_doble_factor"
+  },
+  {
+    "esquema_en": "services",
+    "esquema_es": "servicios",
+    "tabla_en": "equipment",
+    "tabla_es": "equipos"
+  },
+  {
+    "esquema_en": "services",
+    "esquema_es": "servicios",
+    "tabla_en": "equipment_types",
+    "tabla_es": "tipos_de_equipo"
+  },
+  {
+    "esquema_en": "services",
+    "esquema_es": "servicios",
+    "tabla_en": "maintenance_plans",
+    "tabla_es": "planes_de_mantenimiento"
+  },
+  {
+    "esquema_en": "services",
+    "esquema_es": "servicios",
+    "tabla_en": "scheduled_maintenances",
+    "tabla_es": "mantenimientos_programados"
+  },
+  {
+    "esquema_en": "services",
+    "esquema_es": "servicios",
+    "tabla_en": "service_contract_types",
+    "tabla_es": "tipos_de_contrato_de_servicio"
+  },
+  {
+    "esquema_en": "services",
+    "esquema_es": "servicios",
+    "tabla_en": "service_contracts",
+    "tabla_es": "contratos_de_servicio"
+  },
+  {
+    "esquema_en": "services",
+    "esquema_es": "servicios",
+    "tabla_en": "service_order_lines",
+    "tabla_es": "lineas_de_orden_de_servicio"
+  },
+  {
+    "esquema_en": "services",
+    "esquema_es": "servicios",
+    "tabla_en": "service_order_reasons",
+    "tabla_es": "motivos_de_orden_de_servicio"
+  },
+  {
+    "esquema_en": "services",
+    "esquema_es": "servicios",
+    "tabla_en": "service_order_status",
+    "tabla_es": "estados_de_orden_de_servicio"
+  },
+  {
+    "esquema_en": "services",
+    "esquema_es": "servicios",
+    "tabla_en": "service_order_status_history",
+    "tabla_es": "historial_de_estado_de_orden_de_servicio"
+  },
+  {
+    "esquema_en": "services",
+    "esquema_es": "servicios",
+    "tabla_en": "service_orders",
+    "tabla_es": "ordenes_de_servicio"
+  },
+  {
+    "esquema_en": "services",
+    "esquema_es": "servicios",
+    "tabla_en": "service_parts_consumed",
+    "tabla_es": "repuestos_consumidos_de_servicio"
+  },
+  {
+    "esquema_en": "services",
+    "esquema_es": "servicios",
+    "tabla_en": "service_types",
+    "tabla_es": "tipos_de_servicio"
+  },
+  {
+    "esquema_en": "services",
+    "esquema_es": "servicios",
+    "tabla_en": "service_visits",
+    "tabla_es": "visitas_de_servicio"
+  },
+  {
+    "esquema_en": "services",
+    "esquema_es": "servicios",
+    "tabla_en": "service_work_reports",
+    "tabla_es": "reportes_de_trabajo_de_servicio"
+  },
+  {
+    "esquema_en": "services",
+    "esquema_es": "servicios",
+    "tabla_en": "sla_definitions",
+    "tabla_es": "definiciones_de_sla"
+  },
+  {
+    "esquema_en": "services",
+    "esquema_es": "servicios",
+    "tabla_en": "technician_assignments",
+    "tabla_es": "asignaciones_de_tecnico"
+  },
+  {
+    "esquema_en": "services",
+    "esquema_es": "servicios",
+    "tabla_en": "technicians",
+    "tabla_es": "tecnicos"
+  },
+  {
+    "esquema_en": "suppliers",
+    "esquema_es": "proveedores",
+    "tabla_en": "supplier_addresses",
+    "tabla_es": "direcciones_de_proveedor"
+  },
+  {
+    "esquema_en": "suppliers",
+    "esquema_es": "proveedores",
+    "tabla_en": "supplier_bank_accounts",
+    "tabla_es": "cuentas_bancarias_de_proveedor"
+  },
+  {
+    "esquema_en": "suppliers",
+    "esquema_es": "proveedores",
+    "tabla_en": "supplier_block_history",
+    "tabla_es": "historial_de_bloqueo_de_proveedor"
+  },
+  {
+    "esquema_en": "suppliers",
+    "esquema_es": "proveedores",
+    "tabla_en": "supplier_classifications",
+    "tabla_es": "clasificaciones_de_proveedor"
+  },
+  {
+    "esquema_en": "suppliers",
+    "esquema_es": "proveedores",
+    "tabla_en": "supplier_contacts",
+    "tabla_es": "contactos_de_proveedor"
+  },
+  {
+    "esquema_en": "suppliers",
+    "esquema_es": "proveedores",
+    "tabla_en": "supplier_credit_limit_history",
+    "tabla_es": "historial_de_limite_de_credito_de_proveedor"
+  },
+  {
+    "esquema_en": "suppliers",
+    "esquema_es": "proveedores",
+    "tabla_en": "supplier_credit_profiles",
+    "tabla_es": "perfiles_de_credito_de_proveedor"
+  },
+  {
+    "esquema_en": "suppliers",
+    "esquema_es": "proveedores",
+    "tabla_en": "supplier_evaluation_criteria",
+    "tabla_es": "criterios_de_evaluacion_de_proveedor"
+  },
+  {
+    "esquema_en": "suppliers",
+    "esquema_es": "proveedores",
+    "tabla_en": "supplier_evaluation_scores",
+    "tabla_es": "puntajes_de_evaluacion_de_proveedor"
+  },
+  {
+    "esquema_en": "suppliers",
+    "esquema_es": "proveedores",
+    "tabla_en": "supplier_evaluations",
+    "tabla_es": "evaluaciones_de_proveedor"
+  },
+  {
+    "esquema_en": "suppliers",
+    "esquema_es": "proveedores",
+    "tabla_en": "supplier_history",
+    "tabla_es": "historial_de_proveedor"
+  },
+  {
+    "esquema_en": "suppliers",
+    "esquema_es": "proveedores",
+    "tabla_en": "supplier_withholding_profiles",
+    "tabla_es": "perfiles_de_retencion_de_proveedor"
+  },
+  {
+    "esquema_en": "suppliers",
+    "esquema_es": "proveedores",
+    "tabla_en": "suppliers",
+    "tabla_es": "proveedores"
+  },
+  {
+    "esquema_en": "taxes",
+    "esquema_es": "impuestos",
+    "tabla_en": "tax_declaration_lines",
+    "tabla_es": "lineas_de_declaracion_de_impuestos"
+  },
+  {
+    "esquema_en": "taxes",
+    "esquema_es": "impuestos",
+    "tabla_en": "tax_declarations",
+    "tabla_es": "declaraciones_de_impuestos"
+  },
+  {
+    "esquema_en": "taxes",
+    "esquema_es": "impuestos",
+    "tabla_en": "tax_exemption_certificates",
+    "tabla_es": "certificados_de_exencion_fiscal"
+  },
+  {
+    "esquema_en": "taxes",
+    "esquema_es": "impuestos",
+    "tabla_en": "tax_exemptions",
+    "tabla_es": "exenciones_fiscales"
+  },
+  {
+    "esquema_en": "taxes",
+    "esquema_es": "impuestos",
+    "tabla_en": "tax_jurisdictions",
+    "tabla_es": "jurisdicciones_fiscales"
+  },
+  {
+    "esquema_en": "taxes",
+    "esquema_es": "impuestos",
+    "tabla_en": "tax_perception_rules",
+    "tabla_es": "reglas_de_percepcion_fiscal"
+  },
+  {
+    "esquema_en": "taxes",
+    "esquema_es": "impuestos",
+    "tabla_en": "tax_perceptions",
+    "tabla_es": "percepciones_fiscales"
+  },
+  {
+    "esquema_en": "taxes",
+    "esquema_es": "impuestos",
+    "tabla_en": "tax_rates",
+    "tabla_es": "tasas_de_impuesto"
+  },
+  {
+    "esquema_en": "taxes",
+    "esquema_es": "impuestos",
+    "tabla_en": "tax_rules",
+    "tabla_es": "reglas_fiscales"
+  },
+  {
+    "esquema_en": "taxes",
+    "esquema_es": "impuestos",
+    "tabla_en": "tax_translations",
+    "tabla_es": "traducciones_de_impuesto"
+  },
+  {
+    "esquema_en": "taxes",
+    "esquema_es": "impuestos",
+    "tabla_en": "taxes",
+    "tabla_es": "impuestos"
+  },
+  {
+    "esquema_en": "taxes",
+    "esquema_es": "impuestos",
+    "tabla_en": "withholding_certificates",
+    "tabla_es": "certificados_de_retencion"
+  },
+  {
+    "esquema_en": "taxes",
+    "esquema_es": "impuestos",
+    "tabla_en": "withholding_rules",
+    "tabla_es": "reglas_de_retencion"
+  }
+]

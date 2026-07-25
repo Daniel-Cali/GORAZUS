@@ -1,0 +1,3642 @@
+[
+  {
+    "en": "abbreviation",
+    "es": "abreviatura",
+    "source": "override"
+  },
+  {
+    "en": "accepts_postings",
+    "es": "acepta_asientos",
+    "source": "override"
+  },
+  {
+    "en": "access_token_hash",
+    "es": "hash_token_acceso",
+    "source": "override"
+  },
+  {
+    "en": "account_id",
+    "es": "cuenta_id",
+    "source": "override"
+  },
+  {
+    "en": "account_number_encrypted",
+    "es": "numero_cuenta_encriptado",
+    "source": "override"
+  },
+  {
+    "en": "account_type",
+    "es": "tipo_de_cuenta",
+    "source": "override"
+  },
+  {
+    "en": "account_type_id",
+    "es": "tipo_de_cuenta_id",
+    "source": "override"
+  },
+  {
+    "en": "accrual_rule",
+    "es": "regla_de_devengo",
+    "source": "override"
+  },
+  {
+    "en": "accrued_days",
+    "es": "dias_devengados",
+    "source": "override"
+  },
+  {
+    "en": "acl_id",
+    "es": "lista_de_control_de_acceso_id",
+    "source": "override"
+  },
+  {
+    "en": "acquisition_cost",
+    "es": "costo_de_adquisicion",
+    "source": "override"
+  },
+  {
+    "en": "acquisition_date",
+    "es": "fecha_de_adquisicion",
+    "source": "override"
+  },
+  {
+    "en": "action",
+    "es": "accion",
+    "source": "override"
+  },
+  {
+    "en": "action_code",
+    "es": "codigo_de_accion",
+    "source": "override"
+  },
+  {
+    "en": "action_executed",
+    "es": "accion_ejecutada",
+    "source": "override"
+  },
+  {
+    "en": "action_on_expiry",
+    "es": "accion_al_expirar",
+    "source": "override"
+  },
+  {
+    "en": "action_payload",
+    "es": "contenido_de_la_accion",
+    "source": "override"
+  },
+  {
+    "en": "action_type",
+    "es": "tipo_de_accion",
+    "source": "override"
+  },
+  {
+    "en": "action_type_id",
+    "es": "tipo_de_accion_id",
+    "source": "override"
+  },
+  {
+    "en": "actor_user_id",
+    "es": "usuario_actor_id",
+    "source": "override"
+  },
+  {
+    "en": "actual_quantity",
+    "es": "cantidad_real",
+    "source": "override"
+  },
+  {
+    "en": "ad_hoc_config",
+    "es": "configuracion_ad_hoc",
+    "source": "override"
+  },
+  {
+    "en": "address_line",
+    "es": "linea_direccion",
+    "source": "override"
+  },
+  {
+    "en": "address_type",
+    "es": "tipo_direccion",
+    "source": "override"
+  },
+  {
+    "en": "adjustment_id",
+    "es": "ajuste_id",
+    "source": "override"
+  },
+  {
+    "en": "aggregation",
+    "es": "agregacion",
+    "source": "override"
+  },
+  {
+    "en": "agreed_price",
+    "es": "precio_acordado",
+    "source": "override"
+  },
+  {
+    "en": "alert_id",
+    "es": "alerta_id",
+    "source": "override"
+  },
+  {
+    "en": "algorithm",
+    "es": "algoritmo",
+    "source": "override"
+  },
+  {
+    "en": "all_checks_passed",
+    "es": "todas_las_verificaciones_pasaron",
+    "source": "override"
+  },
+  {
+    "en": "allocation_percentage",
+    "es": "porcentaje_de_asignacion",
+    "source": "override"
+  },
+  {
+    "en": "amount",
+    "es": "monto",
+    "source": "auto"
+  },
+  {
+    "en": "amount_applied",
+    "es": "monto_aplicado",
+    "source": "override"
+  },
+  {
+    "en": "amount_delta",
+    "es": "variacion_de_monto",
+    "source": "override"
+  },
+  {
+    "en": "amount_formula",
+    "es": "formula_de_monto",
+    "source": "override"
+  },
+  {
+    "en": "api_key_id",
+    "es": "clave_de_api_id",
+    "source": "override"
+  },
+  {
+    "en": "approval_id",
+    "es": "aprobacion_id",
+    "source": "override"
+  },
+  {
+    "en": "approved_by_user_id",
+    "es": "aprobado_por_usuario_id",
+    "source": "override"
+  },
+  {
+    "en": "approver_role_id",
+    "es": "rol_aprobador_id",
+    "source": "override"
+  },
+  {
+    "en": "approver_user_id",
+    "es": "usuario_aprobador_id",
+    "source": "override"
+  },
+  {
+    "en": "asset_id",
+    "es": "activo_id",
+    "source": "override"
+  },
+  {
+    "en": "assigned_salesperson_id",
+    "es": "vendedor_asignado_id",
+    "source": "override"
+  },
+  {
+    "en": "assigned_to_user_id",
+    "es": "asignado_a_usuario_id",
+    "source": "override"
+  },
+  {
+    "en": "attempt_number",
+    "es": "numero_de_intento",
+    "source": "override"
+  },
+  {
+    "en": "attempt_status",
+    "es": "estado_del_intento",
+    "source": "override"
+  },
+  {
+    "en": "attempts",
+    "es": "intentos",
+    "source": "override"
+  },
+  {
+    "en": "attribute_id",
+    "es": "atributo_id",
+    "source": "override"
+  },
+  {
+    "en": "attribute_value_id",
+    "es": "valor_de_atributo_id",
+    "source": "override"
+  },
+  {
+    "en": "author_user_id",
+    "es": "usuario_autor_id",
+    "source": "override"
+  },
+  {
+    "en": "available_at",
+    "es": "fecha_disponible",
+    "source": "override"
+  },
+  {
+    "en": "avatar_file_id",
+    "es": "archivo_de_avatar_id",
+    "source": "override"
+  },
+  {
+    "en": "backup_source",
+    "es": "origen_del_respaldo",
+    "source": "override"
+  },
+  {
+    "en": "balance_due",
+    "es": "saldo_pendiente",
+    "source": "override"
+  },
+  {
+    "en": "bank_account_id",
+    "es": "cuenta_bancaria_id",
+    "source": "override"
+  },
+  {
+    "en": "bank_id",
+    "es": "banco_id",
+    "source": "override"
+  },
+  {
+    "en": "bank_name",
+    "es": "nombre_del_banco",
+    "source": "override"
+  },
+  {
+    "en": "barcode",
+    "es": "codigo_de_barras",
+    "source": "override"
+  },
+  {
+    "en": "barcode_type",
+    "es": "tipo_de_codigo_de_barras",
+    "source": "override"
+  },
+  {
+    "en": "base_query_name",
+    "es": "nombre_consulta_base",
+    "source": "override"
+  },
+  {
+    "en": "base_salary",
+    "es": "salario_base",
+    "source": "override"
+  },
+  {
+    "en": "base_unit_id",
+    "es": "unidad_base_id",
+    "source": "override"
+  },
+  {
+    "en": "batch_id",
+    "es": "lote_id",
+    "source": "override"
+  },
+  {
+    "en": "batch_purpose",
+    "es": "proposito_del_lote",
+    "source": "override"
+  },
+  {
+    "en": "beneficiary_name",
+    "es": "nombre_del_beneficiario",
+    "source": "override"
+  },
+  {
+    "en": "benefit_id",
+    "es": "beneficio_id",
+    "source": "override"
+  },
+  {
+    "en": "billing_cutoff_day",
+    "es": "dia_de_corte_de_facturacion",
+    "source": "override"
+  },
+  {
+    "en": "billing_cycle",
+    "es": "ciclo_de_facturacion",
+    "source": "override"
+  },
+  {
+    "en": "billing_frequency",
+    "es": "frecuencia_de_facturacion",
+    "source": "override"
+  },
+  {
+    "en": "billing_method",
+    "es": "metodo_de_facturacion",
+    "source": "override"
+  },
+  {
+    "en": "billing_plan_id",
+    "es": "plan_de_facturacion_id",
+    "source": "override"
+  },
+  {
+    "en": "birth_date",
+    "es": "fecha_nacimiento",
+    "source": "override"
+  },
+  {
+    "en": "block_reason",
+    "es": "motivo_de_bloqueo",
+    "source": "override"
+  },
+  {
+    "en": "body",
+    "es": "cuerpo",
+    "source": "override"
+  },
+  {
+    "en": "bom_id",
+    "es": "lista_de_materiales_id",
+    "source": "override"
+  },
+  {
+    "en": "bracket_max",
+    "es": "tramo_maximo",
+    "source": "override"
+  },
+  {
+    "en": "bracket_min",
+    "es": "tramo_minimo",
+    "source": "override"
+  },
+  {
+    "en": "branch_id",
+    "es": "sucursal_id",
+    "source": "base_entity"
+  },
+  {
+    "en": "brand_id",
+    "es": "marca_id",
+    "source": "override"
+  },
+  {
+    "en": "budget_amount",
+    "es": "monto_presupuestado",
+    "source": "override"
+  },
+  {
+    "en": "budget_id",
+    "es": "presupuesto_id",
+    "source": "override"
+  },
+  {
+    "en": "budgeted_amount",
+    "es": "monto_presupuestado",
+    "source": "override"
+  },
+  {
+    "en": "calculation_detail",
+    "es": "detalle_de_calculo",
+    "source": "override"
+  },
+  {
+    "en": "calculation_formula",
+    "es": "formula_de_calculo",
+    "source": "override"
+  },
+  {
+    "en": "campaign_id",
+    "es": "campana_id",
+    "source": "override"
+  },
+  {
+    "en": "candidate_id",
+    "es": "candidato_id",
+    "source": "override"
+  },
+  {
+    "en": "card_type",
+    "es": "tipo_de_tarjeta",
+    "source": "override"
+  },
+  {
+    "en": "cart_id",
+    "es": "carrito_id",
+    "source": "override"
+  },
+  {
+    "en": "cash_count_id",
+    "es": "arqueo_de_caja_id",
+    "source": "override"
+  },
+  {
+    "en": "cash_register_id",
+    "es": "caja_id",
+    "source": "override"
+  },
+  {
+    "en": "category",
+    "es": "categoria",
+    "source": "override"
+  },
+  {
+    "en": "category_id",
+    "es": "categoria_id",
+    "source": "override"
+  },
+  {
+    "en": "changed_columns",
+    "es": "columnas_modificadas",
+    "source": "override"
+  },
+  {
+    "en": "channel_id",
+    "es": "canal_id",
+    "source": "override"
+  },
+  {
+    "en": "channel_type",
+    "es": "tipo_de_canal",
+    "source": "override"
+  },
+  {
+    "en": "chart_type",
+    "es": "tipo_de_grafico",
+    "source": "override"
+  },
+  {
+    "en": "check_number",
+    "es": "numero_de_cheque",
+    "source": "override"
+  },
+  {
+    "en": "check_results",
+    "es": "resultados_de_verificacion",
+    "source": "override"
+  },
+  {
+    "en": "check_type",
+    "es": "tipo_de_verificacion",
+    "source": "override"
+  },
+  {
+    "en": "checkbook_id",
+    "es": "chequera_id",
+    "source": "override"
+  },
+  {
+    "en": "checked_at",
+    "es": "fecha_verificacion",
+    "source": "override"
+  },
+  {
+    "en": "checksum_sha256",
+    "es": "suma_verificacion_sha256",
+    "source": "override"
+  },
+  {
+    "en": "cidr_range",
+    "es": "rango_cidr",
+    "source": "override"
+  },
+  {
+    "en": "claim_description",
+    "es": "descripcion_del_reclamo",
+    "source": "override"
+  },
+  {
+    "en": "classification_id",
+    "es": "clasificacion_id",
+    "source": "override"
+  },
+  {
+    "en": "client_id",
+    "es": "aplicacion_cliente_id",
+    "source": "override"
+  },
+  {
+    "en": "client_secret_hash",
+    "es": "hash_secreto_cliente",
+    "source": "override"
+  },
+  {
+    "en": "closed_by_user_id",
+    "es": "cerrado_por_usuario_id",
+    "source": "override"
+  },
+  {
+    "en": "closing_balance",
+    "es": "saldo_de_cierre",
+    "source": "override"
+  },
+  {
+    "en": "closing_id",
+    "es": "cierre_id",
+    "source": "override"
+  },
+  {
+    "en": "code",
+    "es": "codigo",
+    "source": "override"
+  },
+  {
+    "en": "code_hash",
+    "es": "hash_codigo",
+    "source": "override"
+  },
+  {
+    "en": "collection_id",
+    "es": "coleccion_id",
+    "source": "override"
+  },
+  {
+    "en": "color_hex",
+    "es": "color_hexadecimal",
+    "source": "override"
+  },
+  {
+    "en": "column_name",
+    "es": "nombre_columna",
+    "source": "override"
+  },
+  {
+    "en": "combo_id",
+    "es": "combo_id",
+    "source": "override"
+  },
+  {
+    "en": "comment",
+    "es": "comentario",
+    "source": "auto"
+  },
+  {
+    "en": "commission_percentage",
+    "es": "porcentaje_de_comision",
+    "source": "override"
+  },
+  {
+    "en": "commission_rule_id",
+    "es": "regla_de_comision_id",
+    "source": "override"
+  },
+  {
+    "en": "company_id",
+    "es": "empresa_id",
+    "source": "base_entity"
+  },
+  {
+    "en": "completed_at",
+    "es": "fecha_finalizacion",
+    "source": "override"
+  },
+  {
+    "en": "completion_status",
+    "es": "estado_de_finalizacion",
+    "source": "override"
+  },
+  {
+    "en": "component_product_id",
+    "es": "producto_componente_id",
+    "source": "override"
+  },
+  {
+    "en": "concept_id",
+    "es": "concepto_id",
+    "source": "override"
+  },
+  {
+    "en": "concept_type_id",
+    "es": "tipo_de_concepto_id",
+    "source": "override"
+  },
+  {
+    "en": "condition_expression",
+    "es": "expresion_de_condicion",
+    "source": "override"
+  },
+  {
+    "en": "confirmed_at",
+    "es": "fecha_confirmacion",
+    "source": "override"
+  },
+  {
+    "en": "consent_type",
+    "es": "tipo_de_consentimiento",
+    "source": "override"
+  },
+  {
+    "en": "consolidation_label",
+    "es": "etiqueta_de_consolidacion",
+    "source": "override"
+  },
+  {
+    "en": "contact_email",
+    "es": "correo_contacto",
+    "source": "override"
+  },
+  {
+    "en": "context",
+    "es": "contexto",
+    "source": "override"
+  },
+  {
+    "en": "context_snapshot",
+    "es": "instantanea_de_contexto",
+    "source": "override"
+  },
+  {
+    "en": "contract_id",
+    "es": "contrato_id",
+    "source": "override"
+  },
+  {
+    "en": "contract_type_id",
+    "es": "tipo_de_contrato_id",
+    "source": "override"
+  },
+  {
+    "en": "conversion_factor",
+    "es": "factor_de_conversion",
+    "source": "override"
+  },
+  {
+    "en": "converted_customer_id",
+    "es": "cliente_convertido_id",
+    "source": "override"
+  },
+  {
+    "en": "cost",
+    "es": "costo",
+    "source": "auto"
+  },
+  {
+    "en": "cost_center_id",
+    "es": "centro_de_costo_id",
+    "source": "override"
+  },
+  {
+    "en": "costing_method",
+    "es": "metodo_de_costeo",
+    "source": "override"
+  },
+  {
+    "en": "counted_amount",
+    "es": "monto_contado",
+    "source": "override"
+  },
+  {
+    "en": "counted_quantity",
+    "es": "cantidad_contada",
+    "source": "override"
+  },
+  {
+    "en": "country_id",
+    "es": "pais_id",
+    "source": "override"
+  },
+  {
+    "en": "coupon_id",
+    "es": "cupon_id",
+    "source": "override"
+  },
+  {
+    "en": "coverage_months",
+    "es": "meses_de_cobertura",
+    "source": "override"
+  },
+  {
+    "en": "created_at",
+    "es": "fecha_creacion",
+    "source": "base_entity"
+  },
+  {
+    "en": "created_by",
+    "es": "creado_por",
+    "source": "base_entity"
+  },
+  {
+    "en": "credential_key",
+    "es": "clave_credencial",
+    "source": "override"
+  },
+  {
+    "en": "credit_amount",
+    "es": "monto_de_credito",
+    "source": "override"
+  },
+  {
+    "en": "credit_limit",
+    "es": "limite_de_credito",
+    "source": "override"
+  },
+  {
+    "en": "credit_note_id",
+    "es": "nota_de_credito_id",
+    "source": "override"
+  },
+  {
+    "en": "criteria_id",
+    "es": "criterio_id",
+    "source": "override"
+  },
+  {
+    "en": "cron_expression",
+    "es": "expresion_cron",
+    "source": "override"
+  },
+  {
+    "en": "cube_id",
+    "es": "cubo_id",
+    "source": "override"
+  },
+  {
+    "en": "currency_code",
+    "es": "codigo_moneda",
+    "source": "override"
+  },
+  {
+    "en": "currency_id",
+    "es": "moneda_id",
+    "source": "override"
+  },
+  {
+    "en": "current_balance",
+    "es": "saldo_actual",
+    "source": "override"
+  },
+  {
+    "en": "current_custodian_user_id",
+    "es": "usuario_custodio_actual_id",
+    "source": "override"
+  },
+  {
+    "en": "current_stage_id",
+    "es": "etapa_actual_id",
+    "source": "override"
+  },
+  {
+    "en": "custodian_user_id",
+    "es": "usuario_custodio_id",
+    "source": "override"
+  },
+  {
+    "en": "customer_id",
+    "es": "cliente_id",
+    "source": "override"
+  },
+  {
+    "en": "customer_signature_file_id",
+    "es": "archivo_firma_cliente_id",
+    "source": "override"
+  },
+  {
+    "en": "dashboard_id",
+    "es": "panel_id",
+    "source": "override"
+  },
+  {
+    "en": "data_mart_table_id",
+    "es": "tabla_datamart_id",
+    "source": "override"
+  },
+  {
+    "en": "data_type",
+    "es": "tipo_de_dato",
+    "source": "override"
+  },
+  {
+    "en": "debit_amount",
+    "es": "monto_de_debito",
+    "source": "override"
+  },
+  {
+    "en": "debit_note_id",
+    "es": "nota_de_debito_id",
+    "source": "override"
+  },
+  {
+    "en": "decided_at",
+    "es": "fecha_decision",
+    "source": "override"
+  },
+  {
+    "en": "decided_by_user_id",
+    "es": "decidido_por_usuario_id",
+    "source": "override"
+  },
+  {
+    "en": "decimal_places",
+    "es": "cantidad_de_decimales",
+    "source": "override"
+  },
+  {
+    "en": "decision",
+    "es": "decision",
+    "source": "override"
+  },
+  {
+    "en": "declaration_id",
+    "es": "declaracion_id",
+    "source": "override"
+  },
+  {
+    "en": "default_channel_id",
+    "es": "canal_predeterminado_id",
+    "source": "override"
+  },
+  {
+    "en": "default_depreciation_method_id",
+    "es": "metodo_depreciacion_predeterminado_id",
+    "source": "override"
+  },
+  {
+    "en": "default_useful_life_months",
+    "es": "vida_util_predeterminada_meses",
+    "source": "override"
+  },
+  {
+    "en": "default_value",
+    "es": "valor_predeterminado",
+    "source": "override"
+  },
+  {
+    "en": "delegate_user_id",
+    "es": "usuario_delegado_id",
+    "source": "override"
+  },
+  {
+    "en": "delegator_user_id",
+    "es": "usuario_delegante_id",
+    "source": "override"
+  },
+  {
+    "en": "deleted_at",
+    "es": "fecha_eliminacion",
+    "source": "base_entity"
+  },
+  {
+    "en": "deleted_by",
+    "es": "eliminado_por",
+    "source": "base_entity"
+  },
+  {
+    "en": "delivery_note_id",
+    "es": "remito_id",
+    "source": "override"
+  },
+  {
+    "en": "denomination_value",
+    "es": "valor_de_denominacion",
+    "source": "override"
+  },
+  {
+    "en": "department_id",
+    "es": "departamento_id",
+    "source": "override"
+  },
+  {
+    "en": "depends_on_task_id",
+    "es": "tarea_dependencia_id",
+    "source": "override"
+  },
+  {
+    "en": "description",
+    "es": "descripcion",
+    "source": "auto"
+  },
+  {
+    "en": "destination_register_id",
+    "es": "caja_destino_id",
+    "source": "override"
+  },
+  {
+    "en": "destination_warehouse_id",
+    "es": "almacen_destino_id",
+    "source": "override"
+  },
+  {
+    "en": "details",
+    "es": "detalles",
+    "source": "override"
+  },
+  {
+    "en": "device_id",
+    "es": "dispositivo_id",
+    "source": "override"
+  },
+  {
+    "en": "device_type",
+    "es": "tipo_de_dispositivo",
+    "source": "override"
+  },
+  {
+    "en": "difference_amount",
+    "es": "monto_de_diferencia",
+    "source": "override"
+  },
+  {
+    "en": "dimension_id",
+    "es": "dimension_id",
+    "source": "override"
+  },
+  {
+    "en": "dimension_value_id",
+    "es": "valor_de_dimension_id",
+    "source": "override"
+  },
+  {
+    "en": "direction",
+    "es": "sentido",
+    "source": "override"
+  },
+  {
+    "en": "discount_amount",
+    "es": "monto_de_descuento",
+    "source": "override"
+  },
+  {
+    "en": "discount_percentage",
+    "es": "porcentaje_de_descuento",
+    "source": "override"
+  },
+  {
+    "en": "discrepancy_amount",
+    "es": "monto_de_discrepancia",
+    "source": "override"
+  },
+  {
+    "en": "display_name",
+    "es": "nombre_visible",
+    "source": "override"
+  },
+  {
+    "en": "display_order",
+    "es": "orden_de_visualizacion",
+    "source": "override"
+  },
+  {
+    "en": "disposal_type",
+    "es": "tipo_de_baja",
+    "source": "override"
+  },
+  {
+    "en": "document_id",
+    "es": "documento_id",
+    "source": "override"
+  },
+  {
+    "en": "document_kind",
+    "es": "clase_de_documento",
+    "source": "override"
+  },
+  {
+    "en": "document_number",
+    "es": "numero_de_documento",
+    "source": "override"
+  },
+  {
+    "en": "document_type",
+    "es": "tipo_de_documento",
+    "source": "override"
+  },
+  {
+    "en": "document_type_id",
+    "es": "tipo_de_documento_id",
+    "source": "override"
+  },
+  {
+    "en": "domain",
+    "es": "dominio",
+    "source": "override"
+  },
+  {
+    "en": "due_at",
+    "es": "fecha_vencimiento",
+    "source": "override"
+  },
+  {
+    "en": "duration_seconds",
+    "es": "duracion_segundos",
+    "source": "override"
+  },
+  {
+    "en": "effect",
+    "es": "efecto",
+    "source": "override"
+  },
+  {
+    "en": "effective_from",
+    "es": "vigente_desde",
+    "source": "override"
+  },
+  {
+    "en": "effective_to",
+    "es": "vigente_hasta",
+    "source": "override"
+  },
+  {
+    "en": "email",
+    "es": "correo",
+    "source": "auto"
+  },
+  {
+    "en": "email_attempted",
+    "es": "correo_intentado",
+    "source": "override"
+  },
+  {
+    "en": "employee_id",
+    "es": "empleado_id",
+    "source": "override"
+  },
+  {
+    "en": "employee_rate_percentage",
+    "es": "porcentaje_tasa_empleado",
+    "source": "override"
+  },
+  {
+    "en": "employer_rate_percentage",
+    "es": "porcentaje_tasa_empleador",
+    "source": "override"
+  },
+  {
+    "en": "encrypted_account_number",
+    "es": "numero_cuenta_encriptado",
+    "source": "override"
+  },
+  {
+    "en": "encrypted_secret",
+    "es": "secreto_encriptado",
+    "source": "override"
+  },
+  {
+    "en": "encrypted_value",
+    "es": "valor_encriptado",
+    "source": "override"
+  },
+  {
+    "en": "encryption_key_id",
+    "es": "clave_encriptacion_id",
+    "source": "override"
+  },
+  {
+    "en": "ending_number",
+    "es": "numero_final",
+    "source": "override"
+  },
+  {
+    "en": "ends_at",
+    "es": "fecha_fin",
+    "source": "override"
+  },
+  {
+    "en": "ends_on",
+    "es": "termina_el",
+    "source": "override"
+  },
+  {
+    "en": "entity_id",
+    "es": "entidad_id",
+    "source": "override"
+  },
+  {
+    "en": "entity_type",
+    "es": "tipo_de_entidad",
+    "source": "override"
+  },
+  {
+    "en": "entry_id",
+    "es": "entrada_id",
+    "source": "override"
+  },
+  {
+    "en": "entry_side",
+    "es": "lado_del_asiento",
+    "source": "override"
+  },
+  {
+    "en": "equipment_id",
+    "es": "equipo_id",
+    "source": "override"
+  },
+  {
+    "en": "equipment_type_id",
+    "es": "tipo_de_equipo_id",
+    "source": "override"
+  },
+  {
+    "en": "error_message",
+    "es": "mensaje_de_error",
+    "source": "override"
+  },
+  {
+    "en": "estimated_amount",
+    "es": "monto_estimado",
+    "source": "override"
+  },
+  {
+    "en": "estimated_quantity",
+    "es": "cantidad_estimada",
+    "source": "override"
+  },
+  {
+    "en": "evaluated_by_user_id",
+    "es": "evaluado_por_usuario_id",
+    "source": "override"
+  },
+  {
+    "en": "evaluation_date",
+    "es": "fecha_evaluacion",
+    "source": "override"
+  },
+  {
+    "en": "evaluation_id",
+    "es": "evaluacion_id",
+    "source": "override"
+  },
+  {
+    "en": "evaluation_mode",
+    "es": "modo_de_evaluacion",
+    "source": "override"
+  },
+  {
+    "en": "event_code",
+    "es": "codigo_de_evento",
+    "source": "override"
+  },
+  {
+    "en": "event_description",
+    "es": "descripcion_del_evento",
+    "source": "override"
+  },
+  {
+    "en": "event_id",
+    "es": "evento_id",
+    "source": "auto"
+  },
+  {
+    "en": "event_type",
+    "es": "tipo_de_evento",
+    "source": "override"
+  },
+  {
+    "en": "executed_by_user_id",
+    "es": "ejecutado_por_usuario_id",
+    "source": "override"
+  },
+  {
+    "en": "execution_id",
+    "es": "ejecucion_id",
+    "source": "override"
+  },
+  {
+    "en": "execution_mode",
+    "es": "modo_de_ejecucion",
+    "source": "override"
+  },
+  {
+    "en": "exemption_id",
+    "es": "exencion_id",
+    "source": "override"
+  },
+  {
+    "en": "expected_amount",
+    "es": "monto_esperado",
+    "source": "override"
+  },
+  {
+    "en": "expense_type",
+    "es": "tipo_de_gasto",
+    "source": "override"
+  },
+  {
+    "en": "expires_after_days",
+    "es": "expira_despues_de_dias",
+    "source": "override"
+  },
+  {
+    "en": "expires_at",
+    "es": "fecha_expiracion",
+    "source": "override"
+  },
+  {
+    "en": "expiry_date",
+    "es": "fecha_vencimiento",
+    "source": "override"
+  },
+  {
+    "en": "export_format",
+    "es": "formato_de_exportacion",
+    "source": "override"
+  },
+  {
+    "en": "external_email",
+    "es": "correo_externo",
+    "source": "override"
+  },
+  {
+    "en": "family_id",
+    "es": "familia_id",
+    "source": "override"
+  },
+  {
+    "en": "file_id",
+    "es": "archivo_id",
+    "source": "override"
+  },
+  {
+    "en": "filed_at",
+    "es": "fecha_de_presentacion",
+    "source": "override"
+  },
+  {
+    "en": "findings",
+    "es": "hallazgos",
+    "source": "override"
+  },
+  {
+    "en": "finished_at",
+    "es": "fecha_finalizacion",
+    "source": "override"
+  },
+  {
+    "en": "fiscal_document_type_id",
+    "es": "tipo_de_documento_fiscal_id",
+    "source": "override"
+  },
+  {
+    "en": "fiscal_folio",
+    "es": "folio_fiscal",
+    "source": "override"
+  },
+  {
+    "en": "fiscal_period_id",
+    "es": "periodo_fiscal_id",
+    "source": "override"
+  },
+  {
+    "en": "fiscal_regime_id",
+    "es": "regimen_fiscal_id",
+    "source": "override"
+  },
+  {
+    "en": "fiscal_year_id",
+    "es": "ejercicio_fiscal_id",
+    "source": "override"
+  },
+  {
+    "en": "fiscal_year_start_month",
+    "es": "mes_inicio_ejercicio_fiscal",
+    "source": "override"
+  },
+  {
+    "en": "flag_key",
+    "es": "clave_bandera",
+    "source": "override"
+  },
+  {
+    "en": "forecast_date",
+    "es": "fecha_pronostico",
+    "source": "override"
+  },
+  {
+    "en": "formula",
+    "es": "formula",
+    "source": "override"
+  },
+  {
+    "en": "frequency",
+    "es": "frecuencia",
+    "source": "override"
+  },
+  {
+    "en": "frequency_days",
+    "es": "frecuencia_en_dias",
+    "source": "override"
+  },
+  {
+    "en": "from_branch_id",
+    "es": "sucursal_origen_id",
+    "source": "override"
+  },
+  {
+    "en": "from_currency_id",
+    "es": "moneda_origen_id",
+    "source": "override"
+  },
+  {
+    "en": "from_unit_id",
+    "es": "unidad_origen_id",
+    "source": "override"
+  },
+  {
+    "en": "full_name",
+    "es": "nombre_completo",
+    "source": "override"
+  },
+  {
+    "en": "functional_currency_code",
+    "es": "codigo_moneda_funcional",
+    "source": "override"
+  },
+  {
+    "en": "fund_amount",
+    "es": "monto_del_fondo",
+    "source": "override"
+  },
+  {
+    "en": "fund_id",
+    "es": "fondo_id",
+    "source": "override"
+  },
+  {
+    "en": "funnel_id",
+    "es": "embudo_id",
+    "source": "override"
+  },
+  {
+    "en": "funnel_stage_id",
+    "es": "etapa_de_embudo_id",
+    "source": "override"
+  },
+  {
+    "en": "gift_card_id",
+    "es": "tarjeta_de_regalo_id",
+    "source": "override"
+  },
+  {
+    "en": "granted_at",
+    "es": "fecha_otorgamiento",
+    "source": "override"
+  },
+  {
+    "en": "gross_amount",
+    "es": "monto_bruto",
+    "source": "override"
+  },
+  {
+    "en": "group_id",
+    "es": "grupo_id",
+    "source": "override"
+  },
+  {
+    "en": "hire_date",
+    "es": "fecha_contratacion",
+    "source": "override"
+  },
+  {
+    "en": "history_count",
+    "es": "cantidad_de_historial",
+    "source": "override"
+  },
+  {
+    "en": "holiday_date",
+    "es": "fecha_feriado",
+    "source": "override"
+  },
+  {
+    "en": "hourly_rate",
+    "es": "tarifa_por_hora",
+    "source": "override"
+  },
+  {
+    "en": "hours",
+    "es": "horas",
+    "source": "override"
+  },
+  {
+    "en": "http_status",
+    "es": "estado_http",
+    "source": "override"
+  },
+  {
+    "en": "iana_name",
+    "es": "nombre_iana",
+    "source": "override"
+  },
+  {
+    "en": "id",
+    "es": "id",
+    "source": "base_entity"
+  },
+  {
+    "en": "ifrs_standard_reference",
+    "es": "referencia_norma_niif",
+    "source": "override"
+  },
+  {
+    "en": "impact",
+    "es": "impacto",
+    "source": "override"
+  },
+  {
+    "en": "import_batch_id",
+    "es": "lote_de_importacion_id",
+    "source": "override"
+  },
+  {
+    "en": "import_id",
+    "es": "importacion_id",
+    "source": "override"
+  },
+  {
+    "en": "incident_id",
+    "es": "incidente_id",
+    "source": "override"
+  },
+  {
+    "en": "indicator_id",
+    "es": "indicador_id",
+    "source": "override"
+  },
+  {
+    "en": "ingredient_product_id",
+    "es": "producto_ingrediente_id",
+    "source": "override"
+  },
+  {
+    "en": "initial_balance",
+    "es": "saldo_inicial",
+    "source": "override"
+  },
+  {
+    "en": "installment_count",
+    "es": "cantidad_de_cuotas",
+    "source": "override"
+  },
+  {
+    "en": "installment_number",
+    "es": "numero_de_cuota",
+    "source": "override"
+  },
+  {
+    "en": "integration_id",
+    "es": "integracion_id",
+    "source": "override"
+  },
+  {
+    "en": "integration_type",
+    "es": "tipo_de_integracion",
+    "source": "override"
+  },
+  {
+    "en": "inventory_receipt_id",
+    "es": "recepcion_de_inventario_id",
+    "source": "override"
+  },
+  {
+    "en": "invoice_id",
+    "es": "factura_id",
+    "source": "override"
+  },
+  {
+    "en": "invoice_line_id",
+    "es": "linea_de_factura_id",
+    "source": "override"
+  },
+  {
+    "en": "ip_address",
+    "es": "direccion_ip",
+    "source": "override"
+  },
+  {
+    "en": "is_active",
+    "es": "esta_activo",
+    "source": "base_entity"
+  },
+  {
+    "en": "is_ad_hoc",
+    "es": "es_puntual",
+    "source": "override"
+  },
+  {
+    "en": "is_blocked",
+    "es": "esta_bloqueado",
+    "source": "override"
+  },
+  {
+    "en": "is_capitalizable",
+    "es": "es_capitalizable",
+    "source": "override"
+  },
+  {
+    "en": "is_closed",
+    "es": "esta_cerrado",
+    "source": "override"
+  },
+  {
+    "en": "is_current",
+    "es": "es_actual",
+    "source": "override"
+  },
+  {
+    "en": "is_default",
+    "es": "es_predeterminado",
+    "source": "override"
+  },
+  {
+    "en": "is_deleted",
+    "es": "esta_eliminado",
+    "source": "base_entity"
+  },
+  {
+    "en": "is_enabled",
+    "es": "esta_habilitado",
+    "source": "override"
+  },
+  {
+    "en": "is_final",
+    "es": "es_definitivo",
+    "source": "override"
+  },
+  {
+    "en": "is_main_branch",
+    "es": "es_sucursal_principal",
+    "source": "override"
+  },
+  {
+    "en": "is_open",
+    "es": "esta_abierta",
+    "source": "override"
+  },
+  {
+    "en": "is_opted_in",
+    "es": "acepto_participar",
+    "source": "override"
+  },
+  {
+    "en": "is_paid",
+    "es": "esta_pagado",
+    "source": "override"
+  },
+  {
+    "en": "is_preferred",
+    "es": "es_preferido",
+    "source": "override"
+  },
+  {
+    "en": "is_primary",
+    "es": "es_principal",
+    "source": "override"
+  },
+  {
+    "en": "is_reconciled",
+    "es": "esta_conciliado",
+    "source": "override"
+  },
+  {
+    "en": "is_system_account",
+    "es": "es_cuenta_de_sistema",
+    "source": "override"
+  },
+  {
+    "en": "is_system_role",
+    "es": "es_rol_de_sistema",
+    "source": "override"
+  },
+  {
+    "en": "is_within_tolerance",
+    "es": "esta_dentro_de_tolerancia",
+    "source": "override"
+  },
+  {
+    "en": "iso_code",
+    "es": "codigo_iso",
+    "source": "override"
+  },
+  {
+    "en": "issue_id",
+    "es": "problema_id",
+    "source": "override"
+  },
+  {
+    "en": "issued_at",
+    "es": "fecha_emision",
+    "source": "override"
+  },
+  {
+    "en": "job_code",
+    "es": "codigo_trabajo",
+    "source": "override"
+  },
+  {
+    "en": "job_key",
+    "es": "clave_trabajo",
+    "source": "override"
+  },
+  {
+    "en": "job_position_id",
+    "es": "puesto_id",
+    "source": "override"
+  },
+  {
+    "en": "job_title",
+    "es": "puesto",
+    "source": "override"
+  },
+  {
+    "en": "journal_entry_id",
+    "es": "asiento_contable_id",
+    "source": "override"
+  },
+  {
+    "en": "journal_entry_line_id",
+    "es": "linea_de_asiento_id",
+    "source": "override"
+  },
+  {
+    "en": "jurisdiction_id",
+    "es": "jurisdiccion_id",
+    "source": "override"
+  },
+  {
+    "en": "key",
+    "es": "clave",
+    "source": "override"
+  },
+  {
+    "en": "key_hash",
+    "es": "hash_clave",
+    "source": "override"
+  },
+  {
+    "en": "key_prefix",
+    "es": "prefijo_de_clave",
+    "source": "override"
+  },
+  {
+    "en": "kit_id",
+    "es": "kit_id",
+    "source": "override"
+  },
+  {
+    "en": "kms_key_reference",
+    "es": "referencia_clave_kms",
+    "source": "override"
+  },
+  {
+    "en": "kpi_id",
+    "es": "kpi_id",
+    "source": "override"
+  },
+  {
+    "en": "language_code",
+    "es": "codigo_idioma",
+    "source": "override"
+  },
+  {
+    "en": "last_error",
+    "es": "ultimo_error",
+    "source": "override"
+  },
+  {
+    "en": "last_four_digits",
+    "es": "ultimos_cuatro_digitos",
+    "source": "override"
+  },
+  {
+    "en": "last_login_at",
+    "es": "fecha_ultimo_login",
+    "source": "override"
+  },
+  {
+    "en": "last_purchase_cost",
+    "es": "ultimo_costo_de_compra",
+    "source": "override"
+  },
+  {
+    "en": "last_seen_at",
+    "es": "fecha_ultima_conexion",
+    "source": "override"
+  },
+  {
+    "en": "latitude",
+    "es": "latitud",
+    "source": "override"
+  },
+  {
+    "en": "layaway_id",
+    "es": "apartado_id",
+    "source": "override"
+  },
+  {
+    "en": "layout_html",
+    "es": "plantilla_html",
+    "source": "override"
+  },
+  {
+    "en": "lead_id",
+    "es": "prospecto_id",
+    "source": "override"
+  },
+  {
+    "en": "lead_time_days",
+    "es": "dias_de_entrega",
+    "source": "override"
+  },
+  {
+    "en": "leave_request_id",
+    "es": "solicitud_de_licencia_id",
+    "source": "override"
+  },
+  {
+    "en": "leave_type_id",
+    "es": "tipo_de_licencia_id",
+    "source": "override"
+  },
+  {
+    "en": "legal_name",
+    "es": "razon_social",
+    "source": "override"
+  },
+  {
+    "en": "level",
+    "es": "nivel",
+    "source": "override"
+  },
+  {
+    "en": "line1",
+    "es": "linea_1",
+    "source": "override"
+  },
+  {
+    "en": "line2",
+    "es": "linea_2",
+    "source": "override"
+  },
+  {
+    "en": "line_id",
+    "es": "linea_id",
+    "source": "override"
+  },
+  {
+    "en": "line_total",
+    "es": "total_de_linea",
+    "source": "override"
+  },
+  {
+    "en": "list_price",
+    "es": "precio_de_lista",
+    "source": "override"
+  },
+  {
+    "en": "loan_id",
+    "es": "prestamo_id",
+    "source": "override"
+  },
+  {
+    "en": "local_id",
+    "es": "id_local",
+    "source": "base_entity"
+  },
+  {
+    "en": "location_id",
+    "es": "ubicacion_id",
+    "source": "override"
+  },
+  {
+    "en": "locked_at",
+    "es": "fecha_bloqueo",
+    "source": "override"
+  },
+  {
+    "en": "locked_by",
+    "es": "bloqueado_por",
+    "source": "override"
+  },
+  {
+    "en": "lockout_duration_minutes",
+    "es": "duracion_bloqueo_minutos",
+    "source": "override"
+  },
+  {
+    "en": "longitude",
+    "es": "longitud",
+    "source": "override"
+  },
+  {
+    "en": "loss_reason_id",
+    "es": "motivo_de_perdida_id",
+    "source": "override"
+  },
+  {
+    "en": "lot_number",
+    "es": "numero_de_lote",
+    "source": "override"
+  },
+  {
+    "en": "loyalty_account_id",
+    "es": "cuenta_de_fidelidad_id",
+    "source": "override"
+  },
+  {
+    "en": "loyalty_program_id",
+    "es": "programa_de_fidelidad_id",
+    "source": "override"
+  },
+  {
+    "en": "maintenance_type_id",
+    "es": "tipo_de_mantenimiento_id",
+    "source": "override"
+  },
+  {
+    "en": "manager_user_id",
+    "es": "usuario_responsable_id",
+    "source": "override"
+  },
+  {
+    "en": "matched",
+    "es": "conciliado",
+    "source": "override"
+  },
+  {
+    "en": "matched_transfer_id",
+    "es": "transferencia_conciliada_id",
+    "source": "override"
+  },
+  {
+    "en": "materialized_view_name",
+    "es": "nombre_vista_materializada",
+    "source": "override"
+  },
+  {
+    "en": "max_amount",
+    "es": "monto_maximo",
+    "source": "override"
+  },
+  {
+    "en": "max_attempts",
+    "es": "intentos_maximos",
+    "source": "override"
+  },
+  {
+    "en": "max_branches",
+    "es": "sucursales_maximas",
+    "source": "override"
+  },
+  {
+    "en": "max_companies",
+    "es": "empresas_maximas",
+    "source": "override"
+  },
+  {
+    "en": "max_login_attempts",
+    "es": "intentos_maximos_de_login",
+    "source": "override"
+  },
+  {
+    "en": "max_quantity",
+    "es": "cantidad_maxima",
+    "source": "override"
+  },
+  {
+    "en": "max_redemptions",
+    "es": "canjes_maximos",
+    "source": "override"
+  },
+  {
+    "en": "max_users",
+    "es": "usuarios_maximos",
+    "source": "override"
+  },
+  {
+    "en": "max_warehouses",
+    "es": "almacenes_maximos",
+    "source": "override"
+  },
+  {
+    "en": "message",
+    "es": "mensaje",
+    "source": "override"
+  },
+  {
+    "en": "message_body",
+    "es": "cuerpo_del_mensaje",
+    "source": "override"
+  },
+  {
+    "en": "metadata",
+    "es": "metadatos",
+    "source": "base_entity"
+  },
+  {
+    "en": "method",
+    "es": "metodo",
+    "source": "override"
+  },
+  {
+    "en": "metric_id",
+    "es": "metrica_id",
+    "source": "override"
+  },
+  {
+    "en": "mime_type",
+    "es": "tipo_mime",
+    "source": "override"
+  },
+  {
+    "en": "min_amount",
+    "es": "monto_minimo",
+    "source": "override"
+  },
+  {
+    "en": "min_length",
+    "es": "longitud_minima",
+    "source": "override"
+  },
+  {
+    "en": "min_points",
+    "es": "puntos_minimos",
+    "source": "override"
+  },
+  {
+    "en": "min_quantity",
+    "es": "cantidad_minima",
+    "source": "override"
+  },
+  {
+    "en": "model",
+    "es": "modelo",
+    "source": "override"
+  },
+  {
+    "en": "model_id",
+    "es": "modelo_id",
+    "source": "override"
+  },
+  {
+    "en": "module_code",
+    "es": "codigo_de_modulo",
+    "source": "override"
+  },
+  {
+    "en": "movement_type_id",
+    "es": "tipo_de_movimiento_id",
+    "source": "override"
+  },
+  {
+    "en": "municipality_id",
+    "es": "municipio_id",
+    "source": "override"
+  },
+  {
+    "en": "name",
+    "es": "nombre",
+    "source": "auto"
+  },
+  {
+    "en": "national_id_encrypted",
+    "es": "documento_nacional_encriptado",
+    "source": "override"
+  },
+  {
+    "en": "net_amount",
+    "es": "monto_neto",
+    "source": "override"
+  },
+  {
+    "en": "new_average_cost",
+    "es": "nuevo_costo_promedio",
+    "source": "override"
+  },
+  {
+    "en": "new_limit",
+    "es": "limite_nuevo",
+    "source": "override"
+  },
+  {
+    "en": "new_quantity",
+    "es": "cantidad_nueva",
+    "source": "override"
+  },
+  {
+    "en": "new_value",
+    "es": "valor_nuevo",
+    "source": "override"
+  },
+  {
+    "en": "new_values",
+    "es": "valores_nuevos",
+    "source": "override"
+  },
+  {
+    "en": "next_generation_date",
+    "es": "fecha_proxima_generacion",
+    "source": "override"
+  },
+  {
+    "en": "next_number",
+    "es": "numero_siguiente",
+    "source": "override"
+  },
+  {
+    "en": "next_run_date",
+    "es": "fecha_proxima_ejecucion",
+    "source": "override"
+  },
+  {
+    "en": "normal_balance",
+    "es": "saldo_normal",
+    "source": "override"
+  },
+  {
+    "en": "notification_id",
+    "es": "notificacion_id",
+    "source": "override"
+  },
+  {
+    "en": "number_length",
+    "es": "longitud_numero",
+    "source": "override"
+  },
+  {
+    "en": "observations",
+    "es": "observaciones",
+    "source": "base_entity"
+  },
+  {
+    "en": "observed_value",
+    "es": "valor_observado",
+    "source": "override"
+  },
+  {
+    "en": "occurred_at",
+    "es": "fecha_ocurrencia",
+    "source": "override"
+  },
+  {
+    "en": "old_values",
+    "es": "valores_anteriores",
+    "source": "override"
+  },
+  {
+    "en": "opened_by_user_id",
+    "es": "abierto_por_usuario_id",
+    "source": "override"
+  },
+  {
+    "en": "opening_amount",
+    "es": "monto_de_apertura",
+    "source": "override"
+  },
+  {
+    "en": "opening_id",
+    "es": "apertura_id",
+    "source": "override"
+  },
+  {
+    "en": "operation",
+    "es": "operacion",
+    "source": "override"
+  },
+  {
+    "en": "opportunity_id",
+    "es": "oportunidad_id",
+    "source": "override"
+  },
+  {
+    "en": "original_name",
+    "es": "nombre_original",
+    "source": "override"
+  },
+  {
+    "en": "original_quantity",
+    "es": "cantidad_original",
+    "source": "override"
+  },
+  {
+    "en": "outcome",
+    "es": "resultado",
+    "source": "override"
+  },
+  {
+    "en": "outcome_notes",
+    "es": "notas_del_resultado",
+    "source": "override"
+  },
+  {
+    "en": "output_file_id",
+    "es": "archivo_de_salida_id",
+    "source": "override"
+  },
+  {
+    "en": "output_quantity",
+    "es": "cantidad_producida",
+    "source": "override"
+  },
+  {
+    "en": "overall_score",
+    "es": "puntaje_general",
+    "source": "override"
+  },
+  {
+    "en": "override_amount",
+    "es": "monto_sobrescrito",
+    "source": "override"
+  },
+  {
+    "en": "owner_user_id",
+    "es": "usuario_propietario_id",
+    "source": "override"
+  },
+  {
+    "en": "parameter_id",
+    "es": "parametro_id",
+    "source": "override"
+  },
+  {
+    "en": "parameter_key",
+    "es": "clave_parametro",
+    "source": "override"
+  },
+  {
+    "en": "parameters_used",
+    "es": "parametros_utilizados",
+    "source": "override"
+  },
+  {
+    "en": "parent_account_id",
+    "es": "cuenta_padre_id",
+    "source": "override"
+  },
+  {
+    "en": "parent_category_id",
+    "es": "categoria_padre_id",
+    "source": "override"
+  },
+  {
+    "en": "parent_department_id",
+    "es": "departamento_padre_id",
+    "source": "override"
+  },
+  {
+    "en": "parent_location_id",
+    "es": "ubicacion_padre_id",
+    "source": "override"
+  },
+  {
+    "en": "parent_product_id",
+    "es": "producto_padre_id",
+    "source": "override"
+  },
+  {
+    "en": "parent_task_id",
+    "es": "tarea_padre_id",
+    "source": "override"
+  },
+  {
+    "en": "password_hash",
+    "es": "hash_contrasena",
+    "source": "override"
+  },
+  {
+    "en": "password_policy_id",
+    "es": "politica_contrasena_id",
+    "source": "override"
+  },
+  {
+    "en": "payload",
+    "es": "contenido",
+    "source": "override"
+  },
+  {
+    "en": "payment_form_id",
+    "es": "forma_de_pago_id",
+    "source": "override"
+  },
+  {
+    "en": "payment_gateway_integration_id",
+    "es": "integracion_pasarela_de_pago_id",
+    "source": "override"
+  },
+  {
+    "en": "payment_method_id",
+    "es": "metodo_de_pago_id",
+    "source": "override"
+  },
+  {
+    "en": "payment_terms_days",
+    "es": "dias_de_plazo_de_pago",
+    "source": "override"
+  },
+  {
+    "en": "payroll_entry_id",
+    "es": "entrada_de_nomina_id",
+    "source": "override"
+  },
+  {
+    "en": "perception_id",
+    "es": "percepcion_id",
+    "source": "override"
+  },
+  {
+    "en": "performed_by_user_id",
+    "es": "realizado_por_usuario_id",
+    "source": "override"
+  },
+  {
+    "en": "period_end",
+    "es": "fin_de_periodo",
+    "source": "override"
+  },
+  {
+    "en": "period_id",
+    "es": "periodo_id",
+    "source": "override"
+  },
+  {
+    "en": "period_number",
+    "es": "numero_de_periodo",
+    "source": "override"
+  },
+  {
+    "en": "period_start",
+    "es": "inicio_de_periodo",
+    "source": "override"
+  },
+  {
+    "en": "permission_id",
+    "es": "permiso_id",
+    "source": "override"
+  },
+  {
+    "en": "phone",
+    "es": "telefono",
+    "source": "auto"
+  },
+  {
+    "en": "physical_count_id",
+    "es": "conteo_fisico_id",
+    "source": "override"
+  },
+  {
+    "en": "plan_code",
+    "es": "codigo_de_plan",
+    "source": "override"
+  },
+  {
+    "en": "plan_id",
+    "es": "plan_id",
+    "source": "override"
+  },
+  {
+    "en": "planned_date",
+    "es": "fecha_planificada",
+    "source": "override"
+  },
+  {
+    "en": "planned_quantity",
+    "es": "cantidad_planificada",
+    "source": "override"
+  },
+  {
+    "en": "points_balance",
+    "es": "saldo_de_puntos",
+    "source": "override"
+  },
+  {
+    "en": "points_delta",
+    "es": "variacion_de_puntos",
+    "source": "override"
+  },
+  {
+    "en": "points_per_currency_unit",
+    "es": "puntos_por_unidad_de_moneda",
+    "source": "override"
+  },
+  {
+    "en": "position_order",
+    "es": "orden_de_posicion",
+    "source": "override"
+  },
+  {
+    "en": "postal_code",
+    "es": "codigo_postal",
+    "source": "override"
+  },
+  {
+    "en": "posting_date",
+    "es": "fecha_contabilizacion",
+    "source": "override"
+  },
+  {
+    "en": "predicted_value",
+    "es": "valor_predicho",
+    "source": "override"
+  },
+  {
+    "en": "preferred_currency_code",
+    "es": "codigo_moneda_preferida",
+    "source": "override"
+  },
+  {
+    "en": "preferred_language",
+    "es": "idioma_preferido",
+    "source": "override"
+  },
+  {
+    "en": "preferred_timezone",
+    "es": "zona_horaria_preferida",
+    "source": "override"
+  },
+  {
+    "en": "prefix",
+    "es": "prefijo",
+    "source": "override"
+  },
+  {
+    "en": "previous_limit",
+    "es": "limite_anterior",
+    "source": "override"
+  },
+  {
+    "en": "previous_quantity",
+    "es": "cantidad_anterior",
+    "source": "override"
+  },
+  {
+    "en": "previous_value",
+    "es": "valor_anterior",
+    "source": "override"
+  },
+  {
+    "en": "price_list_id",
+    "es": "lista_de_precios_id",
+    "source": "override"
+  },
+  {
+    "en": "price_type",
+    "es": "tipo_de_precio",
+    "source": "override"
+  },
+  {
+    "en": "pricing_policy",
+    "es": "politica_de_precios",
+    "source": "override"
+  },
+  {
+    "en": "priority",
+    "es": "prioridad",
+    "source": "override"
+  },
+  {
+    "en": "probability",
+    "es": "probabilidad",
+    "source": "override"
+  },
+  {
+    "en": "product_category_id",
+    "es": "categoria_de_producto_id",
+    "source": "override"
+  },
+  {
+    "en": "product_id",
+    "es": "producto_id",
+    "source": "override"
+  },
+  {
+    "en": "product_type",
+    "es": "tipo_de_producto",
+    "source": "override"
+  },
+  {
+    "en": "production_order_id",
+    "es": "orden_de_produccion_id",
+    "source": "override"
+  },
+  {
+    "en": "proficiency_level",
+    "es": "nivel_de_competencia",
+    "source": "override"
+  },
+  {
+    "en": "profit_center_id",
+    "es": "centro_de_utilidad_id",
+    "source": "override"
+  },
+  {
+    "en": "program_id",
+    "es": "programa_id",
+    "source": "override"
+  },
+  {
+    "en": "progress_percentage",
+    "es": "porcentaje_de_avance",
+    "source": "override"
+  },
+  {
+    "en": "project_id",
+    "es": "proyecto_id",
+    "source": "override"
+  },
+  {
+    "en": "project_type_id",
+    "es": "tipo_de_proyecto_id",
+    "source": "override"
+  },
+  {
+    "en": "promotion_id",
+    "es": "promocion_id",
+    "source": "override"
+  },
+  {
+    "en": "provider_name",
+    "es": "nombre_del_proveedor",
+    "source": "override"
+  },
+  {
+    "en": "provider_response",
+    "es": "respuesta_del_proveedor",
+    "source": "override"
+  },
+  {
+    "en": "purchase_invoice_id",
+    "es": "factura_de_compra_id",
+    "source": "override"
+  },
+  {
+    "en": "purchase_order_id",
+    "es": "orden_de_compra_id",
+    "source": "override"
+  },
+  {
+    "en": "purpose",
+    "es": "proposito",
+    "source": "auto"
+  },
+  {
+    "en": "push_token",
+    "es": "token_push",
+    "source": "override"
+  },
+  {
+    "en": "quantity",
+    "es": "cantidad",
+    "source": "auto"
+  },
+  {
+    "en": "quantity_in_base_unit",
+    "es": "cantidad_en_unidad_base",
+    "source": "override"
+  },
+  {
+    "en": "quantity_on_hand",
+    "es": "cantidad_en_existencia",
+    "source": "override"
+  },
+  {
+    "en": "quantity_required",
+    "es": "cantidad_requerida",
+    "source": "override"
+  },
+  {
+    "en": "quantity_reserved",
+    "es": "cantidad_reservada",
+    "source": "override"
+  },
+  {
+    "en": "queue_name",
+    "es": "nombre_de_la_cola",
+    "source": "override"
+  },
+  {
+    "en": "quote_id",
+    "es": "cotizacion_id",
+    "source": "override"
+  },
+  {
+    "en": "rate",
+    "es": "tasa",
+    "source": "override"
+  },
+  {
+    "en": "rate_date",
+    "es": "fecha_tasa",
+    "source": "override"
+  },
+  {
+    "en": "rate_multiplier",
+    "es": "multiplicador_de_tasa",
+    "source": "override"
+  },
+  {
+    "en": "rate_percentage",
+    "es": "porcentaje_de_tasa",
+    "source": "override"
+  },
+  {
+    "en": "rate_type_id",
+    "es": "tipo_de_tasa_id",
+    "source": "override"
+  },
+  {
+    "en": "rating",
+    "es": "calificacion",
+    "source": "override"
+  },
+  {
+    "en": "raw_payload",
+    "es": "contenido_bruto",
+    "source": "override"
+  },
+  {
+    "en": "raw_row_data",
+    "es": "datos_de_fila_bruta",
+    "source": "override"
+  },
+  {
+    "en": "read_at",
+    "es": "fecha_lectura",
+    "source": "override"
+  },
+  {
+    "en": "reason",
+    "es": "motivo",
+    "source": "override"
+  },
+  {
+    "en": "reason_id",
+    "es": "motivo_id",
+    "source": "override"
+  },
+  {
+    "en": "receipt_id",
+    "es": "recibo_id",
+    "source": "override"
+  },
+  {
+    "en": "receipt_note_id",
+    "es": "nota_de_recepcion_id",
+    "source": "override"
+  },
+  {
+    "en": "received_at",
+    "es": "fecha_recepcion",
+    "source": "override"
+  },
+  {
+    "en": "recipe_id",
+    "es": "receta_id",
+    "source": "override"
+  },
+  {
+    "en": "recipient_user_id",
+    "es": "usuario_destinatario_id",
+    "source": "override"
+  },
+  {
+    "en": "reconciled_balance",
+    "es": "saldo_conciliado",
+    "source": "override"
+  },
+  {
+    "en": "reconciliation_id",
+    "es": "conciliacion_id",
+    "source": "override"
+  },
+  {
+    "en": "redirect_uris",
+    "es": "uris_de_redireccion",
+    "source": "override"
+  },
+  {
+    "en": "reference_type",
+    "es": "tipo_de_referencia",
+    "source": "override"
+  },
+  {
+    "en": "refresh_frequency",
+    "es": "frecuencia_de_actualizacion",
+    "source": "override"
+  },
+  {
+    "en": "refresh_token_hash",
+    "es": "hash_token_actualizacion",
+    "source": "override"
+  },
+  {
+    "en": "register_id",
+    "es": "caja_id",
+    "source": "override"
+  },
+  {
+    "en": "register_type",
+    "es": "tipo_de_caja",
+    "source": "override"
+  },
+  {
+    "en": "related_product_id",
+    "es": "producto_relacionado_id",
+    "source": "override"
+  },
+  {
+    "en": "relation_type",
+    "es": "tipo_de_relacion",
+    "source": "override"
+  },
+  {
+    "en": "relationship",
+    "es": "relacion",
+    "source": "override"
+  },
+  {
+    "en": "released_at",
+    "es": "fecha_liberacion",
+    "source": "override"
+  },
+  {
+    "en": "remaining_balance",
+    "es": "saldo_restante",
+    "source": "override"
+  },
+  {
+    "en": "remaining_quantity",
+    "es": "cantidad_restante",
+    "source": "override"
+  },
+  {
+    "en": "report_definition_id",
+    "es": "definicion_de_reporte_id",
+    "source": "override"
+  },
+  {
+    "en": "request_type",
+    "es": "tipo_de_solicitud",
+    "source": "override"
+  },
+  {
+    "en": "requested_by_entity_id",
+    "es": "entidad_solicitante_id",
+    "source": "override"
+  },
+  {
+    "en": "requested_by_entity_type",
+    "es": "tipo_entidad_solicitante",
+    "source": "override"
+  },
+  {
+    "en": "requested_by_user_id",
+    "es": "solicitado_por_usuario_id",
+    "source": "override"
+  },
+  {
+    "en": "requests_per_minute",
+    "es": "solicitudes_por_minuto",
+    "source": "override"
+  },
+  {
+    "en": "required_role_id",
+    "es": "rol_requerido_id",
+    "source": "override"
+  },
+  {
+    "en": "requires_2fa",
+    "es": "requiere_doble_factor",
+    "source": "override"
+  },
+  {
+    "en": "requires_number",
+    "es": "requiere_numero",
+    "source": "override"
+  },
+  {
+    "en": "requires_symbol",
+    "es": "requiere_simbolo",
+    "source": "override"
+  },
+  {
+    "en": "requires_uppercase",
+    "es": "requiere_mayuscula",
+    "source": "override"
+  },
+  {
+    "en": "requisition_id",
+    "es": "requisicion_id",
+    "source": "override"
+  },
+  {
+    "en": "residual_value",
+    "es": "valor_residual",
+    "source": "override"
+  },
+  {
+    "en": "resolution_time_hours",
+    "es": "tiempo_de_resolucion_horas",
+    "source": "override"
+  },
+  {
+    "en": "resolved_at",
+    "es": "fecha_resolucion",
+    "source": "override"
+  },
+  {
+    "en": "resource_id",
+    "es": "recurso_id",
+    "source": "override"
+  },
+  {
+    "en": "resource_type",
+    "es": "tipo_de_recurso",
+    "source": "override"
+  },
+  {
+    "en": "response_time_hours",
+    "es": "tiempo_de_respuesta_horas",
+    "source": "override"
+  },
+  {
+    "en": "restore_finished_at",
+    "es": "fecha_fin_restauracion",
+    "source": "override"
+  },
+  {
+    "en": "restore_started_at",
+    "es": "fecha_inicio_restauracion",
+    "source": "override"
+  },
+  {
+    "en": "resulting_sales_order_id",
+    "es": "pedido_de_venta_resultante_id",
+    "source": "override"
+  },
+  {
+    "en": "resume_file_id",
+    "es": "archivo_de_cv_id",
+    "source": "override"
+  },
+  {
+    "en": "retention_period_months",
+    "es": "periodo_de_retencion_meses",
+    "source": "override"
+  },
+  {
+    "en": "return_id",
+    "es": "devolucion_id",
+    "source": "override"
+  },
+  {
+    "en": "revoked_at",
+    "es": "fecha_revocacion",
+    "source": "override"
+  },
+  {
+    "en": "role_id",
+    "es": "rol_id",
+    "source": "override"
+  },
+  {
+    "en": "role_name",
+    "es": "nombre_del_rol",
+    "source": "override"
+  },
+  {
+    "en": "rollout_percentage",
+    "es": "porcentaje_de_despliegue",
+    "source": "override"
+  },
+  {
+    "en": "rotated_at",
+    "es": "fecha_de_rotacion",
+    "source": "override"
+  },
+  {
+    "en": "rotated_by_user_id",
+    "es": "rotado_por_usuario_id",
+    "source": "override"
+  },
+  {
+    "en": "route_id",
+    "es": "ruta_id",
+    "source": "override"
+  },
+  {
+    "en": "row_id",
+    "es": "fila_id",
+    "source": "override"
+  },
+  {
+    "en": "row_number",
+    "es": "numero_de_fila",
+    "source": "override"
+  },
+  {
+    "en": "row_version",
+    "es": "version_fila",
+    "source": "base_entity"
+  },
+  {
+    "en": "rule_id",
+    "es": "regla_id",
+    "source": "override"
+  },
+  {
+    "en": "rule_set_key",
+    "es": "clave_conjunto_reglas",
+    "source": "override"
+  },
+  {
+    "en": "rule_type",
+    "es": "tipo_de_regla",
+    "source": "override"
+  },
+  {
+    "en": "run_id",
+    "es": "ejecucion_id",
+    "source": "override"
+  },
+  {
+    "en": "salary_band_max",
+    "es": "banda_salarial_maxima",
+    "source": "override"
+  },
+  {
+    "en": "salary_band_min",
+    "es": "banda_salarial_minima",
+    "source": "override"
+  },
+  {
+    "en": "sales_channel",
+    "es": "canal_de_venta",
+    "source": "override"
+  },
+  {
+    "en": "sales_order_id",
+    "es": "pedido_de_venta_id",
+    "source": "override"
+  },
+  {
+    "en": "sales_return_id",
+    "es": "devolucion_de_venta_id",
+    "source": "override"
+  },
+  {
+    "en": "salesperson_id",
+    "es": "vendedor_id",
+    "source": "override"
+  },
+  {
+    "en": "schedule_id",
+    "es": "programacion_id",
+    "source": "auto"
+  },
+  {
+    "en": "scheduled_at",
+    "es": "fecha_programada",
+    "source": "override"
+  },
+  {
+    "en": "scheduled_date",
+    "es": "fecha_programada",
+    "source": "override"
+  },
+  {
+    "en": "scheduled_job_id",
+    "es": "trabajo_programado_id",
+    "source": "override"
+  },
+  {
+    "en": "scheme_name",
+    "es": "nombre_de_esquema",
+    "source": "override"
+  },
+  {
+    "en": "scope_id",
+    "es": "alcance_id",
+    "source": "override"
+  },
+  {
+    "en": "score",
+    "es": "puntaje",
+    "source": "override"
+  },
+  {
+    "en": "season",
+    "es": "temporada",
+    "source": "override"
+  },
+  {
+    "en": "secret_hash",
+    "es": "hash_secreto",
+    "source": "override"
+  },
+  {
+    "en": "serial_number",
+    "es": "numero_de_serie",
+    "source": "override"
+  },
+  {
+    "en": "series_id",
+    "es": "serie_id",
+    "source": "override"
+  },
+  {
+    "en": "service_order_id",
+    "es": "orden_de_servicio_id",
+    "source": "override"
+  },
+  {
+    "en": "service_type_id",
+    "es": "tipo_de_servicio_id",
+    "source": "override"
+  },
+  {
+    "en": "service_visit_id",
+    "es": "visita_de_servicio_id",
+    "source": "override"
+  },
+  {
+    "en": "session_id",
+    "es": "sesion_id",
+    "source": "override"
+  },
+  {
+    "en": "session_timeout_minutes",
+    "es": "tiempo_espera_sesion_minutos",
+    "source": "override"
+  },
+  {
+    "en": "severity",
+    "es": "severidad",
+    "source": "override"
+  },
+  {
+    "en": "signature_image_file_id",
+    "es": "archivo_imagen_firma_id",
+    "source": "override"
+  },
+  {
+    "en": "signed_at",
+    "es": "fecha_firma",
+    "source": "override"
+  },
+  {
+    "en": "signer_external_name",
+    "es": "nombre_firmante_externo",
+    "source": "override"
+  },
+  {
+    "en": "signer_user_id",
+    "es": "usuario_firmante_id",
+    "source": "override"
+  },
+  {
+    "en": "size_bytes",
+    "es": "tamano_en_bytes",
+    "source": "override"
+  },
+  {
+    "en": "skill_id",
+    "es": "habilidad_id",
+    "source": "override"
+  },
+  {
+    "en": "sku",
+    "es": "sku",
+    "source": "override"
+  },
+  {
+    "en": "slug",
+    "es": "slug",
+    "source": "override"
+  },
+  {
+    "en": "snapshot",
+    "es": "instantanea",
+    "source": "override"
+  },
+  {
+    "en": "snapshot_data",
+    "es": "datos_de_instantanea",
+    "source": "override"
+  },
+  {
+    "en": "snapshot_date",
+    "es": "fecha_instantanea",
+    "source": "override"
+  },
+  {
+    "en": "snapshot_value",
+    "es": "valor_instantanea",
+    "source": "override"
+  },
+  {
+    "en": "source_commission_entry_id",
+    "es": "entrada_de_comision_origen_id",
+    "source": "override"
+  },
+  {
+    "en": "source_company_id",
+    "es": "empresa_origen_id",
+    "source": "override"
+  },
+  {
+    "en": "source_entity_id",
+    "es": "entidad_origen_id",
+    "source": "override"
+  },
+  {
+    "en": "source_file_id",
+    "es": "archivo_origen_id",
+    "source": "override"
+  },
+  {
+    "en": "source_id",
+    "es": "origen_id",
+    "source": "auto"
+  },
+  {
+    "en": "source_journal_entry_id",
+    "es": "asiento_contable_origen_id",
+    "source": "override"
+  },
+  {
+    "en": "source_module",
+    "es": "modulo_origen",
+    "source": "override"
+  },
+  {
+    "en": "source_purchase_invoice_id",
+    "es": "factura_de_compra_origen_id",
+    "source": "override"
+  },
+  {
+    "en": "source_purchase_invoice_line_id",
+    "es": "linea_de_factura_de_compra_origen_id",
+    "source": "override"
+  },
+  {
+    "en": "source_receipt_line_id",
+    "es": "linea_de_recibo_origen_id",
+    "source": "override"
+  },
+  {
+    "en": "source_register_id",
+    "es": "caja_origen_id",
+    "source": "override"
+  },
+  {
+    "en": "source_warehouse_id",
+    "es": "almacen_origen_id",
+    "source": "override"
+  },
+  {
+    "en": "stage_id",
+    "es": "etapa_id",
+    "source": "override"
+  },
+  {
+    "en": "stage_order",
+    "es": "orden_de_etapa",
+    "source": "override"
+  },
+  {
+    "en": "standard_cost",
+    "es": "costo_estandar",
+    "source": "override"
+  },
+  {
+    "en": "standard_duration_minutes",
+    "es": "duracion_estandar_minutos",
+    "source": "override"
+  },
+  {
+    "en": "started_at",
+    "es": "fecha_inicio",
+    "source": "override"
+  },
+  {
+    "en": "starting_number",
+    "es": "numero_inicial",
+    "source": "override"
+  },
+  {
+    "en": "starts_at",
+    "es": "fecha_inicio",
+    "source": "override"
+  },
+  {
+    "en": "starts_on",
+    "es": "inicia_el",
+    "source": "override"
+  },
+  {
+    "en": "state_province_id",
+    "es": "provincia_id",
+    "source": "override"
+  },
+  {
+    "en": "statement_id",
+    "es": "extracto_id",
+    "source": "override"
+  },
+  {
+    "en": "statement_line_id",
+    "es": "linea_de_extracto_id",
+    "source": "override"
+  },
+  {
+    "en": "status",
+    "es": "estado",
+    "source": "override"
+  },
+  {
+    "en": "status_id",
+    "es": "estado_id",
+    "source": "override"
+  },
+  {
+    "en": "step_order",
+    "es": "orden_de_paso",
+    "source": "override"
+  },
+  {
+    "en": "storage_bucket",
+    "es": "bucket_almacenamiento",
+    "source": "override"
+  },
+  {
+    "en": "storage_key",
+    "es": "clave_almacenamiento",
+    "source": "override"
+  },
+  {
+    "en": "strategy",
+    "es": "estrategia",
+    "source": "override"
+  },
+  {
+    "en": "structure_id",
+    "es": "estructura_id",
+    "source": "override"
+  },
+  {
+    "en": "subject",
+    "es": "asunto",
+    "source": "override"
+  },
+  {
+    "en": "subject_id",
+    "es": "sujeto_id",
+    "source": "override"
+  },
+  {
+    "en": "subject_type",
+    "es": "tipo_de_sujeto",
+    "source": "override"
+  },
+  {
+    "en": "subledger_balance",
+    "es": "saldo_submayor",
+    "source": "override"
+  },
+  {
+    "en": "subscription_id",
+    "es": "suscripcion_id",
+    "source": "override"
+  },
+  {
+    "en": "subtotal_amount",
+    "es": "subtotal",
+    "source": "override"
+  },
+  {
+    "en": "succeeded",
+    "es": "tuvo_exito",
+    "source": "override"
+  },
+  {
+    "en": "success_rows",
+    "es": "filas_exitosas",
+    "source": "override"
+  },
+  {
+    "en": "suffix",
+    "es": "sufijo",
+    "source": "override"
+  },
+  {
+    "en": "supplier_document_number",
+    "es": "numero_documento_proveedor",
+    "source": "override"
+  },
+  {
+    "en": "supplier_id",
+    "es": "proveedor_id",
+    "source": "override"
+  },
+  {
+    "en": "supplier_sku",
+    "es": "sku_proveedor",
+    "source": "override"
+  },
+  {
+    "en": "swift_code",
+    "es": "codigo_swift",
+    "source": "override"
+  },
+  {
+    "en": "symbol",
+    "es": "simbolo",
+    "source": "override"
+  },
+  {
+    "en": "system_quantity",
+    "es": "cantidad_de_sistema",
+    "source": "override"
+  },
+  {
+    "en": "table_name",
+    "es": "nombre_tabla",
+    "source": "override"
+  },
+  {
+    "en": "table_schema",
+    "es": "esquema_tabla",
+    "source": "override"
+  },
+  {
+    "en": "tag_id",
+    "es": "etiqueta_id",
+    "source": "override"
+  },
+  {
+    "en": "target_amount",
+    "es": "monto_objetivo",
+    "source": "override"
+  },
+  {
+    "en": "target_company_id",
+    "es": "empresa_destino_id",
+    "source": "override"
+  },
+  {
+    "en": "target_journal_entry_id",
+    "es": "asiento_contable_destino_id",
+    "source": "override"
+  },
+  {
+    "en": "target_module",
+    "es": "modulo_destino",
+    "source": "override"
+  },
+  {
+    "en": "target_url",
+    "es": "url_destino",
+    "source": "override"
+  },
+  {
+    "en": "target_value",
+    "es": "valor_objetivo",
+    "source": "override"
+  },
+  {
+    "en": "target_zone_id",
+    "es": "zona_destino_id",
+    "source": "override"
+  },
+  {
+    "en": "task_id",
+    "es": "tarea_id",
+    "source": "override"
+  },
+  {
+    "en": "tax_amount",
+    "es": "impuesto",
+    "source": "override"
+  },
+  {
+    "en": "tax_id",
+    "es": "impuesto_id",
+    "source": "override"
+  },
+  {
+    "en": "tax_kind",
+    "es": "tipo_de_impuesto",
+    "source": "override"
+  },
+  {
+    "en": "tax_regime",
+    "es": "regimen_fiscal",
+    "source": "override"
+  },
+  {
+    "en": "team_id",
+    "es": "equipo_id",
+    "source": "override"
+  },
+  {
+    "en": "technician_id",
+    "es": "tecnico_id",
+    "source": "override"
+  },
+  {
+    "en": "template_id",
+    "es": "plantilla_id",
+    "source": "auto"
+  },
+  {
+    "en": "tenant_id",
+    "es": "inquilino_id",
+    "source": "base_entity"
+  },
+  {
+    "en": "terminal_code",
+    "es": "codigo_de_terminal",
+    "source": "override"
+  },
+  {
+    "en": "termination_date",
+    "es": "fecha_baja",
+    "source": "override"
+  },
+  {
+    "en": "territory_id",
+    "es": "territorio_id",
+    "source": "override"
+  },
+  {
+    "en": "threshold_operator",
+    "es": "operador_de_umbral",
+    "source": "override"
+  },
+  {
+    "en": "threshold_value",
+    "es": "valor_umbral",
+    "source": "override"
+  },
+  {
+    "en": "tier_code",
+    "es": "codigo_de_nivel",
+    "source": "override"
+  },
+  {
+    "en": "title",
+    "es": "titulo",
+    "source": "override"
+  },
+  {
+    "en": "to_branch_id",
+    "es": "sucursal_destino_id",
+    "source": "override"
+  },
+  {
+    "en": "to_currency_id",
+    "es": "moneda_destino_id",
+    "source": "override"
+  },
+  {
+    "en": "to_unit_id",
+    "es": "unidad_destino_id",
+    "source": "override"
+  },
+  {
+    "en": "token_hash",
+    "es": "hash_token",
+    "source": "override"
+  },
+  {
+    "en": "total_amount",
+    "es": "total",
+    "source": "override"
+  },
+  {
+    "en": "total_budget",
+    "es": "presupuesto_total",
+    "source": "override"
+  },
+  {
+    "en": "total_rows",
+    "es": "filas_totales",
+    "source": "override"
+  },
+  {
+    "en": "tracks_lot",
+    "es": "rastrea_lote",
+    "source": "override"
+  },
+  {
+    "en": "tracks_serial",
+    "es": "rastrea_serie",
+    "source": "override"
+  },
+  {
+    "en": "trade_name",
+    "es": "nombre_comercial",
+    "source": "override"
+  },
+  {
+    "en": "training_id",
+    "es": "capacitacion_id",
+    "source": "override"
+  },
+  {
+    "en": "transaction_date",
+    "es": "fecha_transaccion",
+    "source": "override"
+  },
+  {
+    "en": "transaction_type",
+    "es": "tipo_de_transaccion",
+    "source": "override"
+  },
+  {
+    "en": "transfer_id",
+    "es": "transferencia_id",
+    "source": "override"
+  },
+  {
+    "en": "transition_rule_set_key",
+    "es": "clave_conjunto_reglas_transicion",
+    "source": "override"
+  },
+  {
+    "en": "trigger_entity_type",
+    "es": "tipo_entidad_disparadora",
+    "source": "override"
+  },
+  {
+    "en": "trusted_until",
+    "es": "confiable_hasta",
+    "source": "override"
+  },
+  {
+    "en": "unit_cost",
+    "es": "costo_unitario",
+    "source": "override"
+  },
+  {
+    "en": "unit_id",
+    "es": "unidad_id",
+    "source": "auto"
+  },
+  {
+    "en": "unit_price",
+    "es": "precio_unitario",
+    "source": "override"
+  },
+  {
+    "en": "updated_at",
+    "es": "fecha_actualizacion",
+    "source": "base_entity"
+  },
+  {
+    "en": "updated_by",
+    "es": "actualizado_por",
+    "source": "base_entity"
+  },
+  {
+    "en": "used_at",
+    "es": "fecha_uso",
+    "source": "override"
+  },
+  {
+    "en": "used_days",
+    "es": "dias_utilizados",
+    "source": "override"
+  },
+  {
+    "en": "user_agent",
+    "es": "agente_usuario",
+    "source": "override"
+  },
+  {
+    "en": "user_id",
+    "es": "usuario_id",
+    "source": "override"
+  },
+  {
+    "en": "vacancy_id",
+    "es": "vacante_id",
+    "source": "override"
+  },
+  {
+    "en": "valid_until",
+    "es": "valido_hasta",
+    "source": "override"
+  },
+  {
+    "en": "value",
+    "es": "valor",
+    "source": "auto"
+  },
+  {
+    "en": "variant_product_id",
+    "es": "producto_variante_id",
+    "source": "override"
+  },
+  {
+    "en": "version",
+    "es": "version",
+    "source": "base_entity"
+  },
+  {
+    "en": "version_number",
+    "es": "numero_de_version",
+    "source": "override"
+  },
+  {
+    "en": "visit_order",
+    "es": "orden_de_visita",
+    "source": "override"
+  },
+  {
+    "en": "visited_at",
+    "es": "fecha_visita",
+    "source": "override"
+  },
+  {
+    "en": "visited_by_user_id",
+    "es": "visitado_por_usuario_id",
+    "source": "override"
+  },
+  {
+    "en": "warehouse_id",
+    "es": "almacen_id",
+    "source": "override"
+  },
+  {
+    "en": "warehouse_type",
+    "es": "tipo_de_almacen",
+    "source": "override"
+  },
+  {
+    "en": "warranty_id",
+    "es": "garantia_id",
+    "source": "override"
+  },
+  {
+    "en": "weight_percentage",
+    "es": "porcentaje_de_peso",
+    "source": "override"
+  },
+  {
+    "en": "win_probability_percentage",
+    "es": "probabilidad_de_cierre_porcentaje",
+    "source": "override"
+  },
+  {
+    "en": "withholding_rule_id",
+    "es": "regla_de_retencion_id",
+    "source": "override"
+  },
+  {
+    "en": "work_date",
+    "es": "fecha_trabajo",
+    "source": "override"
+  },
+  {
+    "en": "workflow_id",
+    "es": "flujo_de_trabajo_id",
+    "source": "override"
+  },
+  {
+    "en": "workflow_instance_id",
+    "es": "instancia_de_flujo_id",
+    "source": "override"
+  },
+  {
+    "en": "workflow_step_id",
+    "es": "paso_de_flujo_id",
+    "source": "override"
+  },
+  {
+    "en": "year",
+    "es": "anio",
+    "source": "override"
+  },
+  {
+    "en": "year_label",
+    "es": "etiqueta_de_anio",
+    "source": "override"
+  },
+  {
+    "en": "yield_quantity",
+    "es": "cantidad_rendimiento",
+    "source": "override"
+  },
+  {
+    "en": "yield_unit_id",
+    "es": "unidad_rendimiento_id",
+    "source": "override"
+  },
+  {
+    "en": "zone_function",
+    "es": "funcion_de_zona",
+    "source": "override"
+  },
+  {
+    "en": "zone_id",
+    "es": "zona_id",
+    "source": "override"
+  }
+]
