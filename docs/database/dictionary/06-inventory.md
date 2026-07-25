@@ -257,6 +257,9 @@
 | warehouse_id  | `uuid`                     | Sí       | ``                  |     | inventory.warehouses.id |
 | serial_number | `text`                     | No       | ``                  |     |                         |
 | status        | `text`                     | No       | `'in_stock'::text`  |     |                         |
+| unit_cost     | `numeric(18,4)`            | Sí       | ``                  |     |                         |
+
+Columna nueva de `35_functional_completion.sql` (2026-07-25): `unit_cost` — costo real de esta unidad serializada puntual, solo se usa cuando `products.costing_method='specific_identification'`. `FUNCTIONAL_GAPS.md` #3.
 
 ## inventory.lifo_cost_layers
 

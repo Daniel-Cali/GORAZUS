@@ -1,11 +1,25 @@
-# Diccionario de Datos — Español (propuesto)
+# Diccionario de Datos — GORAZUS
 
-> **Fase de diseño.** Este es el diccionario completo y real (no una muestra) de los 501+728
-> objetos de la base de datos GORAZUS, generado a partir de una introspección en vivo de
-> PostgreSQL 17.10 (no de la documentación). Ningún nombre fue renombrado todavía — ver
-> `DATABASE_SPANISH_STANDARD.md` para las reglas usadas y `DATABASE_MIGRATION_REPORT.md` para el
-> plan de ejecución futura. Los archivos fuente completos (JSON) están en
-> `docs/database/spanish-standard/tablas-es.json` y `columnas-es.json`.
+> **Nota de alcance (2026-07-25, Database Finalization)**: este archivo tiene dos contenidos
+> complementarios, no uno solo. §§1-8 de abajo son el **estándar de nomenclatura en español
+> propuesto** (Database Refactor Fase 01, diseño sin ejecutar — ver `DATABASE_SPANISH_STANDARD.md`).
+> El **diccionario de datos estructural real** (columna por columna, tipo, nullable, default, PK,
+> FK — con los nombres **actuales** en inglés, la base tal como está hoy en producción) vive en
+> `docs/database/dictionary/*.md` (21 archivos, uno por schema), generado desde
+> `information_schema` contra Postgres real — cada uno de esos 21 archivos referencia a este mismo
+> archivo para "metodología", una referencia que ya existía antes de la Fase de Estandarización en
+> Español y que este archivo no explicaba — corregido acá: la metodología es introspección directa
+> de `information_schema.columns`/`table_constraints`/`key_column_usage`, sin inferencia ni
+> documentación de por medio, la misma que se usó para las nuevas entradas del §9.
+>
+> ## 9. Actualización — Database Finalization (2026-07-25)
+>
+> La migración `docs/database/sql/35_functional_completion.sql` agregó 2 tablas y 10 columnas
+> nuevas — reflejadas en los diccionarios estructurales reales
+> (`docs/database/dictionary/01-core.md`, `04-suppliers.md`, `05-products.md`, `06-inventory.md`)
+> y resumidas en `DATABASE_COMPLETION_REPORT.md`. El estándar de nomenclatura en español de §§1-8
+> de abajo **no se actualizó automáticamente** con estos objetos nuevos — quedan en inglés hasta
+> que se retome esa fase de diseño; ver `DATABASE_COMPLETION_REPORT.md §6` para el detalle exacto.
 
 ## 1. Esquemas (21 de negocio + `partman` + `public`)
 

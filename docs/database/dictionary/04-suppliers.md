@@ -1,6 +1,39 @@
 # Diccionario de datos — schema `suppliers`
 
 > Generado automáticamente desde `information_schema` contra la base `gorazus` real. Ver [../DATABASE_DICTIONARY.md](../DATABASE_DICTIONARY.md) para metodología. No editar a mano.
+> Regenerado 2026-07-25 (Database Finalization): tabla nueva `supplier_contracts` — ver `docs/database/sql/35_functional_completion.sql`, `FUNCTIONAL_GAPS.md` #4.
+
+## suppliers.supplier_contracts
+
+> Tabla nueva — `35_functional_completion.sql` (2026-07-25). Condiciones comerciales negociadas a nivel de relación completa con el proveedor (vigencia, plazo de pago, SLA de entrega, precios marco) — distinto de `product_suppliers.lead_time_days`, que es por producto individual. `FUNCTIONAL_GAPS.md` #4.
+
+| Columna                 | Tipo                       | Nullable | Default             | PK  | FK                     |
+| ----------------------- | -------------------------- | -------- | ------------------- | --- | ---------------------- |
+| id                      | `uuid`                     | No       | `gen_random_uuid()` | PK  |                        |
+| local_id                | `bigint`                   | No       | ``                  |     |                        |
+| tenant_id               | `uuid`                     | No       | ``                  |     |                        |
+| company_id              | `uuid`                     | No       | ``                  |     |                        |
+| branch_id               | `uuid`                     | Sí       | ``                  |     |                        |
+| created_at              | `timestamp with time zone` | No       | `now()`             |     |                        |
+| updated_at              | `timestamp with time zone` | No       | `now()`             |     |                        |
+| deleted_at              | `timestamp with time zone` | Sí       | ``                  |     |                        |
+| created_by              | `uuid`                     | Sí       | ``                  |     |                        |
+| updated_by              | `uuid`                     | Sí       | ``                  |     |                        |
+| deleted_by              | `uuid`                     | Sí       | ``                  |     |                        |
+| version                 | `integer`                  | No       | `1`                 |     |                        |
+| row_version             | `bigint`                   | No       | `0`                 |     |                        |
+| is_active               | `boolean`                  | No       | `true`              |     |                        |
+| is_deleted              | `boolean`                  | Sí       | ``                  |     |                        |
+| observations            | `text`                     | Sí       | ``                  |     |                        |
+| metadata                | `jsonb`                    | No       | `'{}'::jsonb`       |     |                        |
+| supplier_id             | `uuid`                     | No       | ``                  |     | suppliers.suppliers.id |
+| contract_number         | `text`                     | Sí       | ``                  |     |                        |
+| starts_on               | `date`                     | No       | ``                  |     |                        |
+| ends_on                 | `date`                     | Sí       | ``                  |     |                        |
+| payment_terms_days      | `integer`                  | Sí       | ``                  |     |                        |
+| delivery_sla_days       | `integer`                  | Sí       | ``                  |     |                        |
+| framework_pricing_notes | `text`                     | Sí       | ``                  |     |                        |
+| status                  | `text`                     | No       | `'active'::text`    |     |                        |
 
 ## suppliers.supplier_addresses
 

@@ -224,30 +224,35 @@
 
 ## core.branches
 
-| Columna        | Tipo                       | Nullable | Default             | PK  | FK                |
-| -------------- | -------------------------- | -------- | ------------------- | --- | ----------------- |
-| id             | `uuid`                     | No       | `gen_random_uuid()` | PK  |                   |
-| local_id       | `bigint`                   | No       | ``                  |     |                   |
-| tenant_id      | `uuid`                     | No       | ``                  |     | core.tenants.id   |
-| company_id     | `uuid`                     | No       | ``                  |     | core.companies.id |
-| branch_id      | `uuid`                     | Sí       | ``                  |     |                   |
-| created_at     | `timestamp with time zone` | No       | `now()`             |     |                   |
-| updated_at     | `timestamp with time zone` | No       | `now()`             |     |                   |
-| deleted_at     | `timestamp with time zone` | Sí       | ``                  |     |                   |
-| created_by     | `uuid`                     | Sí       | ``                  |     | core.users.id     |
-| updated_by     | `uuid`                     | Sí       | ``                  |     | core.users.id     |
-| deleted_by     | `uuid`                     | Sí       | ``                  |     | core.users.id     |
-| version        | `integer`                  | No       | `1`                 |     |                   |
-| row_version    | `bigint`                   | No       | `0`                 |     |                   |
-| is_active      | `boolean`                  | No       | `true`              |     |                   |
-| is_deleted     | `boolean`                  | Sí       | ``                  |     |                   |
-| observations   | `text`                     | Sí       | ``                  |     |                   |
-| metadata       | `jsonb`                    | No       | `'{}'::jsonb`       |     |                   |
-| name           | `text`                     | No       | ``                  |     |                   |
-| code           | `text`                     | No       | ``                  |     |                   |
-| is_main_branch | `boolean`                  | No       | `false`             |     |                   |
-| address_line   | `text`                     | Sí       | ``                  |     |                   |
-| phone          | `text`                     | Sí       | ``                  |     |                   |
+| Columna        | Tipo                       | Nullable | Default             | PK  | FK                         |
+| -------------- | -------------------------- | -------- | ------------------- | --- | -------------------------- |
+| id             | `uuid`                     | No       | `gen_random_uuid()` | PK  |                            |
+| local_id       | `bigint`                   | No       | ``                  |     |                            |
+| tenant_id      | `uuid`                     | No       | ``                  |     | core.tenants.id            |
+| company_id     | `uuid`                     | No       | ``                  |     | core.companies.id          |
+| branch_id      | `uuid`                     | Sí       | ``                  |     |                            |
+| created_at     | `timestamp with time zone` | No       | `now()`             |     |                            |
+| updated_at     | `timestamp with time zone` | No       | `now()`             |     |                            |
+| deleted_at     | `timestamp with time zone` | Sí       | ``                  |     |                            |
+| created_by     | `uuid`                     | Sí       | ``                  |     | core.users.id              |
+| updated_by     | `uuid`                     | Sí       | ``                  |     | core.users.id              |
+| deleted_by     | `uuid`                     | Sí       | ``                  |     | core.users.id              |
+| version        | `integer`                  | No       | `1`                 |     |                            |
+| row_version    | `bigint`                   | No       | `0`                 |     |                            |
+| is_active      | `boolean`                  | No       | `true`              |     |                            |
+| is_deleted     | `boolean`                  | Sí       | ``                  |     |                            |
+| observations   | `text`                     | Sí       | ``                  |     |                            |
+| metadata       | `jsonb`                    | No       | `'{}'::jsonb`       |     |                            |
+| name           | `text`                     | No       | ``                  |     |                            |
+| code           | `text`                     | No       | ``                  |     |                            |
+| is_main_branch | `boolean`                  | No       | `false`             |     |                            |
+| address_line   | `text`                     | Sí       | ``                  |     |                            |
+| phone          | `text`                     | Sí       | ``                  |     |                            |
+| country_id     | `uuid`                     | Sí       | ``                  |     | configuration.countries.id |
+| language_id    | `uuid`                     | Sí       | ``                  |     | configuration.languages.id |
+| timezone_id    | `uuid`                     | Sí       | ``                  |     | configuration.timezones.id |
+
+Columnas nuevas de `35_functional_completion.sql` (2026-07-25): `country_id`/`language_id`/`timezone_id` — `FUNCTIONAL_GAPS.md` #2.
 
 ## core.business_rule_evaluations
 
@@ -360,31 +365,36 @@
 
 ## core.companies
 
-| Columna                  | Tipo                       | Nullable | Default             | PK  | FK               |
-| ------------------------ | -------------------------- | -------- | ------------------- | --- | ---------------- |
-| id                       | `uuid`                     | No       | `gen_random_uuid()` | PK  |                  |
-| local_id                 | `bigint`                   | No       | ``                  |     |                  |
-| tenant_id                | `uuid`                     | No       | ``                  |     | core.tenants.id  |
-| company_id               | `uuid`                     | Sí       | ``                  |     |                  |
-| branch_id                | `uuid`                     | Sí       | ``                  |     | core.branches.id |
-| created_at               | `timestamp with time zone` | No       | `now()`             |     |                  |
-| updated_at               | `timestamp with time zone` | No       | `now()`             |     |                  |
-| deleted_at               | `timestamp with time zone` | Sí       | ``                  |     |                  |
-| created_by               | `uuid`                     | Sí       | ``                  |     | core.users.id    |
-| updated_by               | `uuid`                     | Sí       | ``                  |     | core.users.id    |
-| deleted_by               | `uuid`                     | Sí       | ``                  |     | core.users.id    |
-| version                  | `integer`                  | No       | `1`                 |     |                  |
-| row_version              | `bigint`                   | No       | `0`                 |     |                  |
-| is_active                | `boolean`                  | No       | `true`              |     |                  |
-| is_deleted               | `boolean`                  | Sí       | ``                  |     |                  |
-| observations             | `text`                     | Sí       | ``                  |     |                  |
-| metadata                 | `jsonb`                    | No       | `'{}'::jsonb`       |     |                  |
-| legal_name               | `text`                     | No       | ``                  |     |                  |
-| trade_name               | `text`                     | Sí       | ``                  |     |                  |
-| tax_id                   | `text`                     | No       | ``                  |     |                  |
-| tax_regime               | `text`                     | Sí       | ``                  |     |                  |
-| functional_currency_code | `character`                | No       | ``                  |     |                  |
-| fiscal_year_start_month  | `smallint`                 | No       | `1`                 |     |                  |
+| Columna                  | Tipo                       | Nullable | Default             | PK  | FK                         |
+| ------------------------ | -------------------------- | -------- | ------------------- | --- | -------------------------- |
+| id                       | `uuid`                     | No       | `gen_random_uuid()` | PK  |                            |
+| local_id                 | `bigint`                   | No       | ``                  |     |                            |
+| tenant_id                | `uuid`                     | No       | ``                  |     | core.tenants.id            |
+| company_id               | `uuid`                     | Sí       | ``                  |     |                            |
+| branch_id                | `uuid`                     | Sí       | ``                  |     | core.branches.id           |
+| created_at               | `timestamp with time zone` | No       | `now()`             |     |                            |
+| updated_at               | `timestamp with time zone` | No       | `now()`             |     |                            |
+| deleted_at               | `timestamp with time zone` | Sí       | ``                  |     |                            |
+| created_by               | `uuid`                     | Sí       | ``                  |     | core.users.id              |
+| updated_by               | `uuid`                     | Sí       | ``                  |     | core.users.id              |
+| deleted_by               | `uuid`                     | Sí       | ``                  |     | core.users.id              |
+| version                  | `integer`                  | No       | `1`                 |     |                            |
+| row_version              | `bigint`                   | No       | `0`                 |     |                            |
+| is_active                | `boolean`                  | No       | `true`              |     |                            |
+| is_deleted               | `boolean`                  | Sí       | ``                  |     |                            |
+| observations             | `text`                     | Sí       | ``                  |     |                            |
+| metadata                 | `jsonb`                    | No       | `'{}'::jsonb`       |     |                            |
+| legal_name               | `text`                     | No       | ``                  |     |                            |
+| trade_name               | `text`                     | Sí       | ``                  |     |                            |
+| tax_id                   | `text`                     | No       | ``                  |     |                            |
+| tax_regime               | `text`                     | Sí       | ``                  |     |                            |
+| functional_currency_code | `character`                | No       | ``                  |     |                            |
+| fiscal_year_start_month  | `smallint`                 | No       | `1`                 |     |                            |
+| country_id               | `uuid`                     | Sí       | ``                  |     | configuration.countries.id |
+| language_id              | `uuid`                     | Sí       | ``                  |     | configuration.languages.id |
+| timezone_id              | `uuid`                     | Sí       | ``                  |     | configuration.timezones.id |
+
+Columnas nuevas de `35_functional_completion.sql` (2026-07-25): `country_id`/`language_id`/`timezone_id` — `FUNCTIONAL_GAPS.md` #2.
 
 ## core.consent_records
 

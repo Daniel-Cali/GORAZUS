@@ -2,6 +2,7 @@
 
 > Generado automáticamente desde `information_schema` contra la base `gorazus` real. Ver [../DATABASE_DICTIONARY.md](../DATABASE_DICTIONARY.md) para metodología. No editar a mano.
 > Regenerado 2026-07-18 (PHASE 01 — Database Enterprise): `product_attributes.company_id` ahora nullable (corregido en `32_bugfixes.sql`, ver DATABASE_HEALTH_REPORT.md §1.3).
+> Regenerado 2026-07-25 (Database Finalization): `products.products` gana `is_hazardous_material`/`hazmat_classification`/`safety_data_sheet_file_id`/`lifecycle_status`; tabla nueva `product_physical_attributes`; `product_barcodes.barcode_type` admite `qr`/`rfid`; `products.costing_method` admite `specific_identification` — ver `docs/database/sql/35_functional_completion.sql`, `DATABASE_COMPLETION_REPORT.md`.
 
 ## products.bill_of_materials
 
@@ -720,40 +721,77 @@
 
 ## products.products
 
-| Columna           | Tipo                       | Nullable | Default             | PK  | FK                              |
-| ----------------- | -------------------------- | -------- | ------------------- | --- | ------------------------------- |
-| id                | `uuid`                     | No       | `gen_random_uuid()` | PK  |                                 |
-| local_id          | `bigint`                   | No       | ``                  |     |                                 |
-| tenant_id         | `uuid`                     | No       | ``                  |     |                                 |
-| company_id        | `uuid`                     | No       | ``                  |     |                                 |
-| branch_id         | `uuid`                     | Sí       | ``                  |     |                                 |
-| created_at        | `timestamp with time zone` | No       | `now()`             |     |                                 |
-| updated_at        | `timestamp with time zone` | No       | `now()`             |     |                                 |
-| deleted_at        | `timestamp with time zone` | Sí       | ``                  |     |                                 |
-| created_by        | `uuid`                     | Sí       | ``                  |     |                                 |
-| updated_by        | `uuid`                     | Sí       | ``                  |     |                                 |
-| deleted_by        | `uuid`                     | Sí       | ``                  |     |                                 |
-| version           | `integer`                  | No       | `1`                 |     |                                 |
-| row_version       | `bigint`                   | No       | `0`                 |     |                                 |
-| is_active         | `boolean`                  | No       | `true`              |     |                                 |
-| is_deleted        | `boolean`                  | Sí       | ``                  |     |                                 |
-| observations      | `text`                     | Sí       | ``                  |     |                                 |
-| metadata          | `jsonb`                    | No       | `'{}'::jsonb`       |     |                                 |
-| sku               | `text`                     | No       | ``                  |     |                                 |
-| product_type      | `text`                     | No       | ``                  |     |                                 |
-| category_id       | `uuid`                     | Sí       | ``                  |     | products.product_categories.id  |
-| brand_id          | `uuid`                     | Sí       | ``                  |     | products.brands.id              |
-| model_id          | `uuid`                     | Sí       | ``                  |     | products.product_models.id      |
-| line_id           | `uuid`                     | Sí       | ``                  |     | products.product_lines.id       |
-| family_id         | `uuid`                     | Sí       | ``                  |     | products.product_families.id    |
-| collection_id     | `uuid`                     | Sí       | ``                  |     | products.product_collections.id |
-| base_unit_id      | `uuid`                     | No       | ``                  |     | products.units_of_measure.id    |
-| parent_product_id | `uuid`                     | Sí       | ``                  |     | products.products.id            |
-| costing_method    | `text`                     | No       | `'average'::text`   |     |                                 |
-| tracks_serial     | `boolean`                  | No       | `false`             |     |                                 |
-| tracks_lot        | `boolean`                  | No       | `false`             |     |                                 |
-| standard_cost     | `numeric(18,4)`            | Sí       | ``                  |     |                                 |
-| list_price        | `numeric(18,4)`            | Sí       | ``                  |     |                                 |
+| Columna                   | Tipo                       | Nullable | Default             | PK  | FK                              |
+| ------------------------- | -------------------------- | -------- | ------------------- | --- | ------------------------------- |
+| id                        | `uuid`                     | No       | `gen_random_uuid()` | PK  |                                 |
+| local_id                  | `bigint`                   | No       | ``                  |     |                                 |
+| tenant_id                 | `uuid`                     | No       | ``                  |     |                                 |
+| company_id                | `uuid`                     | No       | ``                  |     |                                 |
+| branch_id                 | `uuid`                     | Sí       | ``                  |     |                                 |
+| created_at                | `timestamp with time zone` | No       | `now()`             |     |                                 |
+| updated_at                | `timestamp with time zone` | No       | `now()`             |     |                                 |
+| deleted_at                | `timestamp with time zone` | Sí       | ``                  |     |                                 |
+| created_by                | `uuid`                     | Sí       | ``                  |     |                                 |
+| updated_by                | `uuid`                     | Sí       | ``                  |     |                                 |
+| deleted_by                | `uuid`                     | Sí       | ``                  |     |                                 |
+| version                   | `integer`                  | No       | `1`                 |     |                                 |
+| row_version               | `bigint`                   | No       | `0`                 |     |                                 |
+| is_active                 | `boolean`                  | No       | `true`              |     |                                 |
+| is_deleted                | `boolean`                  | Sí       | ``                  |     |                                 |
+| observations              | `text`                     | Sí       | ``                  |     |                                 |
+| metadata                  | `jsonb`                    | No       | `'{}'::jsonb`       |     |                                 |
+| sku                       | `text`                     | No       | ``                  |     |                                 |
+| product_type              | `text`                     | No       | ``                  |     |                                 |
+| category_id               | `uuid`                     | Sí       | ``                  |     | products.product_categories.id  |
+| brand_id                  | `uuid`                     | Sí       | ``                  |     | products.brands.id              |
+| model_id                  | `uuid`                     | Sí       | ``                  |     | products.product_models.id      |
+| line_id                   | `uuid`                     | Sí       | ``                  |     | products.product_lines.id       |
+| family_id                 | `uuid`                     | Sí       | ``                  |     | products.product_families.id    |
+| collection_id             | `uuid`                     | Sí       | ``                  |     | products.product_collections.id |
+| base_unit_id              | `uuid`                     | No       | ``                  |     | products.units_of_measure.id    |
+| parent_product_id         | `uuid`                     | Sí       | ``                  |     | products.products.id            |
+| costing_method            | `text`                     | No       | `'average'::text`   |     |                                 |
+| tracks_serial             | `boolean`                  | No       | `false`             |     |                                 |
+| tracks_lot                | `boolean`                  | No       | `false`             |     |                                 |
+| standard_cost             | `numeric(18,4)`            | Sí       | ``                  |     |                                 |
+| list_price                | `numeric(18,4)`            | Sí       | ``                  |     |                                 |
+| is_hazardous_material     | `boolean`                  | No       | `false`             |     |                                 |
+| hazmat_classification     | `text`                     | Sí       | ``                  |     |                                 |
+| safety_data_sheet_file_id | `uuid`                     | Sí       | ``                  |     | core.files.id                   |
+| lifecycle_status          | `text`                     | No       | `'active'::text`    |     |                                 |
+
+Columnas nuevas de la migración `35_functional_completion.sql` (2026-07-25): `is_hazardous_material`/`hazmat_classification`/`safety_data_sheet_file_id` (`FUNCTIONAL_GAPS.md` #1) y `lifecycle_status` (`INVENTORY_ARCHITECTURE.md` §5.2, `CHECK` en `active`/`discontinued`/`obsolete`). `costing_method` ahora también admite `specific_identification` (`FUNCTIONAL_GAPS.md` #3).
+
+## products.product_physical_attributes
+
+> Tabla nueva — `35_functional_completion.sql` (2026-07-25). Extensión 1:1 opcional de `products.products` (solo existe fila para los productos donde peso/dimensiones/fecha de fabricación aplican). `INVENTORY_ARCHITECTURE.md` §5.2.
+
+| Columna                   | Tipo                       | Nullable | Default             | PK  | FK                   |
+| ------------------------- | -------------------------- | -------- | ------------------- | --- | -------------------- |
+| id                        | `uuid`                     | No       | `gen_random_uuid()` | PK  |                      |
+| local_id                  | `bigint`                   | No       | ``                  |     |                      |
+| tenant_id                 | `uuid`                     | No       | ``                  |     |                      |
+| company_id                | `uuid`                     | No       | ``                  |     |                      |
+| branch_id                 | `uuid`                     | Sí       | ``                  |     |                      |
+| created_at                | `timestamp with time zone` | No       | `now()`             |     |                      |
+| updated_at                | `timestamp with time zone` | No       | `now()`             |     |                      |
+| deleted_at                | `timestamp with time zone` | Sí       | ``                  |     |                      |
+| created_by                | `uuid`                     | Sí       | ``                  |     |                      |
+| updated_by                | `uuid`                     | Sí       | ``                  |     |                      |
+| deleted_by                | `uuid`                     | Sí       | ``                  |     |                      |
+| version                   | `integer`                  | No       | `1`                 |     |                      |
+| row_version               | `bigint`                   | No       | `0`                 |     |                      |
+| is_active                 | `boolean`                  | No       | `true`              |     |                      |
+| is_deleted                | `boolean`                  | Sí       | ``                  |     |                      |
+| observations              | `text`                     | Sí       | ``                  |     |                      |
+| metadata                  | `jsonb`                    | No       | `'{}'::jsonb`       |     |                      |
+| product_id                | `uuid`                     | No       | ``                  |     | products.products.id |
+| requires_manufacture_date | `boolean`                  | No       | `false`             |     |                      |
+| weight_kg                 | `numeric(12,4)`            | Sí       | ``                  |     |                      |
+| length_cm                 | `numeric(12,4)`            | Sí       | ``                  |     |                      |
+| width_cm                  | `numeric(12,4)`            | Sí       | ``                  |     |                      |
+| height_cm                 | `numeric(12,4)`            | Sí       | ``                  |     |                      |
+| volume_m3                 | `numeric(12,6)`            | Sí       | ``                  |     |                      |
 
 ## products.recipe_ingredients
 
