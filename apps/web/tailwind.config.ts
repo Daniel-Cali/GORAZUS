@@ -16,12 +16,22 @@ export default {
   // relativos no matchean nada, el scan de JIT queda vacío y solo
   // sobreviven las clases usadas directamente vía `@apply` en globals.css
   // (rompe cualquier utilidad de Tailwind usada solo en componentes .tsx).
+  //
+  // `modules/*/frontend/**` — bug real encontrado en la auditoría de UI de
+  // FASE 06: no estaba en este array, así que cualquier clase usada SOLO
+  // ahí (nunca repetida literalmente en `ui-kit`/`apps/web/src`) se purgaba
+  // en silencio. Caso real: `CashRegisterGate` (`modules/pos/frontend`) usa
+  // `max-w-md` sin prefijo, pero el único otro uso de esa cadena en todo el
+  // proyecto era `sm:max-w-md` (`ui-kit/components/primitives/drawer.tsx`)
+  // — para Tailwind son dos utilidades distintas (`max-w-md` nunca se
+  // generaba), la card de "Abrir caja" quedaba sin límite de ancho real.
   content: [
     path.join(__dirname, 'index.html'),
     path.join(__dirname, 'src/**/*.{ts,tsx}'),
     // Subcarpetas explícitas (no `ui-kit/**`) para no recorrer `ui-kit/node_modules`.
     path.join(__dirname, '../../ui-kit/components/**/*.{ts,tsx}'),
     path.join(__dirname, '../../ui-kit/theme/**/*.{ts,tsx}'),
+    path.join(__dirname, '../../modules/*/frontend/**/*.{ts,tsx}'),
   ],
   theme: {
     container: { center: true, padding: '2rem', screens: { '2xl': '1400px' } },
