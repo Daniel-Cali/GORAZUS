@@ -20,6 +20,39 @@ no una reescritura del schema. Detalle completo:
 
 ## [No liberado]
 
+### Corregido
+
+- **Frontend Redesign, Fase 01 — Auditoría Visual y Mejora de UI (2026-07-24).** Sin cambios de
+  API/base de datos/reglas de negocio (regla explícita de esta fase). 5 bugs reales encontrados y
+  corregidos, todos verificados con Playwright real (no solo lectura de código) y, donde aplica,
+  medición programática de contraste WCAG:
+  - **Sesión que perdía el nombre de usuario tras recargar** (`apps/web/src/app/require-auth.tsx`)
+    — `initSession()` restauraba el access token pero nunca repoblaba `useAppStore.user` (excluido
+    a propósito de `localStorage`); la sesión seguía activa pero "Hola, {nombre}" y el nombre del
+    Topbar quedaban en blanco. Fix: llama a `GET /auth/me` (ya existente) tras restaurar el token.
+  - **Tailwind purgaba en silencio clases usadas solo en `modules/*/frontend`**
+    (`apps/web/tailwind.config.ts`) — el `content` no escaneaba esa carpeta. Caso real: la card
+    "Abrir caja" del POS ignoraba `max-w-md` por completo (`max-width: none` en cómputo),
+    ocupando casi todo el viewport. Fix de raíz: se agregó el glob faltante.
+  - **Contraste insuficiente del color destructivo** (`apps/web/src/styles/globals.css`) — 3.61:1
+    (botón) / 3.78:1 (texto de error, uso activo real en todo `FormMessage`), ambos por debajo del
+    mínimo WCAG AA de 4.5:1. Fix: `--destructive` de 60% a 45% de luminosidad, verificado 5.18:1 /
+    5.42:1.
+  - **`DataTable` sin encabezado fijo, columnas ocultables, control de tamaño de página ni
+    skeleton loader** (`ui-kit/components/data/data-table.tsx`) — se agregaron los cuatro, más un
+    nuevo prop `containerClassName` en `Table` (primitive) para que el `sticky` del encabezado no
+    quedara anclado a un contenedor de scroll interno que nunca scrollea de verdad. Primer
+    consumidor real: `modules/seguridad/frontend/pages/usuarios-listado.page.tsx`.
+  - **Tipografía por debajo de 14px en texto real** (`ui-kit/components/layout/notification-center.tsx`)
+    — descripción/hora de cada notificación subidas de `text-xs` a `text-sm`.
+  - Nuevo primitive `Skeleton` (`ui-kit/components/primitives/skeleton.tsx`) — no existía ninguno.
+  - Ver `FRONTEND_VISUAL_AUDIT.md`, `UI_IMPROVEMENTS.md`, `DESIGN_FIXES.md`,
+    `ACCESSIBILITY_REPORT.md`, `RESPONSIVE_REPORT.md`, `COMPONENT_AUDIT.md` y
+    `LAYOUT_RECOMMENDATIONS.md` para el detalle completo, incluyendo lo evaluado y
+    deliberadamente diferido (ancho máximo de contenido en pantallas tipo dashboard, indicador de
+    campo obligatorio, búsqueda global real en tablas — requiere un endpoint nuevo, fuera de
+    alcance de esta fase).
+
 ### Añadido
 
 - **FASE 06, Parte 01 — Punto de Venta (POS) Enterprise (2026-07-24).**

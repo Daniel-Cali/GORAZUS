@@ -7,8 +7,9 @@
 > (deuda técnica consolidada), [PROJECT_HEALTH_REPORT.md](./PROJECT_HEALTH_REPORT.md)
 > (build/lint/test verificado en la sesión de diagnóstico) y
 > [NEXT_STEPS.md](./NEXT_STEPS.md) (qué sigue). Actualizado tras cerrar
-> Fase 06 Parte 01 — Punto de Venta (POS) Enterprise, primer código real
-> de `modules/clientes`, `modules/caja`, `modules/ventas` y `modules/pos`.
+> Frontend Redesign Fase 01 — Auditoría Visual y Mejora de UI, sobre la
+> base de Fase 06 Parte 01 (Punto de Venta), primer código real de
+> `modules/clientes`, `modules/caja`, `modules/ventas` y `modules/pos`.
 
 ## 1. En una frase
 
@@ -28,6 +29,18 @@ explícito (ver `NEXT_STEPS.md`).
 
 ## 2. Versión actual
 
+**0.11.1** (2026-07-24) — Frontend Redesign, Fase 01: Auditoría Visual
+y Mejora de UI. `PATCH`, no `MINOR` — no agrega negocio nuevo, corrige
+5 bugs reales de UI ya existente (sesión que perdía el nombre de
+usuario tras recargar, Tailwind purgando clases de `modules/*/frontend`
+—incluida una regresión real en el POS recién construido—, contraste
+WCAG insuficiente del color destructivo, `DataTable` sin encabezado
+fijo/columnas/tamaño de página/skeleton, tipografía bajo 14px), todos
+verificados con Playwright real y medición de contraste, sin tocar
+API/base de datos/reglas de negocio. Ver [VERSION.md](./VERSION.md)
+para el historial completo y [FRONTEND_VISUAL_AUDIT.md](./FRONTEND_VISUAL_AUDIT.md)
+para el detalle de esta fase.
+
 **0.11.0** (2026-07-24) — FASE 06, Parte 01: Punto de Venta (POS)
 Enterprise — checkout real (buscar → carrito → cobrar con pago mixto →
 factura → descuenta stock → registra caja → confirma), suspender/
@@ -35,9 +48,8 @@ recuperar venta, primera composición backend-a-backend real entre
 módulos de negocio (`pos` orquesta `inventario`/`ventas`/`caja`/
 `clientes`). Corrigió dos bugs preexistentes de Fase 05 (doble
 aplicación de stock, cast `uuid`) encontrados durante la verificación
-end-to-end contra Postgres real. Ver [VERSION.md](./VERSION.md) para el
-historial completo de versiones y [POS_ARCHITECTURE.md](./POS_ARCHITECTURE.md)/
-[POS_DATABASE.md](./POS_DATABASE.md) para el detalle de esta parte.
+end-to-end contra Postgres real. Ver [POS_ARCHITECTURE.md](./POS_ARCHITECTURE.md)/
+[POS_DATABASE.md](./POS_DATABASE.md) para el detalle de esa parte.
 
 ## 3. Estado del código (resumen de ROADMAP.md)
 

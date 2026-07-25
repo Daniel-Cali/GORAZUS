@@ -1,8 +1,8 @@
 # Technical Debt — GORAZUS ERP
 
-> Actualizado FASE 06, Parte 01 — Punto de Venta (POS) Enterprise. Sesión
-> del 2026-07-24, versión **0.11.0**, rama `feature/sales-pos`.
-> Consolida deuda técnica ya dispersa en
+> Actualizado Frontend Redesign, Fase 01 — Auditoría Visual y Mejora de
+> UI. Sesión del 2026-07-24, versión **0.11.1**, rama
+> `feature/frontend-ui-audit`. Consolida deuda técnica ya dispersa en
 > `CHANGELOG.md` ("Pendiente conocido") y en los reportes de sesiones
 > previas, más lo detectado esta sesión — no repite el detalle completo
 > de cada item, referencia la fuente.
@@ -14,6 +14,37 @@ o mantenibilidad a mediano plazo. 🟡 Cosmético o de bajo impacto real.
 Ninguno de los ítems de abajo es nuevo esta sesión salvo donde se indica
 explícitamente "(nuevo)" — esta sesión sí encontró y corrigió dos
 incidentes reales de gravedad 🔴 heredados de Fase 05, ver §0.
+
+## 0.1 Nuevo esta sesión (Frontend Redesign, Fase 01 — Auditoría Visual)
+
+- 🟡 **(nuevo) Sin búsqueda global real en `DataTable`** — necesitaría un parámetro `search`/`q`
+  nuevo en cada endpoint de listado (hoy `GET /seguridad/usuarios` solo acepta `page`/`pageSize`).
+  No implementado a propósito — esta fase tenía prohibido modificar APIs. Ver
+  `LAYOUT_RECOMMENDATIONS.md §5`.
+- 🟡 **(nuevo) Sin indicador visual de campo obligatorio en formularios** — `FormLabel` no recibe
+  ninguna señal de "requerido" todavía; agregarlo bien requiere decidir si sale de un prop manual o
+  se infiere del schema Zod, un cambio de API del componente compartido que toca todos los
+  formularios existentes — fuera del alcance de una fase de solo-UI. Ver `LAYOUT_RECOMMENDATIONS.md §2`.
+- 🟡 **(nuevo) Sin auditoría automatizada de accesibilidad (axe-core/Lighthouse)** — bloqueada en la
+  práctica por `nx run web:test` roto (§4 de abajo, deuda ya existente, no nueva). Recomendado
+  agregar `@axe-core/playwright` a `apps/web-e2e` (que sí corre hoy) una vez resuelto. Ver
+  `LAYOUT_RECOMMENDATIONS.md §4`.
+- 🟡 **(nuevo) Sin ancho máximo de contenido en pantallas tipo dashboard** — a resoluciones 4K, las
+  tarjetas del Dashboard se estiran mucho con poco contenido adentro. No corregido con un límite
+  global porque perjudicaría a pantallas de tabla (que sí quieren usar el ancho completo) — necesita
+  un wrapper opcional por página, no un cambio en `AppShell`. Ver `LAYOUT_RECOMMENDATIONS.md §1`.
+- 🟢 **(corregido) Sesión perdía el nombre de usuario tras recargar la página** —
+  `RequireAuth` restauraba el access token pero nunca repoblaba `useAppStore.user`. Corregido
+  llamando a `GET /auth/me` (ya existente) tras restaurar el token. Ver `UI_IMPROVEMENTS.md §1`.
+- 🟢 **(corregido) Tailwind purgaba clases usadas solo en `modules/*/frontend`** — el `content` de
+  `tailwind.config.ts` no escaneaba esa carpeta; cualquier clase no repetida literalmente en
+  `ui-kit`/`apps/web` se perdía en silencio (síntoma real: la card del POS ignoraba `max-w-md`).
+  Corregido agregando el glob faltante — previene esta clase de bug para cualquier módulo futuro,
+  no solo para el caso encontrado. Ver `UI_IMPROVEMENTS.md §2`.
+- 🟢 **(corregido) Contraste WCAG insuficiente del color destructivo** — 3.61:1/3.78:1, por debajo
+  del mínimo AA de 4.5:1 para texto normal; afectaba todo mensaje de error de formulario
+  (`text-destructive`, uso activo real). Corregido bajando la luminosidad de `--destructive` de 60%
+  a 45%, verificado 5.18:1/5.42:1. Ver `UI_IMPROVEMENTS.md §3`, `ACCESSIBILITY_REPORT.md §1`.
 
 ## 0. Nuevo esta sesión (FASE 06, Parte 01 — POS)
 

@@ -1,7 +1,7 @@
 # Next Steps — GORAZUS ERP
 
-> Actualizado 2026-07-24 tras cerrar Fase 06 Parte 01 (Punto de Venta
-> Enterprise), versión **0.11.0**. Complementa a
+> Actualizado 2026-07-24 tras cerrar Frontend Redesign Fase 01
+> (Auditoría Visual y Mejora de UI), versión **0.11.1**. Complementa a
 > [PROJECT_STATUS.md](./PROJECT_STATUS.md) (estado actual) y
 > [ROADMAP.md](./ROADMAP.md) (estado por módulo) — este documento
 > responde específicamente "¿qué sigue, y por qué en ese orden?".
@@ -91,6 +91,18 @@ Ninguna deuda actual **bloquea** ninguno de los dos caminos. Ítems a tener pres
 - El checkout de POS no es una transacción distribuida real entre `inventario`/`ventas`/`caja` — no
   bloquea POS Parte 02, pero condiciona qué tan lejos se puede llevar el volumen antes de mitigarlo
   (`POS_HEALTH_REPORT.md §3`).
+
+## 6.1 Frontend Redesign, Fase 01 — completa (`v0.11.1`, rama `feature/frontend-ui-audit`)
+
+Fase transversal de UI (no de negocio, no cambia el orden de la sección 4/5): auditó las 4
+pantallas reales que existen hoy (Login, Dashboard, Usuarios, POS) más `ComingSoonPage` (cubre las
+18 restantes), corrigió 5 bugs reales de UI verificados con Playwright y medición de contraste WCAG
+— ver `FRONTEND_VISUAL_AUDIT.md` para el detalle completo. Pendientes explícitamente diferidos, no
+bloqueantes (`LAYOUT_RECOMMENDATIONS.md`): ancho máximo de contenido en pantallas tipo
+dashboard/tarjetas, indicador visual de campo obligatorio en formularios, auditoría automatizada
+tipo axe-core (bloqueada por el mismo `nx run web:test` roto de abajo), y búsqueda global real en
+`DataTable` (necesita un parámetro de query nuevo en el backend — fuera de alcance de una fase que
+tenía prohibido modificar APIs).
 
 ## 7. No bloqueante, pero recomendado antes de seguir sumando módulos
 

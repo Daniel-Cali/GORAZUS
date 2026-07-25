@@ -93,6 +93,18 @@ deuda técnica detectada.
 - **POS**: checkout completo (buscar → carrito → cobrar con pago mixto → factura → stock → caja),
   suspender/recuperar venta, pantalla real `/pos` con atajos de teclado. 42 tests nuevos, 42/42.
 
+### Frontend Redesign, Fase 01 — Auditoría Visual y Mejora de UI (`v0.11.1`, 2026-07-24)
+
+Otro desvío del orden de negocio de arriba, también por pedido explícito: una fase transversal de
+UI, no de un módulo puntual. Auditó las 4 pantallas reales que existen hoy (Login, Dashboard,
+Usuarios, POS) más el componente compartido `ComingSoonPage` (cubre las 18 pantallas restantes que
+el sidebar navega pero que no tienen backend/UI propia todavía), y corrigió 5 bugs reales de UI
+—incluida una regresión visual real en el POS recién construido (`max-w-md` purgado por Tailwind)—
+sin tocar API/base de datos/reglas de negocio. Ver `FRONTEND_VISUAL_AUDIT.md` para el detalle
+completo. El design system (`ui-kit`) queda más sólido para cuando se construyan las próximas
+pantallas reales: `DataTable` ahora soporta encabezado fijo, columnas ocultables, control de
+tamaño de página y skeleton loaders — para cualquier módulo futuro, no solo para Usuarios.
+
 ### Próxima fase: a definir — Inventario Parte 05 o continuar POS Parte 02
 
 `v0.11.0` cerró POS Parte 01, saltando el orden que tenía prevista Inventario Parte 05-08 antes de
@@ -101,7 +113,9 @@ todavía: (a) **POS Parte 02** — devoluciones/cambios/garantías u otro recort
 en `POS_ARCHITECTURE.md §3`; (b) retomar **Inventario Parte 05 — Recepciones, salidas y reglas de
 almacén** (`goods_receipts`/`goods_receipt_lines`/`goods_issues`/`goods_issue_lines`/
 `goods_issue_reasons`/`putaway_rules`/`picking_rules`/`replenishment_rules`) → 06 Costeo → 07
-Series/lotes → 08 Producción, que seguía pendiente antes de este desvío.
+Series/lotes → 08 Producción, que seguía pendiente antes de este desvío. `v0.11.1` (Frontend
+Redesign) no cambia esta decisión pendiente — fue una fase transversal, no parte de ninguno de los
+dos caminos.
 
 ## Backlog conocido
 
