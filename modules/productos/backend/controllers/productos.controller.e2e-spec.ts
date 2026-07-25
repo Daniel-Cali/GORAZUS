@@ -9,6 +9,7 @@ import { initMetrics } from '@gorazus/core-observability';
 import { HttpModule } from '@gorazus/core-http';
 import { CacheModule } from '@gorazus/core-cache';
 import { DatabaseModule } from '@gorazus/core-database';
+import { StorageModule } from '@gorazus/core-storage';
 import type { AccessTokenPayload } from '@gorazus/contracts';
 // Ruta relativa — necesita la clase PrismaClient real (constructible) del cliente
 // generado de `core`, no solo los tipos que reexporta @gorazus/core-database/index.ts.
@@ -81,6 +82,15 @@ describe('Productos (e2e) — Unidades / Categorías / Marcas / Modelos / Produc
         HttpModule,
         CacheModule,
         DatabaseModule,
+        // StorageModule (Global) — bug real preexistente encontrado en esta fase:
+        // SeguridadModule usa AvatarUsuarioService, que desde FASE 03 Parte 03
+        // depende de StorageService; este test nunca la importó, así que
+        // Test.createTestingModule() fallaba con "Nest can't resolve
+        // dependencies of AvatarUsuarioService" — no relacionado con esta fase
+        // de base de datos, pero se corrige acá para poder verificar sin ruido
+        // que la migración 35 no rompió nada. Mismo gap probable en
+        // almacenes.controller.e2e-spec.ts (no corregido acá, ver TECHNICAL_DEBT.md).
+        StorageModule,
         SeguridadModule,
         ProductosModule,
       ],

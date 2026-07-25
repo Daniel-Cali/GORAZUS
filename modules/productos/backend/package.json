@@ -19,6 +19,7 @@
     "@gorazus/core-config": "workspace:*",
     "@gorazus/core-logging": "workspace:*",
     "@gorazus/core-observability": "workspace:*",
+    "@gorazus/core-storage": "workspace:*",
     "@nestjs/platform-express": "^10.4.0",
     "@nestjs/testing": "^10.4.0",
     "@types/cookie-parser": "^1.4.7",
