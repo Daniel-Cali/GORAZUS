@@ -105,7 +105,18 @@ completo. El design system (`ui-kit`) queda más sólido para cuando se construy
 pantallas reales: `DataTable` ahora soporta encabezado fijo, columnas ocultables, control de
 tamaño de página y skeleton loaders — para cualquier módulo futuro, no solo para Usuarios.
 
-### Próxima fase: a definir — Inventario Parte 05 o continuar POS Parte 02
+### Database Refactor, Fase 01 — Estandarización al Español, diseño (sin ejecutar, 2026-07-24)
+
+Tercer desvío del orden de negocio, también por pedido explícito. A diferencia de las dos fases
+anteriores, esta **no ejecutó ningún cambio real** — el usuario eligió explícitamente "diseño
+primero" dado que renombrar 501 tablas/728 columnas distintas/~19.500 objetos reales de una base
+certificada y congelada (`VERSION.md`) en una sola sesión es un riesgo real de romper la
+aplicación. Se generó el estándar completo de nomenclatura y el mapeo real objeto-por-objeto (no
+una muestra) — 7 entregables, ver `DATABASE_SPANISH_STANDARD.md`. Queda como trabajo aprobado-pero-
+no-iniciado: el plan de ejecución por fases está en `DATABASE_MIGRATION_REPORT.md`, empezando por
+un piloto acotado en el schema `taxes` antes de tocar cualquier schema con backend real construido.
+
+### Próxima fase: a definir — Inventario Parte 05, continuar POS Parte 02, o iniciar el piloto de renombrado
 
 `v0.11.0` cerró POS Parte 01, saltando el orden que tenía prevista Inventario Parte 05-08 antes de
 Clientes/Ventas/Caja/POS (`INVENTORY_NEXT_PHASE.md`). Dos caminos abiertos, sin decisión tomada

@@ -5,6 +5,12 @@ completa y estable (no un release público), `PATCH` una corrección puntual. `0
 el proyecto arrancó en `0.1.0` (bootstrap del monorepo + FASE 01-05). Sin releases públicos
 todavía, así que no hay compromiso de compatibilidad entre versiones `0.x`.
 
+> **Nota (2026-07-24)** — Database Refactor, Fase 01 (diseño del estándar de nomenclatura en
+> español, sin ejecutar ningún renombrado) no incrementó la versión — es una fase de diseño puro,
+> mismo criterio que FASE 05 Parte 01 y FASE 03 Parte 01 más abajo. Ver
+> `DATABASE_SPANISH_STANDARD.md`/`DATABASE_DICTIONARY.md`/`DATABASE_MIGRATION_REPORT.md` para el
+> resultado completo de esa fase de diseño — sigue siendo `0.11.1` hasta que se apruebe y ejecute.
+
 ## Versión actual: **0.11.1** (2026-07-24)
 
 Frontend Redesign, Fase 01 — Auditoría Visual y Mejora de UI. `PATCH`, no `MINOR`: no agrega

@@ -20,6 +20,34 @@ no una reescritura del schema. Detalle completo:
 
 ## [No liberado]
 
+### Diseñado (sin ejecutar — fase de diseño puro, no incrementa versión)
+
+- **Database Refactor, Fase 01 — Estandarización Completa al Español (2026-07-24).** Por pedido
+  explícito, se generó el estándar completo de nomenclatura en español y el mapeo real (no una
+  muestra) de los 501 tablas + 728 columnas distintas + 21 esquemas + 9 vistas + 4 vistas
+  materializadas + 20 funciones/procedimientos propios + 5 triggers de la base PostgreSQL 17.10
+  real — **sin ejecutar ningún renombrado todavía**. Decisión explícita del usuario (vía pregunta de
+  alcance) dado que la base está certificada "Enterprise v1.0.0" y congelada
+  (`VERSION.md`), y que renombrar ~19.500 objetos reales en una sola sesión sin poder correr una
+  suite de tests 100% confiable es un riesgo real de romper la aplicación.
+  - **7 entregables**: `DATABASE_SPANISH_STANDARD.md` (reglas), `DATABASE_DICTIONARY.md`
+    (diccionario completo, no una muestra — 501 tablas + 728 columnas), `DATABASE_RENAME_REPORT.md`
+    (conteos por categoría), `DATABASE_MIGRATION_REPORT.md` (plan de ejecución futura por fases,
+    con reversión), `DATABASE_COMPATIBILITY_REPORT.md` (estrategia `@map`/`@@map` de Prisma +
+    impacto real en 61 archivos backend con Prisma tipado vs 8 con SQL crudo),
+    `DATABASE_VALIDATION_REPORT.md` (0 colisiones, 0 choques con palabras reservadas, 0 nombres de
+    tabla/columna sobre 63 bytes), `DATABASE_HEALTH_REPORT.md` (línea base de la base real antes de
+    cualquier cambio).
+  - **Hallazgos reales durante el diseño**: (1) de las 87 funciones detectadas inicialmente, 67 son
+    propias de las extensiones `pg_trgm`/`pgcrypto` y nunca se renombrarían — solo 20 son código de
+    GORAZUS; (2) aplicar el patrón de índice ya usado por el proyecto (`idx_<schema>_<tabla>_<columna>`)
+    mecánicamente en español produce 112 de ~2.948 nombres que superarían el límite de 63 bytes de
+    PostgreSQL — mitigación diseñada, no aplicada; (3) bug real de traducción encontrado y
+    corregido en el propio motor de traducción antes de cerrar el diccionario (`unit_id` se
+    traducía mal como `id_unitario` en vez de `unidad_id`).
+  - Ver `DATABASE_SPANISH_STANDARD.md` para el detalle completo. Cero cambios de schema, backend o
+    API en esta fase — regla explícita del pedido.
+
 ### Corregido
 
 - **Frontend Redesign, Fase 01 — Auditoría Visual y Mejora de UI (2026-07-24).** Sin cambios de

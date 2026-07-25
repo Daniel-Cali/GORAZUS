@@ -1,8 +1,9 @@
 # Technical Debt — GORAZUS ERP
 
-> Actualizado Frontend Redesign, Fase 01 — Auditoría Visual y Mejora de
-> UI. Sesión del 2026-07-24, versión **0.11.1**, rama
-> `feature/frontend-ui-audit`. Consolida deuda técnica ya dispersa en
+> Actualizado Database Refactor, Fase 01 — diseño del estándar de
+> nomenclatura en español (sin ejecutar). Sesión del 2026-07-24, versión
+> **0.11.1** (sin cambios — fase de diseño puro), rama
+> `design/database-spanish-standard`. Consolida deuda técnica ya dispersa en
 > `CHANGELOG.md` ("Pendiente conocido") y en los reportes de sesiones
 > previas, más lo detectado esta sesión — no repite el detalle completo
 > de cada item, referencia la fuente.
@@ -14,6 +15,29 @@ o mantenibilidad a mediano plazo. 🟡 Cosmético o de bajo impacto real.
 Ninguno de los ítems de abajo es nuevo esta sesión salvo donde se indica
 explícitamente "(nuevo)" — esta sesión sí encontró y corrigió dos
 incidentes reales de gravedad 🔴 heredados de Fase 05, ver §0.
+
+## 0.2 Nuevo esta sesión (Database Refactor, Fase 01 — diseño, sin ejecutar)
+
+- 🟠 **(nuevo) 112 nombres de índice superarían 63 bytes si se aplica el patrón mecánico de
+  nomenclatura en español** — el patrón `idx_<esquema>_<tabla>_<columna>` ya usado por el proyecto
+  produce identificadores más largos en español que en inglés; 112 de ~2.948 candidatos en el peor
+  caso superan el límite de PostgreSQL. Mitigación diseñada (sufijo hash o quitar el prefijo de
+  esquema redundante), no aplicada — pendiente de aprobación antes de una futura fase de ejecución.
+  Ver `DATABASE_MIGRATION_REPORT.md §4`.
+- 🟠 **(nuevo) 8 archivos backend con SQL crudo no quedarían protegidos por `@map`/`@@map` de
+  Prisma** si se ejecuta el renombrado — requerirían edición manual sin importar el camino elegido
+  (mapeo-solo vs renombrado físico real). Ver `DATABASE_COMPATIBILITY_REPORT.md §2.1` para la
+  lista completa de archivos.
+- 🟡 **(nuevo) Vocabulario de 728 términos técnicos traducidos sin revisión de hablante nativo
+  humano** — riesgo de matiz regional (México/Argentina/España usan términos distintos para lo
+  mismo, p. ej. "nómina" vs "planilla"), no de corrección funcional. Ver
+  `DATABASE_VALIDATION_REPORT.md §6`.
+- 🟢 **(diseño completo, no ejecutado)** El estándar completo de nomenclatura en español (21
+  esquemas, 501 tablas, 728 columnas distintas, 9 vistas, 4 vistas materializadas, 20 funciones/
+  procedimientos propios, 5 triggers) está diseñado, validado (0 colisiones, 0 choques con
+  palabras reservadas) y documentado en `DATABASE_SPANISH_STANDARD.md`/`DATABASE_DICTIONARY.md` —
+  queda como trabajo aprobado-para-diseñar-pero-no-iniciado-para-ejecutar. Ver
+  `DATABASE_MIGRATION_REPORT.md` para el plan de ejecución por fases.
 
 ## 0.1 Nuevo esta sesión (Frontend Redesign, Fase 01 — Auditoría Visual)
 

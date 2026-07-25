@@ -7,8 +7,9 @@
 > (deuda técnica consolidada), [PROJECT_HEALTH_REPORT.md](./PROJECT_HEALTH_REPORT.md)
 > (build/lint/test verificado en la sesión de diagnóstico) y
 > [NEXT_STEPS.md](./NEXT_STEPS.md) (qué sigue). Actualizado tras cerrar
-> Frontend Redesign Fase 01 — Auditoría Visual y Mejora de UI, sobre la
-> base de Fase 06 Parte 01 (Punto de Venta), primer código real de
+> Database Refactor Fase 01 — diseño del estándar de nomenclatura en
+> español (sin ejecutar), sobre la base de Frontend Redesign Fase 01 y
+> Fase 06 Parte 01 (Punto de Venta), primer código real de
 > `modules/clientes`, `modules/caja`, `modules/ventas` y `modules/pos`.
 
 ## 1. En una frase
@@ -25,7 +26,12 @@ sesión, session-hijacking, verificación de empresa/sucursal activa,
 CSRF, email real, gestión de usuarios completa con multiempresa) —
 Fase 06 Parte 01 (Punto de Venta) queda cerrada con esta parte,
 saltando el orden previsto de Inventario Parte 05-08 por pedido
-explícito (ver `NEXT_STEPS.md`).
+explícito (ver `NEXT_STEPS.md`). Además, Database Refactor Fase 01
+generó el estándar completo y el mapeo real de nomenclatura en español
+para toda la base de datos (501 tablas, 728 columnas distintas) — **sin
+ejecutar ningún renombrado todavía**, decisión explícita del usuario
+dado el riesgo real de tocar una base certificada y congelada en una
+sola sesión (ver `DATABASE_SPANISH_STANDARD.md`).
 
 ## 2. Versión actual
 
