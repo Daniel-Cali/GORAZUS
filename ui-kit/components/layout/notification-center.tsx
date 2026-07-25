@@ -66,9 +66,9 @@ export function NotificationCenter({ notifications, onOpenNotification }: Notifi
                     {n.title}
                   </span>
                   {n.description && (
-                    <span className="text-xs text-muted-foreground">{n.description}</span>
+                    <span className="text-sm text-muted-foreground">{n.description}</span>
                   )}
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-sm text-muted-foreground">
                     {formatRelativeToNow(n.createdAt)}
                   </span>
                 </button>

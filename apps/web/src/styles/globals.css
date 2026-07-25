@@ -24,7 +24,13 @@
     --muted-foreground: 215 16% 47%;
     --accent: 210 40% 96%;
     --accent-foreground: 222 47% 11%;
-    --destructive: 0 84% 60%;
+    /* `60% → 45%` de luminosidad — bug real de accesibilidad encontrado en la
+       auditoría de UI de FASE 06: texto blanco (`--destructive-foreground`)
+       sobre este rojo daba 3.61:1 de contraste, por debajo del mínimo WCAG AA
+       de 4.5:1 para texto normal (afectaba cualquier botón "Desactivar"/
+       destructivo del sistema). Verificado con el algoritmo de contraste
+       relativo real: 45% de luminosidad da 5.18:1. */
+    --destructive: 0 84% 45%;
     --destructive-foreground: 210 40% 98%;
     --border: 214 32% 91%;
     --input: 214 32% 91%;
