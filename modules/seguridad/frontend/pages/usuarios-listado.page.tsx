@@ -48,13 +48,14 @@ const columns: ColumnDef<UsuarioRecord>[] = [
 /** `/seguridad/usuarios` — administración real (alta/baja), wireada a `modules/seguridad/backend`. Requiere `seguridad.gestionar_usuarios` (el backend lo exige; esta pantalla no repite la validación). */
 export function UsuariosListadoPage() {
   const [page, setPage] = React.useState(1);
+  const [pageSize, setPageSize] = React.useState(20);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [tempPassword, setTempPassword] = React.useState<{
     email: string;
     password: string;
   } | null>(null);
 
-  const { data, isLoading } = useUsuarios(page);
+  const { data, isLoading } = useUsuarios(page, pageSize);
   const crearUsuario = useCrearUsuario();
   const desactivarUsuario = useDesactivarUsuario();
 
@@ -78,6 +79,7 @@ export function UsuariosListadoPage() {
     {
       id: 'acciones',
       header: '',
+      enableHiding: false,
       cell: ({ row }) =>
         row.original.is_active ? (
           <Button
@@ -180,6 +182,11 @@ export function UsuariosListadoPage() {
             : undefined
         }
         onPaginationChange={({ pageIndex }) => setPage(pageIndex + 1)}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPage(1);
+        }}
+        enableColumnVisibility
         emptyMessage="No hay usuarios."
       />
 

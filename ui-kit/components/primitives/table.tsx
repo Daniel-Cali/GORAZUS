@@ -1,9 +1,23 @@
 import * as React from 'react';
 import { cn } from '../../lib/cn';
 
-export const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableElement>>(
-  ({ className, ...props }, ref) => (
-    <div className="relative w-full overflow-auto">
+export interface TableProps extends React.HTMLAttributes<HTMLTableElement> {
+  /**
+   * Clases para el `<div>` que envuelve la tabla (el scroll real vive acá,
+   * no en `<table>`). Necesario para poder combinar `max-h-*` + `overflow-auto`
+   * en el mismo elemento — un `position: sticky` en `<th>` se ancla al
+   * ancestro scrolleable MÁS CERCANO; si un consumidor agrega su propio
+   * wrapper con scroll por fuera de este `<div>` (que ya tiene el suyo,
+   * sin límite de altura), el sticky queda anclado al de acá adentro, que
+   * nunca scrollea de verdad, y el encabezado se pierde igual que antes
+   * (hallazgo real de la auditoría de UI de FASE 06, `DataTable`).
+   */
+  containerClassName?: string;
+}
+
+export const Table = React.forwardRef<HTMLTableElement, TableProps>(
+  ({ className, containerClassName, ...props }, ref) => (
+    <div className={cn('relative w-full overflow-auto', containerClassName)}>
       <table ref={ref} className={cn('w-full caption-bottom text-sm', className)} {...props} />
     </div>
   ),

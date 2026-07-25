@@ -27,6 +27,7 @@ export * from './components/primitives/label';
 export * from './components/primitives/loader';
 export * from './components/primitives/money-input';
 export * from './components/primitives/popover';
+export * from './components/primitives/skeleton';
 export * from './components/primitives/table';
 export * from './components/primitives/tabs';
 export * from './components/primitives/toast';
