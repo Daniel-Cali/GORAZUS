@@ -116,6 +116,17 @@ una muestra) — 7 entregables, ver `DATABASE_SPANISH_STANDARD.md`. Queda como t
 no-iniciado: el plan de ejecución por fases está en `DATABASE_MIGRATION_REPORT.md`, empezando por
 un piloto acotado en el schema `taxes` antes de tocar cualquier schema con backend real construido.
 
+### Database Finalization — Database Enterprise v1.1.0 (2026-07-25)
+
+Cuarto desvío del orden de negocio, también por pedido explícito — a diferencia de la fase
+anterior (diseño puro, sin ejecutar), **esta sí ejecutó una migración real** contra la base
+certificada: `docs/database/sql/35_functional_completion.sql`, cerrando 7 gaps funcionales ya
+documentados y especificados por auditorías previas (`FUNCTIONAL_GAPS.md`,
+`INVENTORY_ARCHITECTURE.md §5.2`) — ninguno inventado en esta sesión, siguiendo el principio
+explícito del pedido ("el objetivo NO es crear más tablas"). 501→503 tablas, 100% aditivo, 0 datos
+perdidos, backend existente verificado sin regresión. Ver `DATABASE_FINAL_STATUS.md` para el
+detalle completo y la recomendación de production readiness (9.4/10).
+
 ### Próxima fase: a definir — Inventario Parte 05, continuar POS Parte 02, o iniciar el piloto de renombrado
 
 `v0.11.0` cerró POS Parte 01, saltando el orden que tenía prevista Inventario Parte 05-08 antes de

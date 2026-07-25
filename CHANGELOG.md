@@ -20,6 +20,47 @@ no una reescritura del schema. Detalle completo:
 
 ## [No liberado]
 
+### Añadido — Base de Datos
+
+- **Database Finalization — Database Enterprise v1.1.0 (2026-07-25).** Primera migración
+  versionada real desde el congelamiento de v1.0.0 —
+  `docs/database/sql/35_functional_completion.sql`, append-only, ejecutada y validada contra
+  PostgreSQL 17.10 real. Cierra 7 gaps funcionales ya documentados y especificados por auditorías
+  previas del proyecto (`FUNCTIONAL_GAPS.md`, `INVENTORY_ARCHITECTURE.md §5.2`) — ninguno
+  inventado en esta sesión:
+  - Materiales peligrosos/hoja de seguridad (`products.products` +3 columnas).
+  - País/idioma/timezone en Empresa y Sucursal (`core.companies`/`core.branches` +3 columnas c/u).
+  - Costo Específico — identificación específica (`products.costing_method` 5º valor,
+    `inventory.inventory_serials.unit_cost` nuevo).
+  - Contratos de Proveedor — tabla nueva `suppliers.supplier_contracts`.
+  - QR/RFID en código de barras (`products.product_barcodes.barcode_type` extendido).
+  - Atributos físicos del producto — tabla nueva `products.product_physical_attributes` (peso,
+    dimensiones, exigencia de fecha de fabricación).
+  - Ciclo de vida del producto — `products.products.lifecycle_status`
+    (`active`/`discontinued`/`obsolete`).
+  - 501→**503 tablas**, +10 columnas, +16 índices, +5 FK — 100% aditivo, 0 datos perdidos,
+    verificado con conteo de filas antes/después.
+  - `schema.prisma` regenerado + los 21 clientes Prisma por módulo regenerados
+    (`pnpm db:pull && pnpm db:split && pnpm db:generate`) — confirma de nuevo que el cliente
+    monolítico cuelga por el límite de escala de Prisma 5.x ya documentado en el propio
+    `split-schema-by-module.js` del proyecto.
+  - Backend existente (`productos`, `configuracion`) verificado sin regresión. Durante la
+    verificación se encontraron 5 bugs preexistentes no causados por esta migración —2
+    corregidos (`StorageModule` faltante en el e2e-spec de `productos`, dependencia agregada), 3
+    documentados sin corregir por estar fuera de alcance (aserción de test de `Decimal`, excepción
+    genérica no mapeada a 400 en `Producto`, mismo gap de `StorageModule` probable en
+    `almacenes.controller.e2e-spec.ts`)—.
+  - 9 entregables: `DATABASE_FUNCTIONAL_COVERAGE.md`, `DATABASE_COMPLETION_REPORT.md`,
+    `DATABASE_HEALTH_REPORT.md`, `DATABASE_PERFORMANCE_REPORT.md`, `DATABASE_AUDIT_REPORT.md`,
+    `DATABASE_ENTERPRISE_CHECKLIST.md`, `DATABASE_FINAL_STATUS.md`, `DATABASE_DICTIONARY.md`
+    (actualizado), `DATABASE_RELEASE_NOTES.md`. Diccionario de datos real
+    (`docs/database/dictionary/01-core.md`/`04-suppliers.md`/`05-products.md`/`06-inventory.md`)
+    actualizado con las columnas/tabla nuevas.
+  - Explícitamente NO tocado (decisión, no omisión): RLS de Empresa/Sucursal, resolución de 185 FK
+    cross-schema, `core.restore_test_logs` sin RLS — los 3 son hallazgos ya certificados que
+    requieren una decisión de arquitectura/producto, no una construcción. Recomendación de
+    production readiness: 9.4/10, ver `DATABASE_FINAL_STATUS.md`.
+
 ### Diseñado (sin ejecutar — fase de diseño puro, no incrementa versión)
 
 - **Database Refactor, Fase 01 — Estandarización Completa al Español (2026-07-24).** Por pedido

@@ -1,9 +1,9 @@
 # Technical Debt — GORAZUS ERP
 
-> Actualizado Database Refactor, Fase 01 — diseño del estándar de
-> nomenclatura en español (sin ejecutar). Sesión del 2026-07-24, versión
-> **0.11.1** (sin cambios — fase de diseño puro), rama
-> `design/database-spanish-standard`. Consolida deuda técnica ya dispersa en
+> Actualizado Database Finalization — Database Enterprise v1.1.0.
+> Sesión del 2026-07-25, versión de app **0.11.1** (sin cambios —
+> ninguna API/backend de negocio nueva), rama
+> `feature/database-finalization`. Consolida deuda técnica ya dispersa en
 > `CHANGELOG.md` ("Pendiente conocido") y en los reportes de sesiones
 > previas, más lo detectado esta sesión — no repite el detalle completo
 > de cada item, referencia la fuente.
@@ -16,7 +16,41 @@ Ninguno de los ítems de abajo es nuevo esta sesión salvo donde se indica
 explícitamente "(nuevo)" — esta sesión sí encontró y corrigió dos
 incidentes reales de gravedad 🔴 heredados de Fase 05, ver §0.
 
-## 0.2 Nuevo esta sesión (Database Refactor, Fase 01 — diseño, sin ejecutar)
+## 0.3 Nuevo esta sesión (Database Finalization — Database Enterprise v1.1.0)
+
+- 🟡 **(nuevo) Domain Service de Costo Específico no construido** — el schema soporta
+  `products.costing_method='specific_identification'` y `inventory.inventory_serials.unit_cost`,
+  pero el enum de aplicación (`METODOS_COSTEO` en `modules/productos/backend`) sigue restringido a
+  los 4 valores originales — inalcanzable vía API hasta que se construya la lógica de dominio que
+  decida cuándo usarlo. `FUNCTIONAL_GAPS.md` #3 ya advertía esto explícitamente.
+- 🟡 **(nuevo) `suppliers.supplier_contracts` sin consumidor de backend** — la tabla existe
+  (`35_functional_completion.sql`), pero `modules/proveedores` está vacío (0 archivos, confirmado)
+  — no hay riesgo de romper nada, pero tampoco hay forma de usarla todavía vía API.
+- 🟠 **(nuevo, preexistente descubierto) `modules/productos/backend/controllers/productos.controller.e2e-spec.ts`
+  no compilaba/corría en absoluto** — `SeguridadModule` requiere `StorageService` (vía
+  `AvatarUsuarioService`, FASE 03 Parte 03) que el test nunca importaba. **Corregido** en esta
+  sesión (import de `StorageModule` + `@gorazus/core-storage` agregado a `package.json`) — sin
+  este fix no había forma de verificar que la migración 35 no rompiera nada.
+- 🟡 **(nuevo, preexistente descubierto, no corregido) Aserción de test incorrecta para columnas
+  `Decimal`** — `productos.controller.e2e-spec.ts` espera `list_price` como `number`, pero Prisma
+  serializa `Decimal` como `string` en JSON. Bug de la aserción, no del código de aplicación.
+- 🟡 **(nuevo, preexistente descubierto, no corregido) `Producto` (entidad de dominio) lanza
+  `Error` genérico en vez de una excepción de dominio** — `producto.entity.ts:41`, el filtro
+  global de excepciones lo mapea a 500 en vez de 400 cuando un producto `service` intenta rastrear
+  serie/lote. Encontrado al finalmente poder ejecutar el e2e-spec completo.
+- 🟡 **(nuevo, preexistente, probable, no verificado) Mismo gap de `StorageModule` faltante en
+  `modules/inventario/backend/controllers/almacenes.controller.e2e-spec.ts`** — mismo patrón
+  exacto (`SeguridadModule` sin `StorageModule`), no confirmado en vivo por tiempo.
+- 🟡 **(nuevo, preexistente descubierto, no corregido) `usuarios.controller.ts` no compila en el
+  contexto de test de `configuracion`** — `Namespace 'global.Express' has no exported member
+'Multer'`, típico de `@types/multer` faltante como dependencia declarada donde se hace
+  type-check. Bloquea 4 suites de `configuracion-backend`, no relacionado con `companies`/
+  `branches`.
+- 🟢 **(cerrado esta sesión) 7 gaps funcionales de `FUNCTIONAL_GAPS.md`/`INVENTORY_ARCHITECTURE.md
+§5.2`** — ver `DATABASE_COMPLETION_REPORT.md` para el detalle completo de cada uno. Queda acá
+  solo como registro de que existieron y se cerraron, no como deuda pendiente.
+
+## 0.2 Database Refactor, Fase 01 — diseño del estándar de nomenclatura en español (sin ejecutar, 2026-07-24)
 
 - 🟠 **(nuevo) 112 nombres de índice superarían 63 bytes si se aplica el patrón mecánico de
   nomenclatura en español** — el patrón `idx_<esquema>_<tabla>_<columna>` ya usado por el proyecto

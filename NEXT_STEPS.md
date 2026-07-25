@@ -1,7 +1,8 @@
 # Next Steps — GORAZUS ERP
 
-> Actualizado 2026-07-24 tras cerrar Frontend Redesign Fase 01
-> (Auditoría Visual y Mejora de UI), versión **0.11.1**. Complementa a
+> Actualizado 2026-07-25 tras cerrar Database Finalization (Database
+> Enterprise v1.1.0, migración real 501→503 tablas), versión de app
+> **0.11.1** sin cambios. Complementa a
 > [PROJECT_STATUS.md](./PROJECT_STATUS.md) (estado actual) y
 > [ROADMAP.md](./ROADMAP.md) (estado por módulo) — este documento
 > responde específicamente "¿qué sigue, y por qué en ese orden?".
@@ -91,6 +92,17 @@ Ninguna deuda actual **bloquea** ninguno de los dos caminos. Ítems a tener pres
 - El checkout de POS no es una transacción distribuida real entre `inventario`/`ventas`/`caja` — no
   bloquea POS Parte 02, pero condiciona qué tan lejos se puede llevar el volumen antes de mitigarlo
   (`POS_HEALTH_REPORT.md §3`).
+
+## 6.0 Database Finalization — completa (`Database Enterprise v1.1.0`, rama `feature/database-finalization`)
+
+Cerró los 2 gaps funcionales de mayor peso de `FUNCTIONAL_GAPS.md` (Costo Específico, Contratos de
+Proveedor) + 5 gaps adicionales ya documentados, vía una migración versionada real y aditiva
+(`docs/database/sql/35_functional_completion.sql`). No cambia el orden de desarrollo de negocio de
+las secciones de abajo — es una fase transversal de base de datos, igual que las dos anteriores.
+Pendiente explícito, no bloqueante: Domain Service de Costo Específico (código de aplicación, no
+schema), consumidor de backend para `supplier_contracts` (el módulo `proveedores` sigue vacío), y
+5 bugs preexistentes descubiertos al verificar (2 corregidos, 3 documentados) — ver
+`TECHNICAL_DEBT.md §0.3`.
 
 ## 6.1 Frontend Redesign, Fase 01 — completa (`v0.11.1`, rama `feature/frontend-ui-audit`)
 

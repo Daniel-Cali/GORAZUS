@@ -7,10 +7,12 @@
 > (deuda técnica consolidada), [PROJECT_HEALTH_REPORT.md](./PROJECT_HEALTH_REPORT.md)
 > (build/lint/test verificado en la sesión de diagnóstico) y
 > [NEXT_STEPS.md](./NEXT_STEPS.md) (qué sigue). Actualizado tras cerrar
-> Database Refactor Fase 01 — diseño del estándar de nomenclatura en
-> español (sin ejecutar), sobre la base de Frontend Redesign Fase 01 y
-> Fase 06 Parte 01 (Punto de Venta), primer código real de
-> `modules/clientes`, `modules/caja`, `modules/ventas` y `modules/pos`.
+> Database Finalization — Database Enterprise v1.1.0 (migración real,
+> 501→503 tablas), sobre la base de Database Refactor Fase 01 (diseño
+> del estándar de nomenclatura en español, sin ejecutar), Frontend
+> Redesign Fase 01 y Fase 06 Parte 01 (Punto de Venta), primer código
+> real de `modules/clientes`, `modules/caja`, `modules/ventas` y
+> `modules/pos`.
 
 ## 1. En una frase
 
@@ -26,12 +28,17 @@ sesión, session-hijacking, verificación de empresa/sucursal activa,
 CSRF, email real, gestión de usuarios completa con multiempresa) —
 Fase 06 Parte 01 (Punto de Venta) queda cerrada con esta parte,
 saltando el orden previsto de Inventario Parte 05-08 por pedido
-explícito (ver `NEXT_STEPS.md`). Además, Database Refactor Fase 01
-generó el estándar completo y el mapeo real de nomenclatura en español
-para toda la base de datos (501 tablas, 728 columnas distintas) — **sin
-ejecutar ningún renombrado todavía**, decisión explícita del usuario
-dado el riesgo real de tocar una base certificada y congelada en una
-sola sesión (ver `DATABASE_SPANISH_STANDARD.md`).
+explícito (ver `NEXT_STEPS.md`). Database Refactor Fase 01 generó el
+estándar completo y el mapeo real de nomenclatura en español para toda
+la base de datos (501 tablas, 728 columnas distintas) — **sin ejecutar
+ningún renombrado todavía**, decisión explícita del usuario dado el
+riesgo real de tocar una base certificada y congelada en una sola
+sesión (ver `DATABASE_SPANISH_STANDARD.md`). Database Finalization sí
+ejecutó una migración real (`35_functional_completion.sql`) — 501→503
+tablas, cerrando 7 gaps funcionales ya documentados
+(`FUNCTIONAL_GAPS.md`, `INVENTORY_ARCHITECTURE.md §5.2`), 100% aditivo,
+0 datos perdidos — **Database Enterprise v1.1.0** (ver
+`DATABASE_FINAL_STATUS.md`).
 
 ## 2. Versión actual
 
@@ -93,17 +100,18 @@ documentación, no repetido acá para no duplicar.
 
 ## 5. Estado de la base de datos
 
-Sin cambios desde la certificación formal — **Enterprise v1.0.0**
-(2026-07-21, congelada en su estructura fundamental): 501 tablas, 5.164
-FK (100% válidas), 3.201 índices (0 duplicados), RLS forzado en 500/501
-tablas. Ver [VERSION.md §Versionado del modelo de datos](./VERSION.md)
-y [docs/database/DATABASE_CERTIFICATION.md](./docs/database/DATABASE_CERTIFICATION.md).
-Ningún cambio de schema desde entonces — el modelo de datos sigue siendo
-el contrato que el backend consume, no al revés. Esta parte sumó el
-**primer consumidor de aplicación** para 6 tablas más del schema
-`inventory` (`stock_adjustment_reasons`/`stock_adjustments`/
-`stock_adjustment_lines`/`physical_counts`/`physical_count_lines`/
-`cycle_count_schedules`, 15 de 34 en total) — sin tocar el schema en sí.
+**Enterprise v1.1.0** (2026-07-25) — primer cambio de schema desde el congelamiento de v1.0.0
+(2026-07-21): 503 tablas (501+2), ~5.169 FK (100% válidas), 2.964 índices (0 inválidos), RLS
+forzado en 475 de 503 tablas (`core.restore_test_logs` sigue excluida a propósito). La migración
+`docs/database/sql/35_functional_completion.sql` cerró 7 gaps funcionales ya documentados y
+especificados por auditorías previas (`FUNCTIONAL_GAPS.md`, `INVENTORY_ARCHITECTURE.md §5.2`) —
+100% aditivo, 0 datos perdidos, backend existente verificado sin regresión. Ver
+[VERSION.md §Versionado del modelo de datos](./VERSION.md),
+[docs/database/DATABASE_CERTIFICATION.md](./docs/database/DATABASE_CERTIFICATION.md) (v1.0.0
+original) y [DATABASE_FINAL_STATUS.md](./DATABASE_FINAL_STATUS.md) (v1.1.0, recomendación de
+production readiness 9.4/10). El modelo de datos sigue siendo el contrato que el backend
+consume, no al revés — sigue congelado en su estructura fundamental, el siguiente cambio también
+requiere una migración versionada.
 
 ## 6. Orden de desarrollo — Fase 06 Parte 01 (POS) cerrada, fuera del orden previsto
 

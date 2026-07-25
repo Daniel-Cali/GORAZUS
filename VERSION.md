@@ -182,7 +182,20 @@ El **modelo de datos** de GORAZUS tiene su propio track de versión,
 independiente del código de aplicación de arriba — un cambio de schema
 no necesariamente implica una nueva versión de código, y viceversa.
 
-### Database actual: **Enterprise v1.0.0** (2026-07-21)
+### Database actual: **Enterprise v1.1.0** (2026-07-25)
+
+Database Finalization — primera migración versionada real desde el congelamiento de v1.0.0
+(`docs/database/sql/35_functional_completion.sql`, append-only, no edita ningún script previo).
+Cierra los 2 gaps funcionales de mayor peso ya documentados y especificados desde la certificación
+original (`docs/database/FUNCTIONAL_GAPS.md` #3 Costo Específico y #4 Contratos de Proveedor) más
+3 gaps de `INVENTORY_ARCHITECTURE.md §5.2` (QR/RFID, atributos físicos del producto,
+obsolescencia) y el gap #1/#2 de `FUNCTIONAL_GAPS.md` (hazmat, país/idioma/timezone). 501→**503
+tablas**, +10 columnas, +2 `CHECK` extendidos, +16 índices, +5 FK — 100% aditivo, 0 tablas/columnas
+eliminadas, 0 datos perdidos. Ver `DATABASE_COMPLETION_REPORT.md`/`DATABASE_FINAL_STATUS.md` para
+el detalle completo. Sigue congelada en su estructura fundamental — el siguiente cambio
+estructural también requiere una migración versionada nueva.
+
+### Database v1.0.0 (2026-07-21)
 
 Certificación formal tras 8 partes de auditoría exhaustiva (rama
 `release/database-v1`) — 501 tablas, 5.164 relaciones, 22 schemas, 94/100
@@ -190,7 +203,4 @@ de calificación general. Ver
 [docs/database/DATABASE_CERTIFICATION.md](docs/database/DATABASE_CERTIFICATION.md)
 para la certificación completa y
 [docs/database/DATABASE_CHANGELOG.md](docs/database/DATABASE_CHANGELOG.md)
-para el historial de las 8 partes. **A partir de esta versión, el modelo
-de datos queda congelado en su estructura fundamental** — todo cambio
-estructural futuro requiere una migración versionada (`sql/NN_*.sql`)
-que incremente esta versión.
+para el historial de las 8 partes.
