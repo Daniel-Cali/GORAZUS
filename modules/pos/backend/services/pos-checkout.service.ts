@@ -219,7 +219,7 @@ export class PosCheckoutService {
   }
 
   async listarSuspendidas(context: UserContext, branchId: string) {
-    return this.ventasService.listar(context, branchId, { page: 1, pageSize: 50 });
+    return this.ventasService.listar(context, { branchId }, { page: 1, pageSize: 50 });
   }
 
   async recuperarVenta(context: UserContext, id: string): Promise<FacturaConLineas> {
