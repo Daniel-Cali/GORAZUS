@@ -18,9 +18,30 @@ export const crearFacturaSchema = z.object({
   customerId: z.string().uuid('El id de cliente debe ser un UUID válido'),
   salesChannel: z.enum(['store', 'pos', 'ecommerce', 'phone', 'mobile']).default('store'),
   currencyCode: z.string().length(3, 'El código de moneda debe tener 3 letras (ISO 4217)'),
+  /** Distinto del descuento por línea — se aplica sobre el subtotal ya neto de descuentos de línea. */
+  generalDiscountPercentage: z
+    .number()
+    .min(0, 'El descuento general no puede ser negativo')
+    .max(100, 'El descuento general no puede superar 100')
+    .default(0),
   lines: z.array(lineaFacturaSchema).min(1, 'La factura debe tener al menos una línea'),
 });
-export type CrearFacturaInput = z.infer<typeof crearFacturaSchema>;
+// `z.input`, no `z.infer` (que resuelve al tipo de SALIDA, donde todo campo con
+// `.default()` se vuelve obligatorio) — los campos con default deben poder
+// omitirse para quien construye el objeto en TypeScript directo (`pos-backend`,
+// que no pasa por `ZodValidationPipe`), el default solo se aplica en el borde HTTP.
+export type CrearFacturaInput = z.input<typeof crearFacturaSchema>;
+
+/** Editar un borrador — nunca reasigna empresa/sucursal/cliente/canal/moneda, solo líneas y descuento general. */
+export const actualizarFacturaSchema = z.object({
+  generalDiscountPercentage: z
+    .number()
+    .min(0, 'El descuento general no puede ser negativo')
+    .max(100, 'El descuento general no puede superar 100')
+    .default(0),
+  lines: z.array(lineaFacturaSchema).min(1, 'La factura debe tener al menos una línea'),
+});
+export type ActualizarFacturaInput = z.infer<typeof actualizarFacturaSchema>;
 
 export const registrarReciboSchema = z.object({
   invoiceId: z.string().uuid('El id de factura debe ser un UUID válido'),

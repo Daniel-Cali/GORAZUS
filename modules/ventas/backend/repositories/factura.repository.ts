@@ -2,6 +2,15 @@ import type { SalesPrisma, invoices, invoice_lines } from '@gorazus/core-databas
 import type { PaginatedResult, PaginationParams } from '@gorazus/core-database';
 import type { UserContext } from '@gorazus/contracts';
 
+export interface LineaFacturaParams {
+  productId: string;
+  taxId: string | null;
+  quantity: number;
+  unitPrice: number;
+  discountPercentage: number;
+  lineTotal: number;
+}
+
 export interface CrearFacturaParams {
   companyId: string;
   branchId: string;
@@ -13,17 +22,22 @@ export interface CrearFacturaParams {
   subtotalAmount: number;
   taxAmount: number;
   totalAmount: number;
-  lines: Array<{
-    productId: string;
-    taxId: string | null;
-    quantity: number;
-    unitPrice: number;
-    discountPercentage: number;
-    lineTotal: number;
-  }>;
+  generalDiscountPercentage: number;
+  lines: LineaFacturaParams[];
+}
+
+export interface ActualizarFacturaParams {
+  subtotalAmount: number;
+  taxAmount: number;
+  totalAmount: number;
+  generalDiscountPercentage: number;
+  lines: LineaFacturaParams[];
 }
 
 export type FacturaConLineas = invoices & { invoice_lines: invoice_lines[] };
+
+/** Orden soportado por `listar()` — deliberadamente chico (3 columnas reales, no un `orderBy` arbitrario del cliente). */
+export type OrdenFactura = 'issued_at' | 'total_amount' | 'document_number';
 
 /**
  * `sales.invoices` — particionada anualmente por `issued_at`
@@ -43,7 +57,18 @@ export abstract class FacturaRepository {
     context: UserContext,
     filter: SalesPrisma.invoicesWhereInput,
     pagination: PaginationParams,
+    orden?: { campo: OrdenFactura; direccion: 'asc' | 'desc' },
   ): Promise<PaginatedResult<invoices>>;
 
   abstract actualizarEstado(context: UserContext, id: string, statusId: string): Promise<invoices>;
+
+  /** Reemplaza las líneas existentes (delete + insert, misma transacción) — solo válido sobre un borrador, la regla la aplica el servicio. */
+  abstract actualizar(
+    context: UserContext,
+    id: string,
+    params: ActualizarFacturaParams,
+  ): Promise<FacturaConLineas>;
+
+  /** Baja lógica — solo válido sobre un borrador, la regla la aplica el servicio. */
+  abstract eliminar(context: UserContext, id: string): Promise<invoices>;
 }

@@ -6,7 +6,9 @@ import type { UserContext } from '@gorazus/contracts';
 import {
   FacturaRepository,
   type CrearFacturaParams,
+  type ActualizarFacturaParams,
   type FacturaConLineas,
+  type OrdenFactura,
 } from './factura.repository';
 
 export class FacturaNoEncontradaParaActualizarError extends Error {}
@@ -44,6 +46,7 @@ export class FacturaRepositoryPrisma extends FacturaRepository {
           subtotal_amount: params.subtotalAmount,
           tax_amount: params.taxAmount,
           total_amount: params.totalAmount,
+          general_discount_percentage: params.generalDiscountPercentage,
         },
       });
       await tx.invoice_lines.createMany({
@@ -82,6 +85,7 @@ export class FacturaRepositoryPrisma extends FacturaRepository {
     context: UserContext,
     filter: SalesPrisma.invoicesWhereInput,
     pagination: PaginationParams,
+    orden?: { campo: OrdenFactura; direccion: 'asc' | 'desc' },
   ): Promise<PaginatedResult<invoices>> {
     const { page, pageSize } = pagination;
     const where = { ...filter, deleted_at: null };
@@ -91,7 +95,7 @@ export class FacturaRepositoryPrisma extends FacturaRepository {
           where,
           skip: (page - 1) * pageSize,
           take: pageSize,
-          orderBy: { issued_at: 'desc' },
+          orderBy: orden ? { [orden.campo]: orden.direccion } : { issued_at: 'desc' },
         }),
         tx.invoices.count({ where }),
       ]);
@@ -106,6 +110,62 @@ export class FacturaRepositoryPrisma extends FacturaRepository {
       return tx.invoices.update({
         where: { id_issued_at: { id, issued_at: actual.issued_at } },
         data: { status_id: statusId },
+      });
+    });
+  }
+
+  /** Reemplaza las líneas (delete + insert, misma transacción) — mismo motivo de encabezado+líneas por separado que `crear()` (tabla particionada, sin relación real entre `invoices`/`invoice_lines`). */
+  async actualizar(
+    context: UserContext,
+    id: string,
+    params: ActualizarFacturaParams,
+  ): Promise<FacturaConLineas> {
+    return withTenantScope(this.client, context, async (tx) => {
+      const actual = await tx.invoices.findFirst({ where: { id, deleted_at: null } });
+      if (!actual) throw new FacturaNoEncontradaParaActualizarError(id);
+
+      const factura = await tx.invoices.update({
+        where: { id_issued_at: { id, issued_at: actual.issued_at } },
+        data: {
+          subtotal_amount: params.subtotalAmount,
+          tax_amount: params.taxAmount,
+          total_amount: params.totalAmount,
+          general_discount_percentage: params.generalDiscountPercentage,
+        },
+      });
+
+      await tx.invoice_lines.updateMany({
+        where: { invoice_id: id, deleted_at: null },
+        data: { deleted_at: new Date() },
+      });
+      await tx.invoice_lines.createMany({
+        data: params.lines.map((line) => ({
+          tenant_id: context.tenantId,
+          company_id: factura.company_id,
+          branch_id: factura.branch_id,
+          invoice_id: id,
+          product_id: line.productId,
+          tax_id: line.taxId,
+          quantity: line.quantity,
+          unit_price: line.unitPrice,
+          discount_percentage: line.discountPercentage,
+          line_total: line.lineTotal,
+        })),
+      });
+      const invoice_lines = await tx.invoice_lines.findMany({
+        where: { invoice_id: id, deleted_at: null },
+      });
+      return { ...factura, invoice_lines };
+    });
+  }
+
+  async eliminar(context: UserContext, id: string): Promise<invoices> {
+    return withTenantScope(this.client, context, async (tx) => {
+      const actual = await tx.invoices.findFirst({ where: { id, deleted_at: null } });
+      if (!actual) throw new FacturaNoEncontradaParaActualizarError(id);
+      return tx.invoices.update({
+        where: { id_issued_at: { id, issued_at: actual.issued_at } },
+        data: { deleted_at: new Date(), deleted_by: context.userId },
       });
     });
   }
