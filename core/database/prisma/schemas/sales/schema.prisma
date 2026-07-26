@@ -501,6 +501,7 @@ model invoices {
   tax_amount                       Decimal                @default(0) @db.Decimal(18, 4)
   total_amount                     Decimal                @default(0) @db.Decimal(18, 4)
   issued_at                        DateTime               @default(now()) @db.Timestamptz(6)
+  general_discount_percentage      Decimal                @default(0) @db.Decimal(5, 2)
   sales_orders                     sales_orders?          @relation(fields: [sales_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   invoice_status                   invoice_status         @relation(fields: [status_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
