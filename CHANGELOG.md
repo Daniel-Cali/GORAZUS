@@ -22,6 +22,33 @@ no una reescritura del schema. Detalle completo:
 
 ### Añadido — Base de Datos
 
+- **CRM — Parte 02, Base de Datos — Database Enterprise v1.2.0 (2026-07-25).** Pedido: "Design and
+  implement the complete CRM database". Auditoría previa contra `information_schema` (antes de
+  escribir SQL) encontró que 16 de 19 requisitos pedidos ya existían — `customers` (20 tablas,
+  maestro de clientes: contactos, direcciones, categorías, límite de crédito, condiciones de pago,
+  listas de precio, historial), `core.entity_tags`/`core.documents` (tags/adjuntos genéricos),
+  `sales.salespeople` (vendedores) — ninguno se duplicó.
+  - **3 gaps reales cerrados** (`docs/database/sql/36_crm_customer_completion.sql`, aditiva): tabla
+    `customers.customer_notes` (notas libres fechadas), tabla `customers.customer_ratings`
+    (calificación interna del cliente), columna `crm.follow_up_activities.customer_id` (seguimiento
+    directo sobre un cliente ya convertido, antes solo lead/oportunidad).
+  - **Vista nueva** `customers.v_customer_timeline` — agrega 8 fuentes de datos ya existentes
+    (notas, calificaciones, visitas, historial de bloqueo/crédito, bitácora CRM, seguimientos), no
+    duplica ningún dato.
+  - **Bug sistémico encontrado y corregido (4 tablas)**: ninguna tabla creada después de
+    `sql/30_backup_restore.sql` hereda el `GRANT` masivo por schema (sin `ALTER DEFAULT PRIVILEGES`
+    configurado) — sin `GRANT` explícito, Prisma no puede introspectarla y el modelo desaparece de
+    `schema.prisma` en cada `db:pull`. Corregido con `GRANT` explícito en las 2 tablas nuevas de esta
+    fase y en **2 preexistentes de la migración 35** que tenían el mismo bug sin detectar
+    (`suppliers.supplier_contracts`, `products.product_physical_attributes`). `core.restore_test_logs`
+    tiene el mismo síntoma pero no se tocó — exclusión ya documentada como intencional. Ver
+    `TECHNICAL_DEBT.md §0.5`.
+  - Prisma regenerado (`db:pull`→`db:split`→`db:generate`, 21 módulos, 0 errores) — `customers`
+    18→20 modelos. 503→505 tablas.
+  - Entregables: `docs/reports/crm/CRM_DATABASE_COMPLETION_REPORT.md` (los 19 requisitos uno por
+    uno), `docs/reports/crm/CRM_DATABASE_ER_DIAGRAM.md` (diagrama Mermaid completo de `customers` +
+    `crm`), diccionario de datos actualizado.
+
 - **Database Finalization — Database Enterprise v1.1.0 (2026-07-25).** Primera migración
   versionada real desde el congelamiento de v1.0.0 —
   `docs/database/sql/35_functional_completion.sql`, append-only, ejecutada y validada contra
@@ -62,6 +89,29 @@ no una reescritura del schema. Detalle completo:
     production readiness: 9.4/10, ver `DATABASE_FINAL_STATUS.md`.
 
 ### Diseñado (sin ejecutar — fase de diseño puro, no incrementa versión)
+
+- **CRM — Parte 01, Diseño de Arquitectura (2026-07-25).** Por pedido explícito ("solo completar la
+  arquitectura, no programar lógica de negocio todavía"), se diseñó la arquitectura de código
+  completa del módulo CRM — 0 archivos `.ts` escritos. El modelo de datos (17 tablas,
+  `docs/database/sql/15_crm.sql`) y el diseño funcional (`docs/architecture/27-modulo-crm.md`) ya
+  estaban cerrados desde antes, con Prisma ya generado (`core/database/prisma/schemas/crm/`); esta
+  fase solo cerró la capa de código que faltaba, reutilizando el patrón ya construido en
+  `modules/ventas`/`modules/clientes` (repositorio puerto+adaptador Prisma, servicio de casos de
+  uso, controller con `@RequirePermission`+Zod, module-root-barrel).
+  - **Entregables**: `docs/reports/crm/CRM_ARCHITECTURE.md` (entidades de 5 sub-dominios —
+    Leads/Oportunidades/Campañas/Agenda/Seguimientos — con invariantes, repositorios incl. 3
+    lookups nuevos hacia `clientes`/`productos`/usuarios, 5 servicios, 5 controllers con 5+13
+    endpoints, 10 permisos, 6 eventos de dominio "preparados no publicados" igual que `auth`,
+    diagrama de dependencias y de entidades en Mermaid), `docs/reports/crm/CRM_ROADMAP.md` (6
+    partes de implementación restante), addendum en `docs/architecture/27-modulo-crm.md §7`.
+  - **Decisión de diseño explícita**: 5 servicios enfocados (no 1 monolítico de 17 tablas) —
+    dominios con ciclos de vida independientes, pero todos en un solo módulo Nx (no 5 módulos
+    separados) para no fragmentar permisos/auditoría/`README.md` compartidos.
+  - **Confirmado, no rediseñado**: `OportunidadGanada` sigue siendo comando síncrono hacia `ventas`
+    (no evento RabbitMQ), regla ya fijada en `12-backend-enterprise.md §6.3` antes de esta fase.
+  - **Dependencia externa real detectada**: `core/notifications` necesita extenderse para
+    destinatarios externos (lead/cliente sin cuenta) antes de que la Parte 05 del roadmap pueda
+    enviar WhatsApp real — no bloquea Partes 02-04. Ver `TECHNICAL_DEBT.md §0.4`.
 
 - **Database Refactor, Fase 01 — Estandarización Completa al Español (2026-07-24).** Por pedido
   explícito, se generó el estándar completo de nomenclatura en español y el mapeo real (no una
@@ -123,6 +173,341 @@ no una reescritura del schema. Detalle completo:
     alcance de esta fase).
 
 ### Añadido
+
+- **FASE 04 — Módulo Facturación Enterprise, Parte 1: Motor de Facturación (2026-07-26), `v0.22.0`.**
+  - Origen: pedido con arquitectura CQRS/DDD/Value Objects/Factories y stack PHP/PHPUnit/PHPStan —
+    no aplica a este proyecto (NestJS/TypeScript/Prisma). Reality-check obligatorio (mismo
+    protocolo que Roles Enterprise) encontró que `modules/ventas/backend` ya tenía un motor de
+    facturación real y funcionando desde `v0.11.0` — se extendió ese módulo, no se construyó uno
+    paralelo en PHP.
+  - **Nuevo**: editar borrador (`PUT /ventas/facturas/:id`, recalcula impuestos, `409` si ya no es
+    `draft`), eliminar borrador (`DELETE`, baja lógica, mismo rechazo), anular (`POST .../anular`,
+    `draft`/`issued` → `cancelled`, estado final, `409` si ya estaba anulada), duplicar (`POST
+.../duplicar`, nuevo borrador con las mismas líneas, impuestos recalculados a la tasa vigente),
+    descuento general por factura (`generalDiscountPercentage`, aplicado sobre el subtotal ya neto
+    de descuentos de línea, sin afectar la base del impuesto), filtros avanzados en `listar()`
+    (`customerId`/`statusId`/`issuedFrom`/`issuedTo`) y orden (`sortBy`/`sortDir` sobre
+    `issued_at`/`total_amount`/`document_number`).
+  - **Migración `40_facturacion_descuento_general.sql`** (aditiva, aplicada y verificada):
+    `sales.invoices.general_discount_percentage` (`NUMERIC(5,2)`, default `0`) + CHECK 0-100 —
+    Database Enterprise v1.2.1. Confirmado que `ALTER TABLE` sobre la tabla particionada por
+    `issued_at` se propaga sola a las particiones hijas.
+  - Eventos de dominio preparados: `FacturaCreadaEvent`/`FacturaConfirmadaEvent`/
+    `FacturaAnuladaEvent` (`modules/ventas/backend/events/`) — mismo patrón "preparado, sin
+    publicar todavía" que `auth`/`seguridad`.
+  - **Ruptura de compatibilidad real, detectada y corregida en el mismo turno** (regla obligatoria
+    del pedido: "nunca romper compatibilidad con módulos existentes"): `generalDiscountPercentage`
+    con `.default(0)` en Zod volvía el campo obligatorio en el tipo `CrearFacturaInput` exportado
+    (`z.infer` resuelve al tipo de SALIDA de Zod, donde todo default deja de ser opcional) y
+    `listar()` cambió de firma posicional a un objeto de filtros — ambos rompían la compilación de
+    `pos-backend` (`pos-checkout.service.ts`). Corregido: los tipos exportados de
+    `facturas.schema.ts` pasan a `z.input` (tipo de ENTRADA, donde un campo con default sigue
+    siendo opcional) y `pos-checkout.service.ts` se actualizó a la nueva firma de `listar()`.
+    Confirmado con `pos-backend:build`/`test` (9/9) y `ventas-backend:build`/`lint`/`test` (30/30)
+    limpios tras el fix.
+  - Permiso `ventas.ver` agregado a `seed-rbac.ts` (mismo gap sistémico que `clientes.ver`/`crm.ver`
+    en fases anteriores).
+  - Tests: `facturacion-domain-events.spec.ts` (nuevo, 3), `ventas.service.spec.ts` (extendido a
+    17), `facturas.controller.e2e-spec.ts` (nuevo, 5 — flujo completo crear→editar→listar→
+    confirmar→anular, y crear→duplicar→eliminar). 30 tests totales de Ventas (con los 5 ya
+    existentes de `factura.entity.spec.ts`). Build/lint limpios,
+    arranque real de la API verificado (9 rutas de `/ventas/facturas`, `401` confirmado con `curl`
+    en 7 de ellas), OpenAPI regenerado y confirmado.
+  - PDF/vista previa/impresión/envío por correo — mencionados en el pedido bajo "Documentos" —
+    quedan fuera de esta parte: no existe librería de generación de PDF en el proyecto, y el pedido
+    ya excluye "Facturación Electrónica" del alcance. Documentado como Parte 2 pendiente.
+  - Documentos nuevos: `modules/ventas/README.md`, `docs/reports/ventas/INVOICE_ARCHITECTURE.md`,
+    `INVOICE_API_REPORT.md`, `INVOICE_TEST_REPORT.md`, `INVOICE_HEALTH_REPORT.md`,
+    `INVOICE_REPORT.md`.
+
+- **GORAZUS ERP Enterprise Phase 03 Part 04, Subfase 4.1 — Roles Module Infrastructure (2026-07-26), `v0.21.0`.**
+  - Origen: pedido con gate explícito por subfase ("wait for review and approval before proceeding")
+    — solo se ejecuta la Subfase 4.1, se reporta y se espera aprobación antes de 4.2-4.8.
+  - Análisis previo (pedido explícitamente en el prompt): casi toda la infraestructura de Roles
+    pedida (module structure, entity, repositorios, DTOs, exceptions, integración de auditoría,
+    tests, documentación técnica) ya existía de las 3 fases anteriores (`v0.18.0`-`v0.20.0`) — no
+    se re-implementó nada ya construido, siguiendo la regla "DO NOT modify existing code unless
+    absolutely necessary".
+  - **Nuevo**: `RolCreadoEvent`/`RolActualizadoEvent`/`RolEliminadoEvent`
+    (`modules/seguridad/backend/events/`) — mismo patrón "preparado, sin publicar todavía" que
+    `modules/auth/backend/events/*.event.ts` (`EventBusService` existe, ningún módulo lo usa para
+    publicar todavía). 3 tests nuevos (`roles-domain-events.spec.ts`).
+  - **"Mappers" (pedido explícitamente en el prompt) no es un patrón que este proyecto use** — los
+    servicios devuelven el tipo de Prisma directo al controlador en los 8+ módulos ya construidos
+    esta sesión, sin capa de mapeo intermedia en ninguno. Omitido a propósito, no por descuido.
+  - Confirmado para el reporte de estado: Subfases 4.2 (CRUD completo), 4.3 (scoping empresa/
+    sucursal) y buena parte de 4.5 (API REST) ya están completas desde `v0.18.0` — el roadmap de
+    subfases pendientes se ajusta a esto, no se re-cuentan como trabajo nuevo.
+  - Verificado: build/lint limpios. Sin migración, sin cambios de contrato público, sin romper
+    compatibilidad — cumple las "Mandatory Rules" del pedido.
+
+- **Roles Enterprise — Domain Value Objects, descartados a propósito (2026-07-26), `v0.20.0`.**
+  - Origen: pedido "Roles Enterprise - Domain Value Objects" (.NET/C#, `RoleId`/`RoleName`/
+    `RoleCode` como clases con igualdad de valor propia, `sealed record`). Ningún otro entity del
+    proyecto usa ese patrón (`Cliente`, `Lead`, `Opportunity`, el propio `Rol` de `v0.18.0`/
+    `v0.19.0` validan primitivos directo en el constructor) — construirlos solo para Roles habría
+    sido inconsistente y habría exigido reescribir repositorio/servicio/controlador/validadores
+    para hablar en VOs en vez de `string` en toda la cadena.
+  - Las invariantes pedidas se incorporaron a la entidad `Rol` existente en vez de crear clases
+    nuevas: `name` se guarda recortado (trim, máx. `NOMBRE_ROL_MAX_LENGTH` = 100), `code` se guarda
+    recortado y en mayúsculas (máx. `CODIGO_ROL_MAX_LENGTH` = 50, solo letras/números/guion bajo).
+  - **Hallazgo real corregido en el camino**: `RolesService.crear()`/`actualizar()` construían
+    `new Rol(...)` solo para validar, pero seguían usando las variables originales (sin normalizar)
+    para persistir — la normalización nunca llegaba a la base. Corregido leyendo `.name`/`.code` de
+    vuelta de la instancia ya normalizada.
+  - **Hallazgo real corregido en el camino (#2)**: `crearRolSchema`/`actualizarRolSchema` (Zod) no
+    reflejaban el largo máximo ni el patrón de `code` — un valor inválido pasaba el pipe y llegaba
+    al `Error` de dominio sin traducir, rompiendo en un 500 (mismo tipo de hallazgo que
+    `RolDeFabricaException`, `v0.18.0`). Corregido agregando `.max()`/`.regex()` a los schemas, con
+    `.trim()` antes del `.regex()` — sin esto, un código con espacios que la entidad iba a aceptar
+    después de normalizar se rechazaba antes de tiempo.
+  - Tests: `rol.entity.spec.ts` (+6: trim de nombre, largo máximo de nombre/código, normalización y
+    patrón de código, código nulo válido), `roles.service.spec.ts` (+2: normalización end-to-end en
+    `crear()`/`actualizar()`), `roles.controller.e2e-spec.ts` (+3: normalización real vía API,
+    código inválido → `400`). 46 tests totales de Roles. Build/lint limpios, verificación en vivo de
+    la API. **Sin migración** — solo invariantes de aplicación, sin columnas nuevas.
+
+- **Roles Enterprise — Domain Entities: code/description/roleType reales (2026-07-26), `v0.19.0`.**
+  - Origen: pedido "Roles Enterprise - Domain Entities" (.NET/C#, `Domain/Entities/Role.cs` +
+    `RoleContext.cs` + `Enums/RoleType.cs`, `RoleType` en `Organization`/`Department`/`Project`) —
+    mismo criterio que `v0.18.0`: traducido a TypeScript sobre `modules/seguridad/backend`.
+    `RoleType` se ajustó a valores reales del proyecto (`system`/`tenant`/`company`/`branch`/
+    `custom`) sin la entidad `RoleContext` — el scoping real ya está resuelto por `company_id`/
+    `branch_id` (`v0.18.0`); `RoleContext` habría duplicado ese mecanismo con conceptos
+    (Organization/Department/Project) que no existen en el modelo de datos de GORAZUS.
+  - **Migración `39_roles_enterprise_fields.sql`** (aplicada y verificada): `core.roles` gana
+    `code` (identificador corto opcional, sin unicidad forzada), `description` (texto libre) y
+    `role_type` (CHECK a los 5 valores reales, default `custom`) + backfill de los roles de fábrica
+    existentes (`is_system_role = true`) a `role_type = 'system'`.
+  - **Prisma regenerado** (los 21 clientes, pipeline `db:pull` → `db:split` → `db:generate`) —
+    necesario por ser una columna real nueva en `core`, a diferencia de la vista de solo lectura de
+    Cuentas por Cobrar (`v0.17.0`, resuelta con `$queryRaw` sin tocar el pipeline).
+  - **`Rol` (entidad)**: invariantes nuevos — `roleType` debe ser uno de los 5 valores reales,
+    `isSystemRole=true` exige `roleType='system'`. La API rechaza `roleType: 'system'` con `400`
+    (solo el script de seed crea roles de fábrica, `crear()` siempre fija `is_system_role: false`).
+  - Tests: `rol.entity.spec.ts` (+4 invariantes), `roles.service.spec.ts` (+2),
+    `roles.controller.e2e-spec.ts` (+2, incluida la validación de `roleType: 'system'` rechazado).
+    28 tests totales de Roles. Hallazgo real corregido en el camino: un test pre-existente
+    ("crea un rol nuevo y aparece en el listado") se volvió flaky por acumulación de datos de
+    prueba (40+ roles creados por corridas repetidas del e2e a lo largo de la sesión, sin orden
+    explícito en `listar()`) — reemplazado por una verificación directa vía `GET /seguridad/roles/:id`
+    en vez de depender de la paginación por defecto.
+  - Verificado: build/lint limpios, arranque completo de la API tras la regeneración de Prisma
+    (rutas de `clientes`/`crm`/`seguridad` confirmadas sin roturas cruzadas).
+
+- **Roles Enterprise — CRUD completo + scoping real (2026-07-26), `v0.18.0`.**
+  - Origen: pedido "ROLES ENTERPRISE - FASE 4.1" con estructura .NET/C# (Commands/Queries/DTOs/
+    ValueObjects/DomainEvents, Entity Framework, archivos `.cs`) que no aplica a este proyecto
+    (NestJS/TypeScript/Prisma) y que además duplicaba un módulo Roles ya implementado en
+    `modules/seguridad/backend` — el usuario confirmó reforzar el Roles real existente en vez de
+    construir la estructura ajena.
+  - **`RolesService`**: `obtener(id)` (rol + códigos de permiso asignados — no existía forma de
+    verlo sin consultar la base a mano), `actualizar()` (renombrar), `eliminar()` (baja lógica).
+    Ambos usan `Rol.verificarPuedeEliminarse/Renombrarse`, invariante que existía desde antes en la
+    entidad pero nunca se llamaba desde ningún lado (código muerto hasta esta fase).
+  - **`RolDeFabricaException`** (409, nueva): traduce ese invariante de dominio (un `Error` plano,
+    la entidad es pura sin conocer HTTP) a un status HTTP real — antes rechazar un rol de fábrica
+    rompía en un 500 sin traducir.
+  - **Scoping real**: `core.roles.company_id`/`branch_id` ya eran nullable en el schema desde
+    antes (rol de todo el tenant, de una empresa, o de una sucursal) pero la API nunca lo exponía
+    — `crear()` fijaba siempre la empresa activa de la sesión y `listar()` no filtraba nada (la RLS
+    de `core.roles` solo aísla por tenant, no por empresa). `POST /seguridad/roles` acepta
+    `companyId`/`branchId` opcionales (`companyId: null` explícito = rol de todo el tenant),
+    `GET /seguridad/roles` acepta `?companyId=`.
+  - **`DELETE /seguridad/roles/:id/permisos/:code`** (nuevo): el método `revocarPermiso` del
+    service existía desde antes sin ningún endpoint que lo expusiera.
+  - **`AsignacionRepository.listarPermisosDeRol()`** (nuevo): códigos de permiso asignados
+    directamente a un rol.
+  - Tests: `roles.service.spec.ts` nuevo (15 tests, no existía), `roles.controller.e2e-spec.ts`
+    extendido (+9 tests, 24 totales). Hallazgo real corregido en el camino: el test nuevo asumía
+    que el admin de prueba tenía `company_id` real — es un admin de todo el tenant (`company_id`
+    null), lo que reveló que pasar ese valor sin validar como filtro de UUID rompía en un error de
+    Postgres sin traducir (mismo tipo de hallazgo que el CHECK de `address_type` en Clientes,
+    `v0.17.0`) — documentado como patrón sistémico en `docs/manuals/TECNICO.md §5`, no corregido en
+    los demás endpoints con filtro `companyId` del proyecto por estar fuera de alcance de esta fase.
+  - Verificado: build/lint limpios, arranque real de la API con las 4 rutas nuevas devolviendo
+    `401` sin token, OpenAPI regenerado y confirmado (`/seguridad/roles`, `/seguridad/roles/{id}`,
+    `/seguridad/roles/{id}/permisos`, `/seguridad/roles/{id}/permisos/{permissionCode}`).
+  - Documentación: `modules/seguridad/README.md` nuevo (no existía), `docs/manuals/TECNICO.md §5`
+    con 2 hallazgos nuevos de deuda técnica pre-existente (gap de `@types/multer` en
+    `configuracion-backend`, gap de `StorageModule` en 3 e2e-spec de `seguridad-backend` sin
+    corregir por estar fuera de alcance).
+
+- **CRM/Clientes — preparación para producción (2026-07-26), `v0.17.0`.**
+  - Origen: pedido "Complete the Enterprise CRM module... Prepare the CRM for production",
+    integración con Sales/Inventory/Cash/Accounts Receivable/Future Quotations/Future
+    Orders/Future Purchasing/Future Accounting + verificaciones (duplicación, APIs rotas,
+    conflictos de migración, inconsistencias de base, seguridad, deuda técnica) + generación de
+    tests/documentación/reporte final. Detalle completo en
+    [`CRM_PRODUCTION_READINESS_REPORT.md`](docs/reports/crm/CRM_PRODUCTION_READINESS_REPORT.md).
+  - **Integración real nueva — Cuentas por Cobrar**: `CuentaPorCobrarRepository`/
+    `CuentasPorCobrarService`/`CuentasPorCobrarController` (`GET /clientes/:id/cuentas-por-cobrar`),
+    sobre `customers.v_accounts_receivable_aging` vía `$queryRaw` parametrizado (la vista no es un
+    modelo de Prisma — `previewFeatures` del pipeline `db:pull` no incluye `"views"`; regenerar los
+    21 clientes solo para esta vista no se justificaba).
+  - Sales/Inventory: ya integrados desde Parte 03, verificados de nuevo. Cash: documentado
+    explícitamente sin punto de integración real (sin caso de uso). Quotations/Orders/
+    Purchasing/Accounting: documentados como integraciones futuras — los módulos no existen
+    todavía, no se puede integrar con código inexistente.
+  - **Hallazgo real #1, corregido**: 6 permisos de `clientes` (incluido `clientes.ver`, el que
+    habilita el ítem del sidebar) estaban en el código fuente de `seed-rbac.ts` desde turnos
+    anteriores pero nunca se habían sembrado de verdad en la base — el script se había editado, no
+    re-ejecutado. Sin este fix, cualquier usuario real habría recibido `403` en toda pantalla de
+    Clientes en producción.
+  - **Hallazgo real #2, corregido**: el CHECK `customer_addresses_address_type_check`
+    (`billing`/`shipping`/`other`) no estaba reflejado en `direcciones.schema.ts` ni en
+    `DireccionCliente` — un valor fuera de rango pasaba la validación y rompía en un 500 de
+    Postgres sin traducir. Corregido con `z.enum` + invariante de entidad (backend) y un `<select>`
+    real en vez de texto libre (frontend, `direcciones-tab.tsx`).
+  - **Tests de integración/API nuevos** (no existían antes de esta fase): `clientes.controller.e2e-spec.ts`
+    (flujo Cliente→Contacto→Dirección→Cuentas por Cobrar, contra Postgres/Redis/RabbitMQ reales) y
+    `leads.controller.e2e-spec.ts` (flujo Lead→cambiar estado→convertir, con verificación cruzada de
+    que el cliente resultante existe de verdad — integración real `crm`↔`clientes`). 8 tests nuevos,
+    85 tests totales entre ambos módulos (36 `clientes` + 49 `crm`).
+  - Documentación: `modules/crm/README.md` reescrito (desactualizado desde Parte 02, solo mencionaba
+    Leads), `modules/clientes/README.md` nuevo (no existía), `docs/manuals/USUARIO.md` con sección
+    real de Clientes, `CRM_ARCHITECTURE.md §14` reescrita (integraciones reales vs. futuras
+    explícitas), `CRM_PRODUCTION_READINESS_REPORT.md` nuevo.
+  - Verificado: build/lint limpios en `clientes-backend`/`crm-backend`/`clientes-frontend`/`apps/web`,
+    `pos-backend` no roto por los cambios en `clientes.module.ts`, arranque real de la API con las 22
+    rutas de `crm`/`clientes` mapeadas y `docs/api/openapi.json` regenerado y verificado.
+
+- **Clientes — Parte 02, frontend real: Listado + Detalle + Contactos + Direcciones (2026-07-25), `v0.16.0`.**
+  - Origen: pedido "Develop the complete CRM frontend" (React 19 + Vite + TypeScript + **Bootstrap
+    5**, 15 pantallas: Dashboard, List, Details, Contacts, Addresses, Timeline, Activities, Notes,
+    Documents, Credit Management, Search, Filters, Tags, Categories, Statistics). Dos hallazgos
+    antes de implementar: (1) el stack real es Tailwind + shadcn/ui + Radix (`ui-kit/`), no
+    Bootstrap — se usó el real para no crear un segundo sistema de diseño en paralelo. (2) Solo 4 de
+    las 15 pantallas tienen backend real (v0.15.0); las otras 11 dependen de partes de backend que
+    todavía no existen — quedan documentadas como pendientes, no se construyó UI sin datos reales
+    detrás.
+  - **`modules/clientes/frontend`** (nuevo): `ClientesListadoPage` (`/clientes` — búsqueda con
+    debounce 300ms sobre el único filtro real del backend, paginación server-side, orden client-side
+    de la página cargada ya que el backend no tiene parámetro de orden, alta de cliente con
+    `companyId`/`branchId` tomados de la empresa activa de la sesión vía `useAppStore`) y
+    `ClienteDetallePage` (`/clientes/:id` — edición inline, pestañas Contactos/Direcciones con CRUD
+    completo incluida baja lógica con `ConfirmDialog`).
+  - **Barrel frontend dedicado** (`modules/clientes/frontend/index.ts`, alias nuevo
+    `@gorazus/modules/clientes-frontend` en `tsconfig.base.json`) — separado del barrel backend
+    existente (`modules/clientes/index.ts`, consumido por `crm-backend`/`pos-backend`) para no
+    arrastrar react-router-dom a esos dos módulos ni los clientes Prisma al bundle del navegador,
+    mismo criterio que `modules/pos/index.ts` ya documenta para el caso simétrico.
+  - Ruta `/clientes` reemplaza su `ComingSoonPage` en `apps/web/src/app/router.tsx`
+    (`clientesRoutes` sumado a `realRoutes`).
+  - **Gap de permisos cerrado, no previsto en el pedido**: el ítem "Clientes" del sidebar
+    (`module-registry.ts`) ya apuntaba a `clientes.ver` desde antes, permiso que nunca se había
+    sembrado — se agregó a `seed-rbac.ts` (mismo hallazgo que `crm.ver` en CRM Parte 02 backend).
+  - Verificado: build de producción de `apps/web` exitoso (type-check completo del árbol vía
+    Vite/Rollup, ambas páginas nuevas separadas en su propio chunk lazy-loaded), lint de
+    `clientes-frontend` limpio. **No verificado en navegador real** — este entorno no tiene una
+    herramienta de browser/Playwright disponible; la verificación se limitó a build + lint +
+    revisión de código contra los endpoints reales (ya confirmados con `401` en v0.15.0).
+
+- **Clientes — Parte 02, primera entrega: Customer 360, Contactos + Direcciones (2026-07-25), `v0.15.0`.**
+  - Origen: pedido de "CRM backend completo" (Customers, Contacts, Addresses, Customer Groups,
+    Categories, Tags, Activities, Timeline, Notes, Documents, Credit Profiles, Price Lists, Payment
+    Terms, Customer Dashboard — 14 piezas). Análisis: 12 de las 14 ya tenían tabla real en el schema
+    `customers` desde Database Parte 02, sin ningún código de aplicación; 2 (Tags, Documents) no
+    tienen tabla; Customer Dashboard es una agregación de lectura. No es el módulo `crm` (ese ya
+    está completo, Partes 02-04) — es una extensión del módulo `clientes` existente. Alcance
+    dividido en partes, esta es la primera.
+  - **`modules/clientes/backend`**: entidades `ContactoCliente` (nombre no vacío, email válido si
+    se informa) y `DireccionCliente` (tipo y línea 1 no vacíos).
+  - **`ContactosService`** (`customers.customer_contacts`): crear, listar, obtener, actualizar,
+    eliminar (baja lógica) — invariante "un solo contacto principal por cliente" aplicada en
+    servicio (sin constraint de DB). **`ContactosController`**: 5 endpoints en
+    `/clientes/:customerId/contactos`.
+  - **`DireccionesService`** (`customers.customer_addresses`): misma forma, invariante "una sola
+    dirección predeterminada por cliente". **`DireccionesController`**: 5 endpoints en
+    `/clientes/:customerId/direcciones`.
+  - `company_id`/`branch_id` de cada contacto/dirección se heredan del cliente padre (no del
+    usuario actor) — multi-company real, no asumido del token de sesión.
+  - Permisos `clientes.ver_contactos`/`clientes.gestionar_contactos`/`clientes.ver_direcciones`/
+    `clientes.gestionar_direcciones` agregados a `seed-rbac.ts`.
+  - `core-database` ganó los tipos `customer_contacts`/`customer_addresses` (patrón "bajo demanda").
+  - **Sin cambios de base de datos** — ambas tablas y sus FK a `customers.customers` ya existían.
+  - Verificado: 12 tests nuevos (28 totales del módulo `clientes`), build/lint limpios, `apps/api`
+    arrancado de nuevo, 4 rutas nuevas mapeadas y devolviendo `401 Unauthorized` sin token.
+  - Partes restantes (documentadas en `docs/reports/crm/CRM_ROADMAP.md`): Categorías/
+    Clasificaciones, Notas + Timeline, Perfil de Crédito + Listas de Precio, y una parte final para
+    Tags/Documents (requiere migración nueva) + Customer Dashboard.
+
+- **CRM — Parte 04, código real de Campañas + Agenda (2026-07-25), `v0.14.0`.**
+  - **`modules/crm/backend`**: entidades `Campaign` (invariantes: nombre no vacío, presupuesto no
+    negativo, fin no anterior a inicio) y `CalendarEvent`/`CalendarEventAttendee` (título no vacío,
+    fin posterior a inicio, asistente interno xor externo).
+  - **`CampanasService`**: crear, listar, obtener, `agregarMiembro` (valida que el lead exista —
+    `crm.campaign_members` solo admite leads, sin columna `customer_id`, límite de alcance real ya
+    fijado en el schema). **`CampanasController`**: 4 endpoints en `/crm/campanas`.
+  - **`AgendaService`**: crear, listar, obtener, `agregarAsistente` (interno vía `userId` o externo
+    vía `externalEmail`, nunca ambos). **`AgendaController`**: 4 endpoints en `/crm/agenda`.
+  - Permisos `crm.ver_campanas`/`crm.gestionar_campanas`/`crm.ver_agenda`/`crm.gestionar_agenda`
+    agregados a `seed-rbac.ts`.
+  - `core-database` ganó los tipos `campaigns`/`campaign_members`/`calendar_events`/
+    `calendar_event_attendees` (mismo patrón "bajo demanda" de las partes anteriores).
+  - **Sin cambios de base de datos** — a diferencia de Partes 02/03, ningún catálogo nuevo que
+    sembrar.
+  - Verificado: 19 tests nuevos (45 totales del módulo `crm`), build/lint limpios, `apps/api`
+    arrancado de nuevo, rutas `/api/v1/crm/campanas/*` y `/api/v1/crm/agenda/*` mapeadas y
+    devolviendo `401 Unauthorized` sin token.
+  - Ver `docs/reports/crm/CRM_ROADMAP.md` para las partes siguientes (Seguimientos, Frontend).
+
+- **CRM — Parte 03, código real de Oportunidades (2026-07-25), `v0.13.0`.**
+  - **`modules/crm/backend`**: entidad `Opportunity` (invariantes: origen en lead o cliente
+    existente, etapa de embudo obligatoria, líneas con cantidad estimada > 0),
+    `OpportunityRepository` (crea encabezado + líneas en una sola transacción — sin partición, a
+    diferencia de `FacturaRepository` de `ventas`), `OpportunityLossReasonRepository`/
+    `SalesFunnelRepository` (catálogos, solo lectura) + `ProductoLookupRepository` propio de `crm`.
+  - **`OportunidadesService`**: `crear` (valida etapa/lead/cliente/productos), `moverDeEtapa`,
+    `ganar` (registra `resultingSalesOrderId` — **no** invoca `ventas` directamente, comando
+    síncrono en su forma más simple, tal como ya estaba decidido en `CRM_ARCHITECTURE.md §7`),
+    `perder` (exige motivo válido).
+  - **`OportunidadesController`**: 6 endpoints en `/crm/oportunidades` con `@RequirePermission` +
+    validación Zod.
+  - Permisos `crm.ver_oportunidades`/`crm.gestionar_oportunidades` agregados a `seed-rbac.ts`.
+  - **Gap de datos cerrado en el camino, no previsto en el diseño original**:
+    `sales_funnels`/`sales_funnel_stages`/`opportunity_loss_reasons` estaban vacíos — se sembró un
+    embudo "Estándar" (4 etapas) por cada una de las 17 empresas reales + 5 motivos de pérdida
+    (`docs/database/sql/38_crm_opportunities_seed.sql`). Se descubrió que
+    `sales_funnels.company_id` tiene FK real hacia `core.companies` (a diferencia de
+    `crm.lead_status`, sin FK de empresa) — el seed itera sobre las empresas reales existentes, no
+    usa un id inventado.
+  - `core-database` ganó los tipos `opportunities`/`opportunity_lines`/`opportunity_loss_reasons`/
+    `sales_funnels`/`sales_funnel_stages` (mismo patrón "bajo demanda" de la Parte 02).
+  - Verificado: 14 tests nuevos (`opportunity.entity.spec.ts`, `oportunidades.service.spec.ts` —
+    26 tests totales del módulo `crm`), build/lint limpios, `apps/api` arrancado de nuevo contra
+    Postgres/Redis/RabbitMQ reales, rutas `/api/v1/crm/oportunidades/*` mapeadas y devolviendo
+    `401 Unauthorized` sin token.
+  - Ver `docs/reports/crm/CRM_ROADMAP.md` para las partes siguientes (Campañas, Agenda,
+    Seguimientos, Frontend).
+
+- **CRM — Parte 02, código real de Leads (2026-07-25), `v0.12.0`.**
+  - **`modules/crm/backend`** (nuevo): entidad `Lead` (invariantes: nombre no vacío, estado
+    obligatorio, al menos email o teléfono), `LeadRepository`/`LeadStatusRepository`/
+    `LeadSourceRepository` (catálogos `crm.lead_status`/`crm.lead_sources`, solo lectura desde la
+    app) + `ClienteLookupRepository` propio de `crm` (copia local de solo lectura sobre
+    `customers.customers`, mismo patrón que `modules/ventas/backend`).
+  - **`LeadsService`**: `crear` (valida estado inicial "nuevo" y origen si se especifica),
+    `cambiarEstado` (transacción única: actualiza `leads.status_id` + registra en
+    `lead_status_history`), `convertir` (idempotente — invoca `ClientesService.crear()` del módulo
+    `clientes`, nunca escribe directo en `customers.customers`, patrón "módulo dueño").
+  - **`LeadsController`**: `GET/POST /crm/leads`, `GET /crm/leads/:id`,
+    `PATCH /crm/leads/:id/estado`, `POST /crm/leads/:id/convertir` — todos con
+    `@RequirePermission`, validación Zod.
+  - Catálogo de permisos `crm.ver`/`crm.ver_leads`/`crm.gestionar_leads` agregado a
+    `modules/seguridad/backend/scripts/seed-rbac.ts`.
+  - **Gap de infraestructura cerrado en el camino**: `core-database` no exportaba ningún tipo de
+    `crm` en su barrel público (`PRISMA_CRM` existía en la DI interna, pero no `CrmPrismaClient`/
+    modelos) — se agregó siguiendo el mismo patrón "bajo demanda" que los otros 8 schemas ya
+    expuestos.
+  - **Único cambio de base de datos**: seed del catálogo `crm.lead_status` (estaba vacío desde su
+    creación, `docs/database/sql/37_crm_leads_seed.sql`) — no es una migración estructural.
+  - Verificado: 12 tests unitarios (`lead.entity.spec.ts`, `leads.service.spec.ts`), build y lint
+    limpios, arranque real de `apps/api` contra Postgres/Redis/RabbitMQ reales sin errores de
+    inyección de dependencias, rutas `/api/v1/crm/leads/*` mapeadas y devolviendo
+    `401 Unauthorized` sin token (comportamiento esperado).
+  - Ver `docs/reports/crm/CRM_ROADMAP.md` para las partes siguientes (Oportunidades, Campañas,
+    Agenda, Seguimientos, Frontend).
 
 - **FASE 06, Parte 01 — Punto de Venta (POS) Enterprise (2026-07-24).**
   - **`modules/clientes/backend`** (nuevo): CRUD mínimo sobre `customers.customers` +
