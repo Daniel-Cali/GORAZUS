@@ -11,10 +11,9 @@
 
 Motor de facturación completo (crear/editar/eliminar borrador,
 confirmar, anular, duplicar, recibos de cobro, impuesto real por línea
-
-- descuento general) más el extremo inicial del pipeline comercial:
-  cotizaciones (con aprobación/rechazo/vigencia) y pedidos de venta (con
-  reserva real de inventario y conversión total/parcial a factura).
+y descuento general) más el extremo inicial del pipeline comercial:
+cotizaciones (con aprobación/rechazo/vigencia) y pedidos de venta (con
+reserva real de inventario y conversión total/parcial a factura).
 
 ## Entidades que este módulo posee
 
