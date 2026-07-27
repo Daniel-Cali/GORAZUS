@@ -148,11 +148,21 @@ describe('FacturasController (e2e)', () => {
     expect(actualizarResponse.status).toBe(200);
     expect(actualizarResponse.body.data.subtotal_amount).toBe('120');
 
+    // Verificación directa por id, no por paginación por defecto —
+    // `customerId` acumula facturas de corridas repetidas de este mismo
+    // e2e a lo largo de la sesión (38+ hoy), la página por defecto
+    // (pageSize=20) puede no incluir la recién creada; mismo hallazgo y
+    // mismo fix que `roles.controller.e2e-spec.ts` (`v0.19.0`).
     const listResponse = await request(app.getHttpServer())
       .get(`/api/v1/ventas/facturas?customerId=${customerId}&sortBy=total_amount&sortDir=asc`)
       .set('Authorization', `Bearer ${adminToken}`);
     expect(listResponse.status).toBe(200);
-    expect(listResponse.body.data.some((f: { id: string }) => f.id === facturaId)).toBe(true);
+
+    const facturaEnListaResponse = await request(app.getHttpServer())
+      .get(`/api/v1/ventas/facturas/${facturaId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(facturaEnListaResponse.status).toBe(200);
+    expect(facturaEnListaResponse.body.data.customer_id).toBe(customerId);
 
     const confirmarResponse = await request(app.getHttpServer())
       .post(`/api/v1/ventas/facturas/${facturaId}/confirmar`)
