@@ -519,7 +519,7 @@ Aplica a: `audit_logs`, `activity_logs`, `system_logs`, `stock_movements`, `invo
 `purchase_invoices`, `background_jobs`, `notifications` (recomendada), `scheduled_job_runs`
 (recomendada), `edi_transactions` (recomendada), `webhook_delivery_logs` (recomendada).
 
-```
+```text
                          core.audit_logs (tabla particionada, lógica)
                                           │
         ┌───────────────┬────────────────┼────────────────┬───────────────┐
@@ -549,7 +549,7 @@ Puntos clave del diagrama:
 Aplica a: `accounting.journal_entries` (y, por el mismo criterio ya documentado en
 `07-estrategia-particionamiento.md`, `assets.asset_depreciation_entries`).
 
-```
+```text
                     accounting.journal_entries (tabla particionada, lógica)
                                           │
               ┌───────────────────────────┼───────────────────────────┐
@@ -578,7 +578,7 @@ Aplica solo como **escape quirúrgico** (§4.4) para el caso específico de un t
 ruidoso" dentro de una tabla ya particionada por RANGE — no es el diseño por defecto de ninguna
 tabla del catálogo de §7. Ejemplo ilustrativo sobre `inventory.stock_movements`:
 
-```
+```text
                     inventory.stock_movements (tabla particionada, lógica)
                                           │
               ┌───────────────────────────┼───────────────────────────┐
@@ -933,3 +933,485 @@ magnitud dejaría de ser prematura. El particionamiento, la retención y el Gest
 descritos en este documento siguen siendo la base necesaria incluso si esa conversación ocurriera —
 ninguna evolución hacia un modelo distribuido elimina la necesidad de particionar cada nodo
 individual del mismo modo aquí descrito.
+
+---
+
+## Guía Técnica de Implementación
+
+Las secciones §1-§13 son el registro de **decisión** de arquitectura (el "por qué"). Las secciones
+§14-§17 son la guía de **implementación** técnica (el "cómo") — a diferencia de las anteriores, esta
+parte del documento sí incluye SQL real de PostgreSQL, verificado contra el script certificado del
+proyecto (`docs/database/sql/29_partitioning.sql`) y contra el schema Prisma real, no ejemplos
+genéricos de manual.
+
+## 14. Implementación en PostgreSQL
+
+### 14.1 Cómo debe implementarse el particionamiento `RANGE`
+
+PostgreSQL exige que `PARTITION BY RANGE (<columna>)` se declare **en el momento del
+`CREATE TABLE`** — a diferencia de un índice o una restricción, no existe un `ALTER TABLE` que
+convierta una tabla regular ya creada en particionada. Esta es la razón técnica exacta por la que
+§2.1 insiste en que la decisión de particionar se tome en el diseño inicial del modelo, no como
+proyecto de remediación: remediarla después no es un ajuste incremental, es una migración de datos
+completa. El procedimiento correcto tiene dos caminos, según el estado de la tabla:
+
+- **Tabla nueva, cluster sin datos todavía**: se declara `PARTITION BY RANGE` directamente en el
+  `CREATE TABLE` original. Es el camino usado por toda tabla particionada correctamente declarada
+  hoy en GORAZUS (`inventory.stock_movements`, `sales.invoices`, `purchases.purchase_invoices`,
+  `accounting.journal_entries`, entre otras — ver §14.4/§14.5).
+- **Tabla ya poblada en producción**: requiere el runbook de conversión ya documentado en
+  `29_partitioning.sql §5` — crear una tabla nueva particionada (`LIKE <tabla> INCLUDING ALL`),
+  migrar los datos por lotes, recrear las FK que apunten a ella, y renombrar bajo una ventana de
+  mantenimiento controlada. No es una operación que deba ejecutarse sin planificación explícita de
+  downtime o de migración en caliente.
+
+**Hallazgo real verificado en esta revisión** (no corregido en este documento, señalado para
+corrección en el script correspondiente): `29_partitioning.sql` **ya se autodocumenta** como
+incompleto en un punto concreto — seis tablas (`core.audit_logs`, `core.system_logs`,
+`core.activity_logs`, `core.notification_delivery_logs`, `security.login_attempts`,
+`security.session_activity_logs`) están descritas como "particionada mensualmente" en comentarios y
+tienen ya, en el schema Prisma certificado, la clave primaria compuesta que una tabla particionada
+necesita (`@@id([id, occurred_at])` en `audit_logs`, por ejemplo) — pero su `CREATE TABLE` real en
+`01_core.sql`/`02_security.sql` **todavía no declara `PARTITION BY RANGE`**, y ninguna de las seis
+tiene todavía su llamada `partman.create_parent()` en la sección 1 de `29_partitioning.sql`. Una
+clave primaria compuesta por sí sola no crea una tabla particionada — es una condición necesaria,
+no suficiente. En la práctica: si el cluster se aprovisionara desde cero hoy con los scripts tal
+como están, estas seis tablas se crearían como tablas regulares, no particionadas, a pesar de que el
+resto del sistema (este ADR incluido, §7) las trata como si ya lo estuvieran. El ejemplo de §14.3
+es, exactamente, la corrección concreta de esta brecha para `audit_logs` — no un ejemplo ilustrativo
+desconectado de un problema real.
+
+### 14.2 Cuándo deben usarse sub-particiones
+
+La sub-partición compuesta (`RANGE` por fecha + `HASH` por `tenant_id`, §4.4/§9.3) no se implementa
+preventivamente sobre ninguna tabla del catálogo de §7. Se implementa cuando se cumplen, con datos
+reales de producción (no proyectados), **las dos condiciones a la vez**:
+
+1. Un tenant específico concentra un volumen de escritura sobre una tabla particionada que es
+   desproporcionado frente al resto de los tenants en la misma partición de fecha (orden de magnitud
+   mayor, no una diferencia marginal).
+2. Ese volumen concentrado ya genera contención medible (bloqueos, latencia de escritura, tiempo de
+   `VACUUM` de esa partición específica) — no como preocupación teórica sino como métrica observada
+   vía el monitoreo de §12.6/§10.2 (responsabilidad 4).
+
+Implementarla antes de que ambas condiciones ocurran es exactamente el error que §2.1/§5 ya
+descartan explícitamente (particionar sin beneficio medible, "por si acaso").
+
+### 14.3 Ejemplo real: `core.audit_logs` (corrección de una brecha real, §14.1)
+
+Columnas verificadas contra el schema Prisma certificado. El siguiente `CREATE TABLE` es la
+corrección concreta a aplicar en `01_core.sql` **antes** del primer aprovisionamiento de un cluster
+nuevo (para una base ya poblada, seguir el runbook de conversión de §14.1):
+
+```sql
+CREATE TABLE core.audit_logs (
+    id                  UUID        NOT NULL DEFAULT gen_random_uuid(),
+    local_id            BIGINT      NOT NULL GENERATED ALWAYS AS IDENTITY,
+    tenant_id           UUID        NOT NULL REFERENCES core.tenants(id),
+    company_id          UUID        REFERENCES core.companies(id),
+    branch_id           UUID        REFERENCES core.branches(id),
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at          TIMESTAMPTZ,
+    created_by          UUID        REFERENCES core.users(id),
+    updated_by          UUID        REFERENCES core.users(id),
+    deleted_by          UUID        REFERENCES core.users(id),
+    version             INTEGER     NOT NULL DEFAULT 1,
+    row_version         BIGINT      NOT NULL DEFAULT 0,
+    is_active           BOOLEAN     NOT NULL DEFAULT true,
+    is_deleted          BOOLEAN     GENERATED ALWAYS AS (deleted_at IS NOT NULL) STORED,
+    observations        TEXT,
+    metadata            JSONB       NOT NULL DEFAULT '{}',
+    table_schema        TEXT        NOT NULL,
+    table_name          TEXT        NOT NULL,
+    row_id              UUID        NOT NULL,
+    operation           TEXT        NOT NULL,
+    old_values          JSONB,
+    new_values          JSONB,
+    changed_columns     TEXT[],
+    actor_user_id       UUID        REFERENCES core.users(id),
+    occurred_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (id, occurred_at),
+    UNIQUE (local_id, occurred_at)
+) PARTITION BY RANGE (occurred_at);
+
+-- Índices locales — se propagan automáticamente a cada partición nueva (§4.5):
+CREATE INDEX idx_core_audit_logs_actor_user_id ON core.audit_logs (actor_user_id);
+CREATE INDEX idx_core_audit_logs_occurred_brin ON core.audit_logs USING BRIN (occurred_at);
+
+-- Registro con pg_partman — cierra la brecha real de §14.1 (falta hoy en 29_partitioning.sql §1):
+SELECT partman.create_parent(
+    p_parent_table => 'core.audit_logs', p_control => 'occurred_at',
+    p_interval => '1 month', p_premake => 3
+);
+
+-- Retención (§11.3 propone 7 años como piso conservador de cumplimiento — validar contra
+-- configuration.fiscal_regimes del país antes de aplicar en producción, ver §11.2):
+UPDATE partman.part_config
+SET retention = '7 years', retention_keep_table = true
+WHERE parent_table = 'core.audit_logs';
+```
+
+### 14.4 Ejemplo real: `inventory.stock_movements` (ya implementado — patrón de referencia)
+
+A diferencia de `audit_logs`, esta tabla **ya declara `PARTITION BY RANGE` correctamente** desde su
+`CREATE TABLE` real (`29_partitioning.sql`, nota inicial) y ya está registrada con `pg_partman`. Se
+incluye como el patrón de referencia correcto — la forma en que las seis tablas de §14.1 deberían
+quedar una vez corregidas:
+
+```sql
+CREATE TABLE inventory.stock_movements (
+    id                  UUID           NOT NULL DEFAULT gen_random_uuid(),
+    local_id            BIGINT         NOT NULL GENERATED ALWAYS AS IDENTITY,
+    tenant_id           UUID           NOT NULL REFERENCES core.tenants(id),
+    company_id          UUID           NOT NULL REFERENCES core.companies(id),
+    branch_id           UUID           REFERENCES core.branches(id),
+    created_at          TIMESTAMPTZ    NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT now(),
+    deleted_at          TIMESTAMPTZ,
+    created_by          UUID           REFERENCES core.users(id),
+    updated_by          UUID           REFERENCES core.users(id),
+    deleted_by          UUID           REFERENCES core.users(id),
+    version             INTEGER        NOT NULL DEFAULT 1,
+    row_version         BIGINT         NOT NULL DEFAULT 0,
+    is_active           BOOLEAN        NOT NULL DEFAULT true,
+    is_deleted          BOOLEAN        GENERATED ALWAYS AS (deleted_at IS NOT NULL) STORED,
+    observations        TEXT,
+    metadata             JSONB         NOT NULL DEFAULT '{}',
+    product_id          UUID           NOT NULL REFERENCES products.products(id),
+    warehouse_id        UUID           NOT NULL REFERENCES inventory.warehouses(id),
+    movement_type_id    UUID           NOT NULL REFERENCES inventory.stock_movement_types(id),
+    quantity            DECIMAL(18,6)  NOT NULL,
+    unit_cost           DECIMAL(18,4),
+    source_module       TEXT,
+    source_entity_id    UUID,
+    PRIMARY KEY (id, created_at),
+    UNIQUE (local_id, created_at)
+) PARTITION BY RANGE (created_at);
+
+CREATE INDEX idx_inventory_stock_movements_product
+    ON inventory.stock_movements (product_id, warehouse_id, created_at);
+CREATE INDEX idx_inventory_stock_movements_created_brin
+    ON inventory.stock_movements USING BRIN (created_at);
+CREATE INDEX idx_inventory_stock_movements_movement_type_id
+    ON inventory.stock_movements (movement_type_id);
+CREATE INDEX idx_inventory_stock_movements_warehouse_id
+    ON inventory.stock_movements (warehouse_id);
+
+-- Ya presente y activo en 29_partitioning.sql §1 (verbatim, tabla de mayor volumen del sistema):
+SELECT partman.create_parent(
+    p_parent_table => 'inventory.stock_movements', p_control => 'created_at',
+    p_interval => '1 month', p_premake => 3
+);
+```
+
+### 14.5 Ejemplo real: `accounting.journal_entries` (ya implementado — partición anual fiscal)
+
+Misma situación que `stock_movements`: ya correctamente particionada desde su `CREATE TABLE` y ya
+registrada. Se diferencia de los dos ejemplos anteriores en la frecuencia (anual, no mensual — §9.2)
+y en que `posting_date` es `DATE`, no `TIMESTAMPTZ` (alineado a día de ejercicio fiscal, no a
+instante de escritura):
+
+```sql
+CREATE TABLE accounting.journal_entries (
+    id                  UUID        NOT NULL DEFAULT gen_random_uuid(),
+    local_id            BIGINT      NOT NULL GENERATED ALWAYS AS IDENTITY,
+    tenant_id           UUID        NOT NULL REFERENCES core.tenants(id),
+    company_id          UUID        NOT NULL REFERENCES core.companies(id),
+    branch_id           UUID        REFERENCES core.branches(id),
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    deleted_at          TIMESTAMPTZ,
+    created_by          UUID        REFERENCES core.users(id),
+    updated_by          UUID        REFERENCES core.users(id),
+    deleted_by          UUID        REFERENCES core.users(id),
+    version             INTEGER     NOT NULL DEFAULT 1,
+    row_version         BIGINT      NOT NULL DEFAULT 0,
+    is_active           BOOLEAN     NOT NULL DEFAULT true,
+    is_deleted          BOOLEAN     GENERATED ALWAYS AS (deleted_at IS NOT NULL) STORED,
+    observations        TEXT,
+    metadata            JSONB       NOT NULL DEFAULT '{}',
+    document_number     TEXT        NOT NULL,
+    fiscal_period_id    UUID        NOT NULL REFERENCES accounting.fiscal_periods(id),
+    status_id           UUID        NOT NULL REFERENCES accounting.journal_entry_status(id),
+    source_module       TEXT,
+    source_entity_id    UUID,
+    posting_date        DATE        NOT NULL DEFAULT CURRENT_DATE,
+    description         TEXT,
+    PRIMARY KEY (id, posting_date),
+    UNIQUE (local_id, posting_date)
+) PARTITION BY RANGE (posting_date);
+
+CREATE INDEX idx_accounting_journal_entries_fiscal_period_id
+    ON accounting.journal_entries (fiscal_period_id);
+CREATE INDEX idx_accounting_journal_entries_posting_brin
+    ON accounting.journal_entries USING BRIN (posting_date);
+CREATE INDEX idx_accounting_journal_entries_status_id
+    ON accounting.journal_entries (status_id);
+
+-- Ya presente y activo en 29_partitioning.sql §1 (verbatim, RANGE anual — §9.2):
+SELECT partman.create_parent(
+    p_parent_table => 'accounting.journal_entries', p_control => 'posting_date',
+    p_interval => '1 year', p_premake => 1
+);
+```
+
+## 15. Estrategia de Indexación
+
+### 15.1 Principio de diseño para tablas particionadas
+
+Un índice declarado sobre la tabla particionada raíz se propaga automáticamente como índice local a
+cada partición nueva (§4.5) — el diseño de índices se decide **una vez, a nivel de la tabla lógica**,
+no partición por partición. La regla que gobierna cada tabla del catálogo de §7 es: la columna de
+partición siempre lleva un índice `BRIN` (§15.5), las columnas de búsqueda de negocio de alta
+selectividad llevan `BTree` (§15.2), y ninguna tabla particionada debería depender de un `Seq Scan`
+completo de una partición individual para su patrón de consulta dominante.
+
+### 15.2 Índices `B-Tree`
+
+El tipo de índice por defecto de PostgreSQL y el que domina el modelo de GORAZUS — **3.884** de los
+índices certificados del sistema (`INDEX_REPORT.md §1`). Correcto para igualdad y rango sobre
+columnas de cardinalidad media-alta: claves primarias, claves foráneas, `UNIQUE`, y toda columna de
+búsqueda de negocio (`document_number`, códigos, emails). Es el índice que debe usarse por defecto
+salvo que el patrón de acceso específico justifique otro tipo — los siguientes cinco tipos son la
+excepción documentada, no la alternativa general.
+
+### 15.3 Índices `GIN`
+
+Correcto para búsqueda dentro de una estructura de datos compuesta: texto libre (trigram, vía
+`pg_trgm`) y documentos `JSONB`. GORAZUS ya certifica **9** índices `GIN` reales: búsqueda por
+nombre en `customers.customers`, `hr.employees`, `suppliers.suppliers`, `products.products`,
+`crm.leads`, más columnas `metadata JSONB` en `core.system_settings`, `products.products` y
+`configuration.price_list_items` (`INDEX_REPORT.md §1`). En una tabla particionada, un `GIN` sobre
+`metadata` tiene sentido cuando existe un patrón de búsqueda real dentro de ese JSON — no se aplica
+preventivamente a la columna `metadata JSONB` presente en prácticamente todas las tablas del sistema
+(patrón de auditoría estándar), solo donde hay una consulta real que lo justifique.
+
+### 15.4 Índices `GiST`
+
+Correcto para tipos de datos con noción de proximidad u orden parcial: rangos (`tsrange`,
+`daterange`), datos geoespaciales (`PostGIS`), búsqueda de vecino más cercano. GORAZUS certifica
+**0** índices `GiST` — ausencia correcta, no un gap: el sistema no maneja datos geoespaciales ni
+tiene un caso de uso real de rangos superpuestos que se beneficie de este tipo de índice
+(`INDEX_REPORT.md §1`). Se documenta explícitamente para que quede registrado como decisión evaluada
+y descartada, no como una omisión no considerada — si en el futuro GORAZUS incorporara, por ejemplo,
+geolocalización de entregas o rutas, sería el candidato natural a revisar.
+
+### 15.5 Índices `BRIN`
+
+El tipo de índice más directamente relevante para el modelo particionado de este ADR. Un `BRIN`
+(Block Range Index) almacena únicamente el valor mínimo y máximo por bloque físico de página, no una
+entrada por fila — órdenes de magnitud más compacto que un `BTree` equivalente, a costa de una
+selectividad menor. Es la elección correcta exactamente para el patrón que define a toda tabla
+particionada por `RANGE` de este ADR: datos append-only, físicamente escritos en orden creciente de
+la misma columna que define la partición (`created_at`/`occurred_at`/`posting_date`) — el orden
+físico en disco y el orden lógico de la columna coinciden, la condición que hace a `BRIN` efectivo.
+GORAZUS ya certifica **55** índices `BRIN` reales, aplicados sobre `core.activity_logs`/`audit_logs`
+y sus particiones. La recomendación de este ADR (ya anticipada en §12.9) es extender el mismo
+criterio a toda tabla particionada del catálogo de §7 — los tres ejemplos de §14.3-§14.5 ya incluyen
+su `BRIN` correspondiente sobre la columna de partición.
+
+### 15.6 Índices compuestos
+
+Correctos cuando una consulta filtra por más de una columna a la vez de forma consistente — el
+orden de las columnas importa: las columnas de igualdad exacta van primero, la columna de rango
+(típicamente la de partición) va última. El ejemplo real del propio catálogo de §7:
+`idx_inventory_stock_movements_product` sobre `(product_id, warehouse_id, created_at)` — soporta
+"movimientos de este producto en este almacén, en un rango de fechas" con un único índice, en vez de
+tres índices simples que Postgres tendría que combinar con un `BitmapAnd` más costoso.
+
+### 15.7 Índices parciales
+
+Correctos cuando una fracción minoritaria y estable de las filas de una tabla concentra
+prácticamente todas las consultas reales — el caso de uso dominante en GORAZUS es
+`WHERE is_deleted = false` / `WHERE is_active = true` (soft-delete), ya aplicado en **828** índices
+reales (`INDEX_REPORT.md §1`), el tipo de índice más numeroso después de `BTree`. Sobre una tabla
+particionada, un índice parcial se propaga a cada partición igual que cualquier otro (§15.1) — su
+beneficio es adicional al de la poda de particiones, no un sustituto: la poda reduce cuántas
+particiones se tocan, el índice parcial reduce cuántas filas dentro de cada partición tocada se
+consideran.
+
+## 16. Mejores Prácticas
+
+### 16.1 Prácticas recomendadas
+
+- Declarar `PARTITION BY RANGE` desde el `CREATE TABLE` original de toda tabla candidata identificada
+  en el diseño — nunca como una fase posterior "cuando haga falta" (§14.1, la lección directa de la
+  brecha real encontrada en `audit_logs`).
+- Mantener siempre al menos un período completo de particiones futuras ya creado (`p_premake`, §4.6)
+  — nunca crear una partición de forma reactiva.
+- Preferir `DETACH PARTITION` + archivado sobre `DELETE` fila por fila para toda purga de datos
+  históricos masivos (§4.6, §11.1).
+- Incluir siempre un índice `BRIN` sobre la columna de partición de toda tabla append-only ordenada
+  por tiempo (§15.5) — es de bajo costo de mantenimiento y alto beneficio en este patrón específico.
+- Documentar la relación "encabezado particionado / línea no particionada" (§4.3, §7) explícitamente
+  en el repositorio de aplicación correspondiente, para que un desarrollador nuevo no asuma una FK
+  declarativa que no existe a nivel de motor.
+
+### 16.2 Errores comunes
+
+- **Particionar sin declarar `PARTITION BY RANGE` desde el `CREATE TABLE`, confiando en que una clave
+  primaria compuesta por sí sola ya implica partición física** — el error real encontrado en esta
+  misma revisión (§14.1). Una clave compuesta es condición necesaria, no suficiente.
+- **Usar `HASH` como estrategia general por defecto** — ya descartado como comportamiento general en
+  §5: sacrifica la poda de particiones real a cambio de un beneficio (distribución de escritura) que
+  no es el cuello de botella dominante de un ERP.
+- **Particionar tablas de catálogo/maestras** (§8) — no reduce el volumen físico por consulta porque
+  su patrón de acceso no es por rango temporal reciente, y sí añade el costo operativo de §2.2 sin
+  contrapartida.
+- **Convertir una tabla ya poblada sin seguir el runbook de migración** (§14.1) — un intento de
+  "particionar en caliente" sin planificación de ventana de mantenimiento arriesga inconsistencia de
+  datos y bloqueos prolongados sobre una tabla en producción activa.
+- **Dejar la creación de particiones futuras a un proceso manual o a la memoria de un operador** — la
+  causa raíz exacta del riesgo ya identificado en §4.9/§10.4 (fallo silencioso de `pg_partman` sin
+  monitoreo).
+
+### 16.3 Recomendaciones de rendimiento
+
+- Corregir `random_page_cost` de `4` (default, asume disco mecánico) a `1.1` sobre almacenamiento
+  SSD real — el hallazgo más accionable ya identificado en `POSTGRESQL_TUNING.md §1`, con impacto
+  directo en si el planificador prefiere `Index Scan` sobre las particiones correctas.
+- Ajustar `maintenance_work_mem` a 256-512MB a medida que el volumen real de cada partición crece —
+  acelera `VACUUM` y la creación de índices sobre particiones grandes (§12.1, §12.5).
+- Habilitar `pg_stat_statements` (hoy no instalado, requiere reinicio del contenedor —
+  `POSTGRESQL_TUNING.md §3`) antes de que el volumen alcance el umbral de 5TB de §13.3, donde deja de
+  ser opcional para identificar qué consultas presionan cada tabla particionada.
+- Adoptar `BRIN` sistemáticamente sobre la columna de partición de toda tabla del catálogo de §7
+  (§15.5) — la ganancia de rendimiento por tamaño de índice es mayor cuanto más crece la tabla.
+
+### 16.4 Recomendaciones de mantenimiento
+
+- `VACUUM`/`ANALYZE` se concentran, por diseño, en la partición `Hot` activa (§12.1, §12.2) — no
+  requieren intervención manual adicional sobre particiones `Warm`/`Cold` ya inactivas.
+- `REINDEX` se ejecuta por partición individual cuando la fragmentación (§12.8) lo justifique, nunca
+  sobre la tabla lógica completa — evita ventanas de mantenimiento extensas innecesarias.
+- Revisar trimestralmente que las políticas de `core.data_retention_policies` (§10.2, §11.3) sigan
+  alineadas con el mínimo legal vigente de cada país/régimen fiscal — un cambio normativo puede mover
+  ese piso sin que el sistema lo detecte automáticamente.
+- Verificar, como parte del ciclo del Gestor de Particiones (§10.3), que toda partición nueva heredó
+  correctamente sus índices, sus `CHECK` constraints y sus políticas RLS — no asumirlo solo porque es
+  el comportamiento nativo esperado de Postgres.
+
+## 17. Checklist de Producción
+
+### 17.1 Despliegue
+
+- [ ] Toda tabla candidata del catálogo de §7 declara `PARTITION BY RANGE` en su `CREATE TABLE`
+      original — verificado explícitamente, no asumido por tener clave compuesta (§14.1).
+- [ ] `CREATE EXTENSION pg_partman` ejecutada en el schema dedicado (`partman`, no `public` — el bug
+      real ya documentado y corregido en `29_partitioning.sql`).
+- [ ] Cada tabla particionada tiene su llamada `partman.create_parent()` correspondiente, con el
+      intervalo correcto (mensual vs. anual, §9.1/§9.2) y `p_premake` configurado.
+- [ ] Cada tabla particionada tiene su política de retención configurada en `partman.part_config`
+      (§11.3) — con el valor validado contra el mínimo legal aplicable si es una tabla contable/fiscal.
+- [ ] El job `partition_maintenance` está registrado en `core.scheduled_jobs` y confirmado en
+      ejecución (§10.1, `29_partitioning.sql §3`).
+- [ ] Índices `BRIN`/`BTree`/parciales de cada tabla particionada verificados presentes en la
+      definición de la tabla raíz (se propagan solos, pero la definición debe estar completa desde el
+      inicio).
+
+### 17.2 Monitoreo
+
+- [ ] `pg_stat_activity`, `pg_locks` y `pg_stat_user_tables.last_autovacuum` confirmados
+      consultables (§12.6, ya verificado hoy).
+- [ ] `pg_stat_statements` instalado y habilitado antes de alcanzar el umbral de 5TB (§13.3, §16.3).
+- [ ] Alerta activa ante ausencia de la partición del próximo período a menos de 7 días de
+      necesitarse (§10.4).
+- [ ] Alerta activa ante crecimiento de una partición activa que excede 3x el promedio histórico
+      (§10.4).
+- [ ] Tamaño físico por partición reportado periódicamente (§10.2, responsabilidad 4).
+
+### 17.3 Mantenimiento
+
+- [ ] `autovacuum` confirmado activo y sin fallos recientes sobre toda partición `Hot` (§12.5, §12.7).
+- [ ] Verificación periódica de que las particiones nuevas heredaron índices, `CHECK` constraints y
+      RLS (§10.3, §16.4).
+- [ ] Revisión trimestral de las políticas de retención contra el mínimo legal vigente (§16.4).
+- [ ] Consistencia entre tabla "encabezado" particionada y su tabla de "línea" no particionada
+      verificada periódicamente, dado que no existe FK declarativa entre ambas (§10.2,
+      responsabilidad 6, §4.9).
+
+### 17.4 Respaldo (Backup)
+
+- [ ] Estrategia de respaldo confirmada compatible con tablas particionadas — un respaldo lógico
+      (`pg_dump`) debe incluir la tabla raíz y todas sus particiones activas de forma consistente.
+- [ ] Particiones ya archivadas a MinIO (`archive-cold`) excluidas del respaldo activo diario, sin
+      quedar huérfanas de todo respaldo (verificar que el propio proceso de archivado cumple la
+      función de respaldo de esos datos, `08-estrategia-respaldo.md §4`).
+- [ ] Metadatos de archivado (tenant, empresa, rango de fechas, tabla origen) verificados suficientes
+      para una reimportación real, no solo declarados en la documentación (§11.1).
+
+### 17.5 Recuperación ante Desastres (Disaster Recovery)
+
+- [ ] Procedimiento de restauración probado incluye la reconstrucción correcta de la jerarquía de
+      particiones (tabla raíz + particiones hijas), no solo de los datos.
+- [ ] Tiempo de restauración medido específicamente sobre la partición `Hot` primero (prioridad de
+      recuperación operativa inmediata) antes que sobre el historial `Warm`/`Cold` completo.
+- [ ] Runbook de conversión de tabla no particionada a particionada (§14.1, `29_partitioning.sql §5`)
+      validado como parte de los procedimientos documentados de recuperación, no solo de
+      aprovisionamiento inicial.
+- [ ] Confirmado que un fallo total del clúster no deja las particiones ya `DETACH`adas pero aún no
+      archivadas en un estado ambiguo (ni en la base activa ni en `archive-cold`).
+
+### 17.6 Validación de rendimiento
+
+- [ ] Poda de particiones (`partition pruning`) confirmada activa en el plan de ejecución (`EXPLAIN`)
+      de las consultas dominantes de cada tabla particionada — no asumida solo por estar particionada.
+- [ ] `random_page_cost` corregido a `1.1` antes de cualquier prueba de rendimiento sobre
+      almacenamiento SSD real (§16.3) — de lo contrario los resultados subestiman sistemáticamente el
+      beneficio real de los índices.
+- [ ] Tiempo de `VACUUM`/`ANALYZE` medido por partición individual, no como promedio de la tabla
+      completa — una partición `Hot` grande puede ocultar que el resto ya es prácticamente gratis
+      (§12.1, §12.2).
+- [ ] Prueba de carga incluye el escenario de "vecino ruidoso" (§4.4/§14.2) para confirmar que el
+      criterio de activación de sub-partición `HASH` está correctamente instrumentado, aun si no se
+      activa todavía.
+
+---
+
+## Conclusión Arquitectónica
+
+GORAZUS ERP Enterprise se diseñó, desde el modelo de datos, para sostener sin reescritura
+estructural el perfil de carga descrito en §1: miles de empresas sobre una base compartida con
+aislamiento lógico por RLS, millones de productos, cientos de millones de movimientos de inventario,
+y más de 15 años de crecimiento continuo. La estrategia documentada en este ADR es la razón técnica
+concreta por la que ese objetivo es alcanzable sin un rediseño futuro, no una aspiración:
+
+1. **El particionamiento `RANGE` por fecha convierte "cientos de millones de filas" en "un conjunto
+   acotado de particiones de tamaño estable y conocido"**, cada una del orden de magnitud de un solo
+   período de actividad — la tabla lógica crece indefinidamente, pero ninguna operación individual
+   (`VACUUM`, `REINDEX`, una consulta de reportes de rango reciente) opera jamás sobre el total, solo
+   sobre las particiones relevantes al período que realmente se consulta (§12.1-§12.3, §15.5).
+2. **La retención por antigüedad, ya modelada como ciclo Hot/Warm/Cold (§11) y ejecutada como
+   operaciones de metadatos (`DETACH`) en vez de purgas masivas de I/O (§4.6)**, garantiza que el
+   tamaño operativo activo del sistema no crece al mismo ritmo que su historial acumulado — un
+   sistema con 15 años de historia puede seguir operando con el volumen activo de solo su ventana de
+   retención reciente.
+3. **La técnica de escape de sub-partición por `HASH(tenant_id)` (§4.4, §9.3, §14.2)**, disponible y
+   ya diseñada pero deliberadamente no aplicada preventivamente, cierra el único escenario de
+   crecimiento que el `RANGE` por fecha por sí solo no resuelve — el tenant individual
+   desproporcionadamente grande — sin necesidad de rediseñar el modelo cuando ese escenario ocurra
+   con datos reales.
+4. **El Gestor de Particiones (§10)**, formalizando responsabilidades que hoy están parcialmente
+   implementadas (creación anticipada, archivado) y parcialmente pendientes (monitoreo,
+   verificación de consistencia, detección de fallos silenciosos), cierra el riesgo operativo real
+   que un sistema de este volumen no puede permitirse ignorar: que la automatización de la que
+   depende toda esta estrategia falle sin que nadie lo note — la misma clase de fallo que ya ocurrió
+   una vez, a nivel de infraestructura, en la historia real de este proyecto (§4.9).
+5. **La estrategia de indexación (§15) no compite con el particionamiento, lo complementa**: `BRIN`
+   sobre la columna de partición explota exactamente la propiedad física que el particionamiento por
+   `RANGE` ya garantiza (orden de escritura append-only), a una fracción del costo de almacenamiento
+   de un `BTree` equivalente — la combinación de ambos es más eficiente que cualquiera de los dos por
+   separado.
+
+Ninguna de estas cinco piezas depende de una arquitectura distribuida, de sharding a nivel de
+aplicación, ni de abandonar el modelo relacional único que el resto de GORAZUS asume (§4.2, §5). Es,
+deliberadamente, la combinación más simple que resuelve el problema real de escala de un ERP
+multiempresa: un solo clúster PostgreSQL, RLS para aislamiento lógico, y particionamiento nativo para
+acotar el costo de cada operación individual al tamaño de un período, no al tamaño de toda la
+historia del sistema. Escalar de cientos de gigabytes a decenas de terabytes (§13) no exige, bajo
+esta estrategia, ninguna decisión estructural nueva — exige, únicamente, que las palancas ya
+diseñadas en este documento (frecuencia de partición, retención, sub-partición por tenant,
+monitoreo del Gestor de Particiones) se activen con la intensidad que cada orden de magnitud
+requiera. Esa es, precisamente, la propiedad que distingue una arquitectura de datos diseñada para
+durar 15 años de una optimizada solo para el primer año de operación.
