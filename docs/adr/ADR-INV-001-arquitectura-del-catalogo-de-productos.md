@@ -426,3 +426,206 @@ grafo, no un dato a mantener.
 | **Comercialización y costeo** | `product_suppliers`, `product_tax_profiles`, `product_price_history`                                                                                                                    | Referencia de abastecimiento, fiscalidad y evolución de precio — sin ejecutar compra, impuesto ni pricing en sí (§2.1).                        |
 | **Contenido y relación**      | `product_images`, `product_videos`, `product_reviews`, `product_related_products`                                                                                                       | Material visual/documental y relaciones producto-a-producto (venta cruzada, repuesto↔equipo).                                                  |
 | **Internacionalización**      | `product_translations`, `product_category_translations`, `brand_translations`, `unit_of_measure_translations`, `product_attribute_translations`, `product_attribute_value_translations` | Nombre visible por idioma para cada entidad de clasificación — no altera la identidad ni el comportamiento del producto, solo su presentación. |
+
+---
+
+## 6. Información del Producto (Datos Maestros)
+
+Cada campo se documenta con su estado real (¿ya existe en el schema certificado, en qué tabla, con
+qué nombre?) y su justificación de negocio — mismo criterio de honestidad que el resto de este ADR.
+Varios de los campos solicitados **ya tienen un mecanismo real que los cubre sin necesidad de una
+tabla nueva** — el hallazgo más relevante de esta sección es que dos subsistemas genéricos de `core`
+(`core.documents`, `core.tags`) ya resuelven necesidades que a primera vista parecerían requerir
+tablas propias de `products`.
+
+| Campo solicitado                                     | Estado real                                         | Dónde vive                                                                                           | Por qué existe                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ---------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **SKU**                                              | ✅ Real                                             | `products.sku` (único por empresa)                                                                   | El identificador primario de negocio del producto — lo que un humano usa para nombrarlo en una orden de compra, una factura, un conteo físico. Es la clave que el resto del sistema referencia por convención, aunque técnicamente el FK real use `id` (UUID).                                                                                                                                                                                                                                                                                                                                                           |
+| **Código Interno**                                   | 🟡 Conceptualmente cubierto por `sku`               | `products.sku`                                                                                       | GORAZUS no distingue "código interno" de "SKU" como dos campos separados — el `sku` **es** el código interno de la empresa. Mantenerlos como el mismo campo evita la ambigüedad de cuál es la referencia autoritativa cuando ambos podrían divergir.                                                                                                                                                                                                                                                                                                                                                                     |
+| **Código de Fabricante**                             | 🟡 Cubierto parcialmente                            | `product_suppliers.supplier_sku`                                                                     | Existe, pero **por proveedor**, no por fabricante — si dos proveedores distintos venden el mismo artículo del mismo fabricante, GORAZUS hoy registra dos `supplier_sku` (uno por relación de suministro), no un único "código de fabricante" canónico. Para la mayoría de los casos de uso reales (identificar con qué código pedirle a un proveedor específico) esto es suficiente y más preciso; un campo `manufacturer_part_number` propio a nivel de `products` sería una mejora futura solo si se necesitara desambiguar fabricante de proveedor como dos entidades distintas — no implementado, no bloqueante hoy. |
+| **Códigos Alternativos**                             | 🔴 No existe                                        | — (propuesto)                                                                                        | Sin tabla ni columna real. Se recomienda **no** crear una tabla nueva de propósito único — el mismo rol lo puede cumplir `metadata JSONB` (ya real, con índice `GIN`, `idx_products_products_metadata`) para códigos heredados de sistemas anteriores (migración de datos) o `product_barcodes` si el código alternativo es, en la práctica, otro identificador escaneable.                                                                                                                                                                                                                                              |
+| **GTIN / UPC / EAN / Código de Barras**              | ✅ Real, unificado                                  | `product_barcodes.barcode` + `barcode_type` (`String`, default `'gtin'`)                             | Una sola tabla flexible cubre los cuatro conceptos solicitados: **GTIN es el estándar superconjunto** — UPC-A es un GTIN-12, EAN-13 es un GTIN-13. Modelarlos como un solo campo `barcode` con un `barcode_type` de texto libre (no un `CHECK` fijo) es correcto porque la lista de estándares de código de barras evoluciona (ITF-14, GTIN-14 para empaque múltiple) sin que el motor deba migrar. Un producto puede tener varios (`product_barcodes` es 1:N por producto) — el mismo producto con distinto empaque (unidad, caja, pallet) legítimamente tiene GTIN distintos.                                          |
+| **Código QR**                                        | 🟡 Cubierto por el mismo mecanismo, con matiz       | `product_barcodes.barcode_type = 'qr'` (valor nuevo, sin cambio de schema)                           | Técnicamente puede convivir en la misma tabla que el resto de códigos de barra — `barcode_type` ya es de texto libre. La diferencia real no es de almacenamiento sino semántica: un GTIN/UPC/EAN es un identificador puro (una secuencia de dígitos que se busca en una base de datos), mientras que un QR habitualmente **codifica** información completa (una URL a la ficha del producto, o un payload estructurado) — si GORAZUS necesitara generar el contenido del QR (no solo almacenarlo), esa lógica de generación es una responsabilidad de la capa de aplicación/API, no del dominio de datos.                |
+| **Nombre Corto / Nombre Comercial / Nombre Técnico** | 🔴 Solo existe un `name` único                      | `product_translations.name` (por idioma)                                                             | **Brecha real identificada**: el schema certificado tiene un único campo `name` por idioma, no tres variantes. Se recomienda **no** triplicar el campo en `product_translations` sin evidencia de necesidad real (mismo criterio de "no diseñar para lo hipotético" ya aplicado en todo este ADR) — la mayoría de los catálogos reales usan un nombre comercial único como `name` (el que ve el cliente) y, si existiera necesidad de un nombre técnico interno distinto, es candidato más natural a vivir como un atributo dinámico (§8) que como una tercera columna fija, dado que no todo producto lo necesita.      |
+| **Descripción**                                      | ✅ Real                                             | `product_translations.description` (por idioma, opcional)                                            | Texto libre para presentación al cliente — catálogo, ficha de producto, e-commerce.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| **Especificaciones Técnicas**                        | 🟢 No es un campo — es el Motor de Atributos (§8)   | `product_attributes`/`product_attribute_values` (extendido en §8)                                    | Decisión de arquitectura deliberada: una "especificación técnica" no es texto libre, es una lista de pares atributo-valor estructurados (Voltaje: 220V, Peso: 2.3kg, Certificación: IP67) — exactamente lo que el motor de atributos dinámicos ya modela. Duplicar esto como un campo de texto libre adicional fragmentaría el dato (dejaría de ser consultable/filtrable) sin ningún beneficio sobre usar el mecanismo que ya existe para este propósito.                                                                                                                                                               |
+| **Imágenes**                                         | ✅ Real                                             | `product_images` (`file_id → core.files`, `display_order`)                                           | Galería de producto — `display_order = 0` es la portada por convención (`18-modulo-products.md §8`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **Videos**                                           | ✅ Real                                             | `product_videos`                                                                                     | Mismo patrón que imágenes, tabla separada por tener metadatos propios de video (duración, formato, vía `core.files`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| **Adjuntos**                                         | 🟢 Cubierto por mecanismo genérico existente        | `core.documents` (`file_id → core.files`, `source_module='products'`, `source_entity_id=product.id`) | **Hallazgo de esta sección**: GORAZUS ya certifica `core.documents`, un repositorio polimórfico de documentos (cualquier módulo puede adjuntar un documento a cualquier entidad vía `source_module`/`source_entity_id`, con `document_type_id` para clasificar el tipo) — mismo patrón ya usado por `customers` (`16-modulo-customers.md §6`). No se necesita una tabla `product_attachments` nueva.                                                                                                                                                                                                                     |
+| **Certificados**                                     | 🟢 Cubierto por el mismo mecanismo genérico         | `core.documents` con `document_type_id` → un tipo "Certificado" en `core.document_types`             | Mismo mecanismo que Adjuntos, con el tipo de documento correcto — un certificado de calidad/origen/conformidad es, estructuralmente, un documento adjunto a un producto con una clasificación específica, no una entidad distinta.                                                                                                                                                                                                                                                                                                                                                                                       |
+| **Documentos de Garantía**                           | 🟢 Cubierto por el mismo mecanismo genérico         | `core.documents` con `document_type_id` → un tipo "Garantía"                                         | Igual criterio — la garantía **documental** (el PDF de términos) vive aquí; la garantía **transaccional** (el reclamo de un cliente sobre una unidad serializada específica) ya es responsabilidad de `sales.warranties`/`services.service_orders`, referenciando el número de serie (`18-modulo-products.md §7`) — son dos conceptos distintos que no deben confundirse: uno es un documento de referencia, el otro es un proceso de negocio.                                                                                                                                                                           |
+| **Tags (etiquetas)**                                 | 🟢 Cubierto por mecanismo genérico existente        | `core.tags` + `core.entity_tags` (`entity_type`/`entity_id` polimórfico, `color_hex` para UI)        | Sistema de etiquetado transversal ya real, sin ninguna tabla `product_tags` dedicada necesaria — un producto se etiqueta exactamente igual que cualquier otra entidad del sistema (`entity_type = 'products.products'`).                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **Estado (Status)**                                  | ✅ Real, diseño formalizado en §4                   | `products.lifecycle_status`                                                                          | Ver ciclo de vida completo (§4) — columna real, hoy sin lógica de aplicación.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| **Visibilidad**                                      | 🔴 No existe como concepto distinto de Estado       | — (propuesto)                                                                                        | **Brecha real**: `is_active` (booleano genérico de todas las tablas del sistema) y `lifecycle_status` (§4) no son, por diseño, lo mismo que "visibilidad por canal" (¿aparece en el catálogo web pero no en POS? ¿visible solo para ciertas sucursales?). Se recomienda modelar la visibilidad por canal como una dimensión propia si el negocio lo requiere — hoy `lifecycle_status = 'active'` es la única señal de "puede mostrarse", sin granularidad por canal. No implementado; señalado para una fase de diseño futura si surge el requisito real.                                                                |
+| **Palabras Clave de Búsqueda**                       | 🔴 No existe un campo dedicado                      | `metadata JSONB` (real, con índice `GIN`) como mecanismo posible                                     | Sin columna `search_keywords` propia. El `metadata JSONB` ya indexado con `GIN` (§1.2) podría alojar un arreglo de palabras clave sin migración de schema, pero no hay una convención definida hoy de qué clave de ese JSON se usaría — se deja como recomendación de diseño, no como algo ya operando.                                                                                                                                                                                                                                                                                                                  |
+| **Campos SEO**                                       | 🔴 No existe, confirmado fuera de alcance inmediato | — (futuro, como ya lo enmarcó el propio pedido)                                                      | Sin ningún campo real relacionado (meta título, meta descripción, slug de URL). Dado que el propio pedido los marca como "(future)", este ADR los deja explícitamente fuera de esta fase de diseño — de implementarse, el patrón correcto sería el mismo que Adjuntos/Certificados: extender, no duplicar, evitando una tabla `product_seo` aislada cuando `metadata JSONB` o una tabla de "canal de publicación" propia podrían cubrirlo con menos superficie nueva.                                                                                                                                                    |
+
+## 7. Clasificación de Producto
+
+### 7.1 Las seis dimensiones y por qué son independientes entre sí
+
+GORAZUS ya certifica seis dimensiones de clasificación sobre `products` (§1.2, §5.1) —
+**Categorías, Marcas, Modelos, Líneas, Familias y Colecciones** — y una séptima solicitada,
+**Temporadas**, que existe con un alcance distinto al esperado (§7.4). La decisión de diseño ya real
+y verificada es que estas dimensiones son **independientes entre sí**, no una jerarquía única
+obligatoria: un producto puede tener Marca sin Línea, Línea sin Colección, Categoría sin ninguna de
+las anteriores. Esto es deliberado — un ERP que fuerza una única taxonomía rígida (Categoría →
+Subcategoría → Familia → Línea, todas obligatorias y anidadas entre sí) no sirve para catálogos
+reales, donde distintos tipos de producto se clasifican por ejes distintos y no todos aplican a
+todos los productos (una Colección con "temporada" tiene sentido en indumentaria, no en insumos de
+oficina).
+
+### 7.2 Categorías — la única dimensión jerárquica en sí misma
+
+`product_categories` es auto-referenciada (`parent_category_id`) de **N niveles**, no un esquema
+fijo de dos niveles (categoría + subcategoría). Es la única de las seis dimensiones con jerarquía
+propia — las otras cinco son planas o se relacionan entre sí de forma distinta (§7.3). Ejemplo de
+profundidad real que el modelo soporta sin límite fijo:
+
+```text
+Electrónica
+└── Audio
+    └── Audífonos
+        └── Audífonos inalámbricos
+            └── Audífonos inalámbricos con cancelación de ruido
+```
+
+`code` único por empresa; el nombre visible usa `product_category_translations` (por idioma) —
+mismo patrón de internacionalización que el resto del dominio (§5.5).
+
+### 7.3 Marcas, Modelos, Líneas, Familias y Colecciones — relación entre ellas
+
+```text
+┌──────────┐   1:N (brand_id NOT NULL)   ┌───────────────────┐
+│  brands   │────────────────────────────▶│ product_models      │  Un Modelo SIEMPRE pertenece
+│  (plana)  │                              │ (p. ej. "iPhone 15") │  a una Marca — no existe
+└──────────┘                              └───────────────────┘  "modelo sin marca" (§1.2 de
+                                                                    18-modulo-products.md).
+┌──────────────┐                          ┌──────────────┐
+│ product_lines │  (plana, sin jerarquía)  │product_families│  (plana, sin jerarquía)
+└──────────────┘                          └──────────────┘
+
+┌─────────────────────┐  (plana, con campo `season` propio — ver §7.4)
+│ product_collections   │
+└─────────────────────┘
+```
+
+Todas se relacionan con `products` de forma directa e independiente (`brand_id`, `model_id`,
+`line_id`, `family_id`, `collection_id`, cada una opcional salvo la regla de consistencia
+marca↔modelo). No hay relación declarada entre Línea, Familia y Colección entre sí — cada empresa
+puede usar las que le sean relevantes para su industria (una ferretería puede no usar
+"Colecciones" en absoluto; una tienda de moda puede depender fuertemente de ella) sin que el modelo
+imponga una combinación obligatoria.
+
+### 7.4 Temporadas — no es una dimensión propia, es un atributo de Colección
+
+**Corrección de expectativa frente al pedido**: "Temporada" no existe como una entidad de
+clasificación independiente (no hay tabla `seasons`) — existe como una columna,
+`product_collections.season` (texto libre, p. ej. `"Primavera-Verano 2027"`), propiedad de una
+Colección. La razón de diseño: una temporada por sí sola no clasifica nada sin el contexto de a qué
+colección pertenece — modelarla como atributo de `product_collections` evita una tabla de una sola
+columna sin identidad propia. Si una industria necesitara temporadas independientes de colecciones,
+el mecanismo correcto no es una tabla `seasons` nueva sino un **atributo dinámico** (§8) — exactamente
+el caso de uso que ese motor está diseñado para resolver sin tocar el schema.
+
+## 8. Motor de Atributos Dinámicos
+
+### 8.1 Estado real — un EAV mínimo, no un motor completo todavía
+
+El schema certificado ya tiene la base de un modelo **EAV** (Entity-Attribute-Value) genérico:
+`product_attributes` (solo `code`, p. ej. `'color'`, `'size'`, `'material'`) y
+`product_attribute_values` (solo `attribute_id` + `code`, p. ej. `'red'`, `'m'`), con traducciones
+propias para el nombre visible de cada uno. Vinculado a `products` a través de
+`product_variant_attribute_values`, este mecanismo **ya resuelve un caso de uso real y completo**:
+la generación de variantes (§3.6 de `18-modulo-products.md`, ya con flujo de creación documentado).
+Lo que el schema certificado **no tiene todavía** es ninguna de las siguientes piezas de gobierno:
+tipo de dato del valor, si el atributo es obligatorio, agrupación de atributos relacionados, reglas
+de validación, ni plantillas por categoría/industria. Este ADR diseña esa capa de gobierno como
+extensión del mecanismo ya real — no reemplaza `product_attributes`/`product_attribute_values`, los
+enriquece.
+
+### 8.2 Atributos estáticos vs. atributos dinámicos
+
+- **Atributos estáticos**: las columnas de primera clase ya reales sobre `products`
+  (`sku`, `product_type`, `base_unit_id`, `standard_cost`, `is_hazardous_material`, etc.) —
+  aplican, con el mismo significado, a **todo** producto del sistema, sin excepción por industria.
+  Cambiarlas requiere una migración de schema (`ALTER TABLE`) — es deliberadamente la lista más
+  corta y estable posible, exactamente los campos que ningún catálogo de ninguna industria podría
+  operar sin ellos.
+- **Atributos dinámicos**: `product_attributes`/`product_attribute_values` — específicos de
+  industria, categoría o incluso de una sola empresa, definidos **sin ninguna migración de schema**
+  (§8.5). "Voltaje" para electrónica, "Contenido de alcohol" para bebidas, "Talla" para indumentaria
+  son todos filas de datos, no columnas — la razón de fondo por la que GORAZUS puede servir
+  industrias distintas con el mismo modelo físico de base de datos.
+
+### 8.3 Grupos de atributos (propuesto)
+
+No implementado hoy — se recomienda `product_attribute_groups` (nueva entidad, mismo patrón de
+tabla ligera que el resto del dominio) para organizar atributos relacionados bajo un encabezado
+común en la interfaz de edición de producto, en vez de una lista plana de decenas de atributos sin
+estructura visual. Ejemplo ilustrativo (no un valor ya sembrado):
+
+```text
+Producto: "Taladro Inalámbrico X200"
+├── Grupo: Especificaciones Eléctricas
+│   ├── Voltaje: 20V
+│   ├── Capacidad de batería: 4.0 Ah
+│   └── Tiempo de carga: 60 min
+├── Grupo: Especificaciones Físicas
+│   ├── Peso: 1.8 kg
+│   └── Longitud: 25 cm
+└── Grupo: Certificaciones
+    └── Norma de seguridad: IP54
+```
+
+Un atributo pertenece a un grupo opcionalmente — no todo atributo necesita agrupación (un atributo
+de variante como "Color" típicamente no pertenece a ningún grupo de especificaciones técnicas, se
+muestra en un selector de variante, no en una ficha técnica).
+
+### 8.4 Validación y atributos obligatorios (propuesto)
+
+Extensión recomendada sobre `product_attributes`, sin alterar su forma actual de EAV:
+
+| Concepto propuesto                                                                              | Qué resuelve                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Tipo de dato del atributo (texto, número, booleano, fecha, selección única, selección múltiple) | Hoy `product_attribute_values.code` es texto libre sin tipo — un atributo "Voltaje" no tiene forma de declarar que su valor debe ser numérico. Sin tipo, no hay validación posible ni ordenamiento/filtrado numérico correcto en reportes.                                                                                                                                                                                                       |
+| Regla de validación (rango numérico, expresión regular, longitud máxima)                        | Permite que "Voltaje" declare un rango válido (p. ej. 100-250) sin codificar esa regla en la capa de aplicación de forma dispersa — la regla vive junto a la definición del atributo.                                                                                                                                                                                                                                                            |
+| Bandera de obligatoriedad, por categoría                                                        | Un atributo puede ser obligatorio para productos de la categoría "Electrónica" (Voltaje) e irrelevante para "Ropa" — la obligatoriedad no es una propiedad global del atributo, es contextual a dónde se usa (relación atributo↔categoría, no solo atributo↔producto).                                                                                                                                                                           |
+| Bandera "genera variante"                                                                       | Distingue explícitamente el caso de uso ya real (`product_variant_attribute_values`, un atributo que al combinarse genera SKUs distintos — Color, Talla) del caso de uso nuevo (un atributo puramente descriptivo — Voltaje, Certificación — que nunca genera una variante nueva, solo documenta una especificación). El schema real hoy no distingue estos dos casos a nivel de metadato del atributo, solo por el uso que la aplicación le da. |
+
+### 8.5 Plantillas de atributos — cómo cada industria define lo suyo sin tocar la base de datos
+
+Esta es la pieza que responde directamente a la pregunta de diseño planteada: **una plantilla de
+atributos es un conjunto nombrado de atributos dinámicos, asociado a una categoría (o a un tipo de
+clasificación de negocio de §3.2)**, no implementada hoy pero diseñable enteramente sobre el
+mecanismo EAV ya real, sin ninguna migración:
+
+```text
+┌───────────────────┐        ┌────────────────────────┐        ┌──────────────────────┐
+│ product_categories  │───────▶│ product_attribute_       │───────▶│  product_attributes    │
+│  "Electrónica"       │  N:M   │ templates (propuesto)    │  N:M   │  (ya real: Voltaje,    │
+└───────────────────┘        │ "Plantilla Electrónica"  │        │  Certificación, Peso)  │
+                               └────────────────────────┘        └──────────────────────┘
+
+┌───────────────────┐        ┌────────────────────────┐        ┌──────────────────────┐
+│ product_categories  │───────▶│ product_attribute_       │───────▶│  product_attributes    │
+│  "Indumentaria"      │  N:M   │ templates (propuesto)    │  N:M   │  (ya real: Color,      │
+└───────────────────┘        │ "Plantilla Indumentaria" │        │  Talla, Material)      │
+                               └────────────────────────┘        └──────────────────────┘
+```
+
+El flujo por el que una industria nueva se auto-atiende sin intervención de ingeniería:
+
+1. Un administrador de catálogo crea una fila nueva en `product_attributes` (p. ej. `'contenido_alcoholico'`)
+   — ya posible hoy, sin migración, exactamente como ya lo describe `18-modulo-products.md §9`.
+2. Declara su tipo, validación y obligatoriedad (§8.4) — extensión propuesta sobre la misma fila.
+3. La agrupa dentro de una plantilla (§8.5) asociada a la categoría "Bebidas" — de nuevo, filas de
+   datos, no columnas ni tablas nuevas.
+4. Todo producto creado bajo la categoría "Bebidas" hereda esa plantilla como sugerencia de qué
+   atributos completar — sin que ningún otro producto del sistema (de otra categoría/industria) se
+   vea afectado.
+
+Esta es, exactamente, la propiedad que distingue un modelo de datos preparado para multi-industria
+real de uno que requeriría una tabla `products_electronica`/`products_indumentaria` separada por
+vertical — el mismo principio de "no toda tabla debe ajustarse a la forma de un solo caso de uso"
+que ya gobierna el resto de la arquitectura de datos de GORAZUS (`ADR-DB-001 §2`).
