@@ -611,3 +611,325 @@ Puntos clave del diagrama:
 - Los meses sin ese problema (`2026_06`, `2026_07` en el diagrama) permanecen como una sola
   partición física, sin el costo adicional de gestionar sub-particiones que no aportan beneficio
   ahí.
+
+## 10. Gestor de Particiones (Partition Manager)
+
+Esta sección define el componente de arquitectura responsable del ciclo de vida completo de una
+partición, desde su creación anticipada hasta su archivado y eliminación definitiva. Se documenta
+distinguiendo, para cada responsabilidad, el **estado real de hoy** (verificado contra la
+infraestructura certificada) de la **recomendación de este ADR** donde ambos difieren — mismo
+criterio de honestidad que el catálogo de §7.
+
+### 10.1 Naturaleza del componente
+
+El Gestor de Particiones **no es un servicio nuevo e independiente que GORAZUS deba construir desde
+cero**: es la combinación, ya parcialmente real, de dos piezas certificadas del sistema —
+
+- `pg_partman` (extensión nativa de PostgreSQL, versión 5.4.3, ya instalada) como motor mecánico de
+  bajo nivel: crea y elimina particiones según configuración declarativa (`p_premake`, ventana de
+  retención).
+- `core.scheduled_jobs` / `core.scheduled_job_runs` (tablas reales del schema `core`, §7) como el
+  mecanismo de orquestación de más alto nivel que GORAZUS ya usa para ejecutar trabajos periódicos —
+  la creación de particiones se dispara desde aquí, no desde un cron externo al sistema.
+
+Este ADR recomienda formalizar esta combinación como un **componente lógico único** ("Gestor de
+Particiones") con siete responsabilidades explícitas, en vez de dejarlas implícitas y dispersas
+entre la configuración de `pg_partman` y trabajos programados ad hoc. Formalizarlo no implica
+reescribir la mecánica ya real — implica nombrarla, darle un contrato de responsabilidades
+explícito, y cerrar las brechas de monitoreo/validación que hoy no tienen dueño.
+
+### 10.2 Las siete responsabilidades
+
+| #   | Responsabilidad                  | Estado real hoy                                    | Mecanismo                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| --- | -------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Crear particiones futuras        | ✅ Implementado                                    | `pg_partman` con `p_premake` — la evidencia real más directa: la infraestructura certificada ya muestra **~1.200 particiones físicas creadas** sobre **27 tablas particionadas declaradas**, un crecimiento de ~6x observado con el tiempo, consistente con la premisa de "siempre al menos un período por delante" (§4.6). Nunca reactivo.                                                                                                                                                             |
+| 2   | Eliminar particiones vencidas    | 🟡 Mecanismo real, política incompleta             | `pg_partman` soporta la eliminación automática vía configuración de retención por tabla, y `core.data_retention_policies` (tabla real, `entity_type` + `retention_period_months` + `action_on_expiry`) existe como el lugar certificado para declarar esa política — pero no hay evidencia de que las 7 tablas de §11.3 tengan hoy una fila poblada en esa tabla. La mecánica existe; los valores de política, no confirmados.                                                                          |
+| 3   | Archivar datos antiguos          | ✅ Implementado (a nivel de diseño certificado)    | Exportación a MinIO (bucket `archive-cold`) en formato comprimido antes de eliminación definitiva, con metadatos suficientes para reimportación (`08-estrategia-respaldo.md §4`) — ejecutado después de que `pg_partman` desconecta (`DETACH`) la partición vencida.                                                                                                                                                                                                                                    |
+| 4   | Monitorear tamaño de particiones | 🔴 No implementado                                 | No existe hoy un job ni un dashboard que reporte el tamaño físico de cada partición individual ni alerte sobre crecimiento anómalo de una partición específica (p. ej. un mes con volumen 10x el promedio, señal de abuso o de bug de un tenant). Recomendado como brecha a cerrar (§10.4).                                                                                                                                                                                                             |
+| 5   | Validar índices                  | 🟡 Correcto en diseño, sin verificación recurrente | Los índices declarados en la tabla particionada raíz se propagan automáticamente a cada partición nueva (propiedad nativa de Postgres, §4.5) — la auditoría de índices más reciente confirmó 0 índices faltantes y 0 duplicados sobre el diseño declarado. Lo que falta es un chequeo periódico que confirme que esa propagación se mantiene íntegra partición por partición a medida que `pg_partman` crea nuevas — hoy se confía en la garantía del motor, sin una verificación explícita programada. |
+| 6   | Verificar consistencia           | 🔴 No implementado                                 | No existe hoy un job que reconcilie, por ejemplo, que el conteo/suma de un documento particionado (`sales.invoices`) case con el de su tabla de detalle no particionada (`sales.invoice_lines`) — relevante precisamente porque esa relación no tiene FK declarativa a nivel de motor (§4.5/§4.9) y depende de disciplina de aplicación.                                                                                                                                                                |
+| 7   | Detectar particiones faltantes   | 🔴 No implementado                                 | No existe hoy una alerta explícita si `pg_partman` fallara silenciosamente y no lograra crear la partición del período siguiente a tiempo — el riesgo ya está identificado como aceptado en §4.9 ("puede detener silenciosamente la creación de particiones futuras si no se monitorea explícitamente"), pero la mitigación (detección proactiva) todavía no tiene mecanismo.                                                                                                                           |
+
+### 10.3 Ciclo operativo automático
+
+El Gestor de Particiones, una vez formalizadas sus siete responsabilidades, opera en un ciclo
+continuo sin intervención manual:
+
+1. **Anticipación** — para cada tabla particionada, con la frecuencia que le corresponda (mensual o
+   anual, §9.1/§9.2), se confirma que exista ya la partición del próximo período completo antes de
+   que el período actual termine. Esta es la única responsabilidad ya cerrada de punta a punta hoy.
+2. **Verificación de integridad** — inmediatamente después de crear una partición nueva, se
+   confirma que heredó los índices y las políticas RLS de la tabla raíz (responsabilidad 5), y que
+   no quedó ningún vacío de rango entre la partición anterior y la nueva (responsabilidad 7).
+3. **Monitoreo continuo** — mientras una partición está activa (recibiendo escritura), se observa su
+   tamaño físico y su tasa de crecimiento (responsabilidad 4), comparándola contra el promedio
+   histórico de particiones equivalentes, para detectar anomalías tempranas.
+4. **Transición a solo lectura** — cuando el período de una partición termina, deja de recibir
+   escrituras nuevas por construcción (la clave de partición ya no cae en su rango) — no requiere
+   una acción explícita del gestor, es una propiedad del particionamiento `RANGE` en sí.
+5. **Evaluación de retención** — el gestor evalúa, contra la política de `core.data_retention_policies`
+   (responsabilidad 2), si la partición ya superó su ventana de vida activa.
+6. **Archivado y desconexión** — si superó la ventana, se exporta a almacenamiento frío
+   (responsabilidad 3) y luego se ejecuta `DETACH PARTITION` — nunca en el orden inverso, para
+   nunca perder una partición que todavía no terminó de archivarse.
+7. **Verificación de consistencia post-archivado** — se confirma que el archivo frío es recuperable
+   e íntegro (responsabilidad 6) antes de considerar el ciclo de esa partición cerrado.
+
+### 10.4 Alertas y fallos silenciosos
+
+La lección operativa real ya documentada en §4.9 —la imagen base de Postgres del proyecto no
+incluía `pg_partman` por defecto, un gap real que existió hasta corregirse— es la justificación
+directa de por qué las responsabilidades 4, 6 y 7 no pueden quedar solo "confiadas" al
+funcionamiento correcto de la extensión: un fallo silencioso de automatización ya ocurrió una vez en
+la historia real de este proyecto, a nivel de infraestructura. Se recomienda que el Gestor de
+Particiones emita una alerta operativa (fuera del alcance de este ADR definir el canal exacto —
+referenciado para la estrategia de observabilidad de la plataforma, igual que en §6) ante cualquiera
+de estas condiciones: ausencia de la partición del próximo período a menos de 7 días de necesitarse,
+crecimiento de una partición activa que excede 3x el promedio histórico sin explicación de negocio
+conocida, o una partición vencida que no logró completar su archivado dentro de su ventana de
+gracia.
+
+## 11. Estrategia de Retención de Datos
+
+### 11.1 Hot, Warm y Cold Data — los tres estados de un mismo dato
+
+Todo dato de una tabla particionada de GORAZUS atraviesa, con el tiempo, tres estados operativos
+distintos. No son tres copias del dato ni tres tablas distintas — son tres **etapas del ciclo de
+vida de la misma fila**, definidas por su antigüedad y su patrón de acceso real, no por su
+contenido:
+
+- **Hot Data (dato caliente)**: vive en la partición del período actual (el mes o año en curso), es
+  el destino de prácticamente el 100% de las escrituras nuevas y de la gran mayoría de las lecturas
+  operativas del día a día (dashboards, operación en curso, validaciones en tiempo real). Debe
+  residir en el almacenamiento más rápido disponible del clúster, completamente indexado, sin
+  compromiso de latencia.
+- **Warm Data (dato tibio)**: vive en particiones de períodos recientes ya cerrados pero todavía
+  dentro de la ventana de consulta operativa habitual (por ejemplo, los 3-12 meses anteriores, según
+  la tabla) — se consulta con frecuencia decreciente pero real: reportes comparativos
+  período-contra-período, auditorías recientes, reimpresión de documentos. Permanece **adjunta**
+  (`ATTACH`) a la tabla particionada y con sus índices activos, pero es candidata a residir en un
+  nivel de almacenamiento más económico si la infraestructura lo permite (p. ej. un tablespace
+  separado sobre disco más lento), sin que la aplicación note la diferencia.
+- **Cold Data (dato frío)**: superó la ventana de retención activa definida en
+  `core.data_retention_policies` — se **desconecta** (`DETACH PARTITION`) de la tabla particionada
+  activa y se archiva comprimida en almacenamiento frío (bucket MinIO `archive-cold`,
+  `08-estrategia-respaldo.md §4`). Deja de ser consultable en línea por la aplicación; se conserva
+  únicamente por el mínimo legal de retención del país/régimen fiscal aplicable, con metadatos
+  suficientes para una reimportación puntual si una auditoría años después lo exige.
+
+### 11.2 Cuándo un dato debe moverse entre etapas
+
+La transición **no se basa en el contenido del dato ni en una decisión caso por caso** — se basa
+exclusivamente en la antigüedad de la partición completa a la que pertenece, aplicada de forma
+uniforme:
+
+- **Hot → Warm** ocurre automáticamente y sin ninguna acción explícita en el instante en que el
+  período de la partición termina (por ejemplo, el 1 de cada mes para las tablas de partición
+  mensual) — es una consecuencia directa de que la clave `RANGE` ya no admite nuevas filas de ese
+  período, no una operación separada que el Gestor de Particiones deba ejecutar.
+- **Warm → Cold** ocurre cuando la antigüedad de la partición supera el `retention_period_months`
+  configurado para ese `entity_type` en `core.data_retention_policies` — la transición es una
+  operación del Gestor de Particiones (§10.3, pasos 5-7): evaluación de política, archivado,
+  `DETACH`. El piso duro nunca configurable por debajo del mínimo legal (regla ya establecida en
+  `05-estrategia-auditoria.md §6` y `08-estrategia-respaldo.md §4`): los datos fiscales/contables se
+  retienen según el mínimo legal del país de la empresa, nunca menos, sin excepción operativa.
+
+### 11.3 Tabla de políticas de retención
+
+Las siguientes siete tablas fueron solicitadas explícitamente. Se documentan con su nombre real de
+GORAZUS (mapeo ya establecido en §7) y con una **propuesta de política** — ninguna de estas siete
+tiene hoy una fila confirmada y poblada en `core.data_retention_policies` (§10.2, responsabilidad
+2), así que los valores de esta tabla son la recomendación de este ADR para poblar esa
+configuración, no un valor ya vigente en producción.
+
+| Tabla solicitada      | Tabla real GORAZUS                                                      | Hot                       | Warm                           | Cold (retención total propuesta)                                                                                                                                                                                                  | Justificación                                                                                                                                                                                                                          |
+| --------------------- | ----------------------------------------------------------------------- | ------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `audit_logs`          | `core.audit_logs`                                                       | Mes en curso              | 24 meses                       | Mínimo legal de auditoría del régimen fiscal/de cumplimiento aplicable (nunca menos) — propuesto 7 años como piso conservador típico de retención de auditoría empresarial, ajustable por país vía `configuration.fiscal_regimes` | Valor de cumplimiento/legal, no técnico — es la tabla con el criterio de retención más largo del catálogo por diseño.                                                                                                                  |
+| `activity_logs`       | `core.activity_logs`                                                    | Mes en curso              | 6 meses                        | 18 meses                                                                                                                                                                                                                          | Valor operativo (soporte a usuario, investigación de incidentes), no de cumplimiento legal — retención más corta que `audit_logs` porque no sustituye la pista de auditoría formal.                                                    |
+| `api_logs`            | Sin tabla real distinta — el rol lo cumple `core.system_logs` (§7)      | Mes en curso              | 1 mes                          | 3 meses                                                                                                                                                                                                                           | El logging técnico decae en valor más rápido que cualquier otra tabla del catálogo — es el candidato natural a la ventana de retención más corta.                                                                                      |
+| `notifications`       | `core.notifications`                                                    | Mes en curso              | 3 meses                        | 12 meses                                                                                                                                                                                                                          | Una notificación pierde valor operativo rápido tras ser leída/expirar, pero se conserva un año como respaldo de soporte al usuario ("¿por qué no me llegó esta notificación?").                                                        |
+| `queue_jobs`          | `core.background_jobs` (§7)                                             | Día/semana en curso       | 1 mes                          | 6 meses                                                                                                                                                                                                                           | Vida útil por fila muy corta (se completa o falla en minutos/horas) — la retención existe para diagnóstico de fallos recientes, no para historial de largo plazo.                                                                      |
+| `inventory_movements` | `inventory.stock_movements`                                             | Mes en curso              | 12 meses                       | Mínimo legal contable/fiscal del país (nunca menos) — propuesto igual criterio que `journal_entries` por su vínculo directo con costo de venta y valuación de inventario                                                          | Es la tabla de mayor volumen físico del sistema (§7) y a la vez tiene valor de cumplimiento real (soporta el costo de venta reportado) — no puede tratarse solo como log técnico.                                                      |
+| `journal_entries`     | `accounting.journal_entries` (+ `journal_entry_lines`, no particionada) | Ejercicio fiscal en curso | 2 ejercicios fiscales cerrados | Mínimo legal contable del país de la empresa, nunca menos (regla ya establecida)                                                                                                                                                  | El libro diario es, por definición legal en la mayoría de jurisdicciones, el registro contable de mayor exigencia de retención de todo el sistema — nunca se purga por política técnica, solo tras confirmar el mínimo legal cumplido. |
+
+## 12. Mantenimiento de Base de Datos
+
+Esta sección documenta las operaciones de mantenimiento de PostgreSQL relevantes para un modelo
+particionado, distinguiendo en cada una el estado real ya verificado en la instancia certificada de
+GORAZUS (Postgres 17, `docker-postgres-1`, ver `docs/database/POSTGRESQL_TUNING.md` e
+`INDEX_REPORT.md`) de la recomendación aplicable cuando el volumen de producción real lo justifique.
+
+### 12.1 `VACUUM`
+
+Recupera el espacio de filas muertas (actualizadas o eliminadas) sin devolverlo al sistema
+operativo, y actualiza los mapas de visibilidad que aceleran `Index-Only Scan`. En un modelo
+particionado, `VACUUM` opera **por partición individual**, no sobre la tabla lógica completa — esta
+es una de las ventajas operativas centrales del particionamiento (§4.8): una partición histórica ya
+en `Warm` casi no genera filas muertas nuevas (no recibe escritura), por lo que su costo marginal de
+`VACUUM` tiende a cero con el tiempo, mientras que la partición `Hot` del período actual concentra
+prácticamente todo el trabajo real de `VACUUM` del sistema — exactamente donde el costo debe
+concentrarse.
+
+### 12.2 `ANALYZE`
+
+Actualiza las estadísticas que el planificador de consultas usa para elegir el plan óptimo (por
+ejemplo, decidir entre `Index Scan` y `Seq Scan`). Igual que `VACUUM`, opera por partición — una
+partición `Hot` con cambios frecuentes necesita estadísticas frescas con mayor regularidad que una
+partición `Cold` ya desconectada, cuyo contenido es, por definición, inmutable.
+
+### 12.3 `REINDEX`
+
+Reconstruye un índice desde cero, típicamente para revertir fragmentación acumulada (§12.8) o tras
+una corrupción puntual. El particionamiento reduce drásticamente el escenario en que `REINDEX` sea
+necesario sobre el sistema completo: si un índice de una partición histórica se fragmenta, se
+reconstruye **esa partición únicamente**, sin bloquear ni tocar el índice de la partición `Hot` en
+escritura activa — la alternativa sin particionar (una tabla monolítica de cientos de millones de
+filas) convertiría la misma operación en una ventana de mantenimiento extensa sobre el sistema
+completo.
+
+### 12.4 `CHECK` constraints
+
+GORAZUS ya certifica **6.102 `CHECK` constraints** reales sobre el modelo completo
+(`docs/database/DATABASE_STRUCTURE.md`) — validaciones declarativas a nivel de motor (rangos,
+enumeraciones, formatos) que no dependen de que la capa de aplicación las repita correctamente en
+cada camino de escritura. En una tabla particionada, un `CHECK` declarado en la tabla raíz se
+propaga a cada partición nueva de la misma forma que los índices (§4.5) — el Gestor de Particiones
+(§10.2, responsabilidad 5) debe incluir esta propagación dentro de su verificación de integridad,
+no solo la de índices.
+
+### 12.5 `AutoVacuum`
+
+Verificado activo (`autovacuum = on`) en la instancia real — configuración correcta, sin cambio
+recomendado en el parámetro en sí. El punto de atención real para un modelo particionado no es
+"activarlo" sino **ajustar su agresividad de forma diferenciada por edad de partición**: una
+partición `Hot` con escritura constante se beneficia de un `autovacuum` más agresivo (umbral de
+filas muertas más bajo antes de disparar) que una partición `Warm` casi estática, donde el valor por
+defecto ya es suficiente. `autovacuum_vacuum_cost_limit` permanece hoy en el valor global (`-1`),
+sin evidencia todavía de necesidad de ajuste — a revisar cuando el volumen real de producción lo
+justifique (mismo criterio ya documentado en `POSTGRESQL_TUNING.md §1`).
+
+### 12.6 Monitoreo
+
+Lo que ya está disponible hoy sin cambios de infraestructura: `pg_stat_activity` (actividad y
+consultas en curso), `pg_locks` (contención de bloqueos) y `pg_stat_user_tables.last_autovacuum`
+(última ejecución de autovacuum por tabla) — las tres ya confirmadas consultables contra la
+instancia real (`POSTGRESQL_TUNING.md §4`). El gap real más importante identificado: la extensión
+`pg_stat_statements` (estadísticas agregadas de consultas, la fuente estándar para identificar
+consultas costosas) **no está instalada** — requiere agregarla a `shared_preload_libraries` y
+reiniciar el contenedor, no es un cambio en caliente. Sin ella, el monitoreo de qué consultas
+específicas presionan más a una tabla particionada (por ejemplo, para decidir cuándo activar la
+sub-partición por `tenant_id` de §4.4) depende de observación manual en vez de datos agregados.
+
+### 12.7 Alertas
+
+No existe hoy un sistema de alertas de base de datos dedicado — el monitoreo actual es de
+consulta activa (§12.6), no de notificación proactiva. Para un modelo particionado en producción
+real, se recomienda que la capa de observabilidad de la plataforma (fuera del alcance de este ADR)
+cubra, como mínimo, las condiciones ya identificadas en §10.4 (partición futura ausente,
+crecimiento anómalo, archivado incompleto) más las señales estándar de motor: fallo de
+`autovacuum` sobre cualquier partición `Hot`, y `random_page_cost` mal calibrado para el
+almacenamiento real (hallazgo ya documentado como el más accionable de `POSTGRESQL_TUNING.md §1`:
+el valor actual, `4`, asume disco mecánico sobre una infraestructura real en SSD).
+
+### 12.8 Fragmentación
+
+La fragmentación de índices (páginas parcialmente vacías tras muchas actualizaciones/eliminaciones)
+es, igual que `VACUUM`/`ANALYZE`, un fenómeno que el particionamiento **acota naturalmente**: una
+partición `Warm`/`Cold` que ya no recibe escritura no se fragmenta más allá del punto en que quedó
+al cerrarse su período — toda la fragmentación nueva del sistema se concentra, por diseño, en la
+partición `Hot` activa. Esto convierte un problema que en una tabla monolítica crecería sin límite en
+uno acotado a un volumen de datos conocido y estable (el de un solo período), independientemente de
+cuántos años de historia acumule el sistema.
+
+### 12.9 Optimización
+
+La auditoría de índices más reciente confirma que GORAZUS ya opera en un estado de índices
+Enterprise-grade sin brechas pendientes: 3.884 índices `BTree` (PK/FK/`UNIQUE`, la mayoría), 55
+`BRIN` ya aplicados exactamente donde corresponde (tablas append-only ordenadas por tiempo —
+`activity_logs`/`audit_logs` y sus particiones, el caso de uso textual de `BRIN`), 9 `GIN` para
+búsqueda por trigram y `JSONB`, 828 índices parciales (`WHERE is_deleted = false`, manteniendo los
+índices activos pequeños) y 11 índices `covering` sobre consultas de alta frecuencia ya
+identificadas — con 0 índices faltantes, 0 duplicados y 0 innecesarios confirmados
+(`INDEX_REPORT.md §1-2`). La recomendación de optimización de este ADR para el modelo particionado
+específicamente es extender el mismo criterio de `BRIN` ya aplicado en `activity_logs`/`audit_logs`
+a toda tabla particionada por fecha del catálogo de §7 que todavía no lo tenga confirmado — un
+índice `BRIN` sobre la columna de partición es, por construcción, órdenes de magnitud más compacto
+que un `BTree` equivalente para el patrón de escritura append-only y ordenada por tiempo que define
+a estas tablas.
+
+## 13. Escalabilidad
+
+Esta sección explica qué palanca arquitectónica de las ya descritas en este ADR sostiene cada orden
+de magnitud de crecimiento, y en qué punto cada palanca deja de ser suficiente por sí sola y activa
+la siguiente. Ninguno de estos umbrales implica un rediseño estructural — es la misma arquitectura
+de §4 operando con distinta intensidad de cada mecanismo ya definido.
+
+### 13.1 100 GB
+
+Volumen correspondiente aproximadamente a los primeros meses de operación real de un número
+moderado de tenants. El particionamiento por `RANGE` ya está activo desde el primer día (§2.1 — la
+decisión se toma en el diseño, no se difiere), pero a este volumen su beneficio es principalmente
+preventivo, no correctivo: cada partición mensual individual es pequeña, `VACUUM`/`ANALYZE` no son
+todavía un problema medible en ninguna tabla, y la configuración de Postgres por defecto documentada
+en `POSTGRESQL_TUNING.md` (`shared_buffers` 128MB, `work_mem` 4MB) sigue siendo funcionalmente
+suficiente. El valor real en esta etapa es no tener que migrar el modelo de datos más adelante.
+
+### 13.2 1 TB
+
+Las tablas de mayor volumen de escritura del catálogo de §7 (`stock_movements`, `audit_logs`,
+`invoices`) empiezan a mostrar la poda de particiones como beneficio medible en reportes de rango
+reciente. Es el punto en el que las recomendaciones ya documentadas en `POSTGRESQL_TUNING.md §1`
+dejan de ser preventivas y pasan a ser necesarias: `maintenance_work_mem` a 256-512MB (acelera
+`VACUUM` en las particiones más grandes), `random_page_cost` corregido a `1.1` para el
+almacenamiento SSD real, y `max_wal_size` ampliado a 2-4GB para absorber la escritura sin
+checkpoints excesivamente frecuentes. El Gestor de Particiones (§10) pasa de ser una formalización
+conveniente a una necesidad operativa real — es el punto en que un fallo silencioso de creación de
+partición futura (§4.9, §10.4) empieza a tener consecuencia visible para el negocio.
+
+### 13.3 5 TB
+
+Las políticas de retención de §11 dejan de ser una buena práctica y se convierten en la única forma
+sostenible de mantener el tamaño operativo del sistema acotado: sin `Warm → Cold` real y regular, el
+volumen de particiones activas (adjuntas) crecería sin límite. Es también el umbral típico en el que
+`pg_stat_statements` (§12.6, hoy no instalado) deja de ser opcional — identificar qué consultas
+específicas presionan cada tabla particionada requiere datos agregados, no observación manual. El
+pooling de conexión externo (PgBouncer en modo `transaction`, ya anticipado como "extensión natural"
+en `POSTGRESQL_TUNING.md §2`) se vuelve la vía recomendada para sostener miles de usuarios
+concurrentes sin subir `max_connections` directamente.
+
+### 13.4 10 TB
+
+Primer umbral en que la técnica de escape de §4.4/§9.3 (sub-particionamiento `HASH(tenant_id)`)
+deja de ser puramente teórica: a este volumen es razonablemente esperable que exista ya al menos un
+tenant "vecino ruidoso" cuyo volumen individual dentro de una tabla particionada por fecha justifique
+la sub-partición quirúrgica — la decisión sigue siendo puntual, tabla por tabla y tenant por tenant
+(§5 — descartada como default), no una migración general del modelo. El archivado a almacenamiento
+frío (§11.1, MinIO `archive-cold`) pasa de reducir costo de almacenamiento a ser, además, un
+requisito de rendimiento: mantener adjuntas particiones que ya no aportan valor operativo empieza a
+tener costo medible sobre el planificador de consultas, incluso con poda de particiones activa.
+
+### 13.5 50 TB
+
+El volumen empieza a exigir separación física de almacenamiento por temperatura de dato (§11.1):
+particiones `Hot`/`Warm` recientes en el almacenamiento más rápido del clúster, particiones `Warm`
+más antiguas movidas a un tablespace de menor costo dentro del mismo clúster antes de su
+desconexión definitiva — una extensión operativa de la infraestructura ya prevista, no un cambio de
+estrategia. El monitoreo de tamaño de partición (§10.2, responsabilidad 4, hoy no implementada) deja
+de ser una mejora deseable y se convierte en una condición de operación segura: a este volumen, una
+partición individual con crecimiento anómalo no detectado puede degradar el sistema completo antes
+de que un operador humano lo note por otros medios.
+
+### 13.6 100 TB
+
+Umbral en el que conviene revisar explícitamente si la arquitectura de clúster único con RLS para
+aislamiento multiempresa (la decisión fundacional de §1, reafirmada como alternativa preferida en
+§5) sigue siendo la correcta para la totalidad de la base, o si algunos tenants de volumen
+extremo justifican una excepción puntual de aislamiento físico más fuerte — sin que esto implique
+abandonar el modelo para el resto del sistema. Es, explícitamente, el mismo umbral en el que
+`10-evolucion-a-microservicios.md` (ya referenciado en §5 como alternativa descartada "para esta
+fase", no permanentemente) se vuelve la conversación arquitectónica relevante a reabrir — este ADR
+no toma esa decisión por adelantado ni la considera necesaria hoy; solo documenta en qué orden de
+magnitud dejaría de ser prematura. El particionamiento, la retención y el Gestor de Particiones
+descritos en este documento siguen siendo la base necesaria incluso si esa conversación ocurriera —
+ninguna evolución hacia un modelo distribuido elimina la necesidad de particionar cada nodo
+individual del mismo modo aquí descrito.
