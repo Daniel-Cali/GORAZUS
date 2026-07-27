@@ -153,6 +153,13 @@ export type {
 } from '../prisma/schemas/customers/generated';
 export type { customers } from '../prisma/schemas/customers/generated';
 /**
+ * Clientes Parte 02 (Customer 360) — se agregan bajo demanda las tablas
+ * que ya existían en el schema desde Database Parte 02 pero seguían sin
+ * código: contactos y direcciones (mismo criterio "una tabla a la vez"
+ * que el resto de este archivo, ver `docs/architecture/01 §2`).
+ */
+export type { customer_contacts, customer_addresses } from '../prisma/schemas/customers/generated';
+/**
  * Cliente Prisma del schema `sales` — octavo cliente independiente
  * (`PRISMA_SALES`), mismo criterio que los anteriores. Primer
  * consumidor: `modules/ventas/backend` (FASE 06 Parte 01 — la venta POS
@@ -193,6 +200,73 @@ export type {
   cash_movement_types,
   cash_movements,
 } from '../prisma/schemas/cash/generated';
+/**
+ * Cliente Prisma del schema `crm` — cliente independiente (`PRISMA_CRM`),
+ * mismo criterio que los anteriores. Primer consumidor:
+ * `modules/crm/backend` (Parte 02 — solo `leads`/`lead_status`/
+ * `lead_sources`/`lead_status_history`, 4 de las 17 tablas del schema;
+ * oportunidades/campañas/agenda/seguimientos sin código todavía, ver
+ * `docs/reports/crm/CRM_ROADMAP.md`).
+ */
+export type {
+  PrismaClient as CrmPrismaClient,
+  Prisma as CrmPrisma,
+} from '../prisma/schemas/crm/generated';
+export type {
+  leads,
+  lead_status,
+  lead_sources,
+  lead_status_history,
+} from '../prisma/schemas/crm/generated';
+/** Parte 03 — Oportunidades. */
+export type {
+  opportunities,
+  opportunity_lines,
+  opportunity_loss_reasons,
+  sales_funnels,
+  sales_funnel_stages,
+} from '../prisma/schemas/crm/generated';
+/** Parte 04 — Campañas y Agenda. */
+export type {
+  campaigns,
+  campaign_members,
+  calendar_events,
+  calendar_event_attendees,
+} from '../prisma/schemas/crm/generated';
+/**
+ * Cliente Prisma del schema `accounting` — cliente independiente
+ * (`PRISMA_ACCOUNTING`), mismo criterio que los anteriores. Primer
+ * consumidor: `modules/contabilidad/backend` (Contabilidad Enterprise
+ * Parte 1 — Núcleo contable + Estados financieros: `chart_of_accounts`/
+ * `account_types`, `accounting_rules`/`accounting_rule_lines`,
+ * `journal_entries`/`journal_entry_lines`/`journal_entry_status`,
+ * `cost_centers`, `fiscal_years`/`fiscal_periods`,
+ * `balance_sheet_snapshots`/`income_statement_snapshots`/
+ * `cash_flow_snapshots` — 17 de las 28 tablas del schema. CxC/CxP
+ * avanzadas, Bancos/Conciliación, Activos Fijos/Depreciaciones,
+ * Impuestos, Presupuestos-ejecución, Cierre contable, dimensiones
+ * contables, revaluación de moneda, intercompañía e IFRS quedan sin
+ * código todavía, ver `docs/reports/contabilidad/ACCOUNTING_ROADMAP.md`).
+ */
+export type {
+  PrismaClient as AccountingPrismaClient,
+  Prisma as AccountingPrisma,
+} from '../prisma/schemas/accounting/generated';
+export type {
+  account_types,
+  chart_of_accounts,
+  cost_centers,
+  fiscal_years,
+  fiscal_periods,
+  journal_entry_status,
+  journal_entries,
+  journal_entry_lines,
+  accounting_rules,
+  accounting_rule_lines,
+  balance_sheet_snapshots,
+  income_statement_snapshots,
+  cash_flow_snapshots,
+} from '../prisma/schemas/accounting/generated';
 // prisma.service.ts (cliente único monolítico) queda superado por el
 // enfoque de 21 clientes por schema en database.module.ts — ver el
 // comentario de cabecera de ese archivo. No se elimina el archivo
