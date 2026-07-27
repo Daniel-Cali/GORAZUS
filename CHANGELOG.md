@@ -174,6 +174,47 @@ no una reescritura del schema. Detalle completo:
 
 ### Añadido
 
+- **Módulo de Ventas Enterprise, Parte 1: Cotización → Pedido → Factura (2026-07-27), `v0.24.0`.**
+  - Origen: pedido "PROMPT MAESTRO — MÓDULO DE VENTAS ENTERPRISE" con 15 secciones — alcance real
+    de varias semanas. Se acordó con el usuario el orden de partes (`AskUserQuestion`) antes de
+    escribir código; esta Parte 1 completa el extremo que le faltaba al motor de facturación ya
+    construido (`v0.22.0`) — hoy una factura se crea directo, sin cotización ni pedido previos.
+  - Reality-check previo: `sales` tiene 55 tablas reales certificadas, solo 5 en uso antes de esta
+    parte. Se construyó sobre 8 tablas más (`quotes`/`quote_lines`/`quote_status`/
+    `quote_status_history`, `sales_orders`/`sales_order_lines`/`sales_order_status`/
+    `sales_order_status_history`) — 13 de 55 en total, sin tablas nuevas. A diferencia de
+    `invoices` (particionada), `quotes`/`sales_orders` no lo están y sus líneas sí tienen relación
+    real de Prisma hacia el encabezado — aceptan `create`/`update` anidado.
+  - **Nuevo**: `CotizacionesService` (crear/editar/eliminar en borrador, aprobar, rechazar,
+    duplicar, vigencia, historial), `PedidosVentaService` (crear directo o desde una cotización
+    aprobada y vigente, reserva real de inventario vía `ReservasService` — recién expuesto de
+    `InventarioModule`, existía desde Fase 05 Parte 03 sin ser inyectable fuera de su módulo —,
+    cancelar solo si nada facturado, convertir a factura total o parcialmente reutilizando
+    `VentasService.crearFactura` con `salesOrderId` fijado).
+  - **Migración `41_ventas_pedidos_facturacion_parcial.sql`** (aditiva): `sales_order_lines` gana
+    `invoiced_quantity` — deriva pendiente/parcial/completado real, no simulado.
+  - **Cadena de integración verificada de punta a punta**: Cotización → Pedido → Factura → Asiento
+    contable, verificado manualmente contra Postgres real (reserva creada al convertir en pedido,
+    `invoiced_quantity` incrementado en cada conversión parcial, reserva liberada al completarse).
+    Las tres partes de esta sesión (Facturación, Contabilidad, Ventas Pipeline) quedan conectadas
+    de verdad, no solo documentadas.
+  - **Hallazgo real corregido en el camino** (no una regresión de esta parte): un test preexistente
+    de Facturación (`facturas.controller.e2e-spec.ts`) empezó a fallar de forma intermitente por
+    acumulación de datos de prueba (38 facturas del mismo cliente de prueba) — mismo patrón ya
+    documentado en `v0.19.0`. Corregido con verificación directa por id en vez de depender de la
+    paginación por defecto.
+  - Tests: 33 nuevos (6+5 entidades, 11+8 servicios, 3 e2e real), 63 tests totales de `ventas`
+    (63/63 ✅). Sin regresión en `inventario-backend` ni `pos-backend` (9/9) — confirmado que
+    `InventarioModule` importado dos veces en el grafo (`PosModule` y `VentasModule`) no duplica
+    instancias. Build/lint limpios, arranque real de la API (14 rutas nuevas), OpenAPI regenerado.
+    Permisos `ventas.gestionar_cotizaciones`/`ventas.gestionar_pedidos` sembrados.
+  - Comprobantes fiscales/NCF, listas de precios, descuentos/promociones avanzados, devoluciones
+    (gap de severidad alta ya documentado), entregas, comisiones, reportes exportables — fuera de
+    esta parte, ver `docs/reports/ventas/SALES_ROADMAP.md`.
+  - Documentos nuevos: `docs/reports/ventas/SALES_PIPELINE_ARCHITECTURE.md`,
+    `SALES_API_REPORT.md`, `SALES_TEST_REPORT.md`, `SALES_HEALTH_REPORT.md`, `SALES_ROADMAP.md`,
+    `SALES_REPORT.md`. `modules/ventas/README.md` actualizado.
+
 - **Contabilidad Enterprise, Parte 1: Núcleo Contable + Estados Financieros (2026-07-27), `v0.23.0`.**
   - Origen: pedido "PROMPT MAESTRO — MÓDULO DE CONTABILIDAD ENTERPRISE" con 20 secciones — alcance
     real de varias semanas. Se acordó con el usuario el orden de partes (`AskUserQuestion`) antes
