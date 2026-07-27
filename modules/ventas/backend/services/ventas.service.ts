@@ -17,6 +17,7 @@ import { EmpresaSucursalLookupRepository } from '../repositories/empresa-sucursa
 import { TasaImpuestoLookupRepository } from '../repositories/tasa-impuesto-lookup.repository';
 import { Factura } from '../entities/factura.entity';
 import type { CrearFacturaInput, ActualizarFacturaInput } from '../validators/facturas.schema';
+import { MotorContableService } from '@gorazus/modules/contabilidad';
 
 export class FacturaNoEncontradaException extends DomainException {
   constructor(id: string) {
@@ -105,6 +106,7 @@ export class VentasService {
     private readonly clienteLookupRepository: ClienteLookupRepository,
     private readonly empresaSucursalLookupRepository: EmpresaSucursalLookupRepository,
     private readonly tasaImpuestoLookupRepository: TasaImpuestoLookupRepository,
+    private readonly motorContableService: MotorContableService,
   ) {}
 
   /** Get-or-create idempotente del estado por código — mismo patrón que `CajaService.resolverTipoPorCodigo`. */
@@ -318,10 +320,39 @@ export class VentasService {
     return this.facturaRepository.eliminar(context, id);
   }
 
+  /**
+   * `draft → issued` + dispara el motor de reglas contables
+   * (`ventas.factura.confirmada`). No bloqueante si la empresa no tiene
+   * ninguna regla configurada para ese evento — `MotorContableService`
+   * devuelve `null` (caso real de la enorme mayoría de empresas hoy,
+   * Contabilidad Enterprise Parte 1 recién se está construyendo). Si SÍ
+   * hay una regla configurada pero está mal armada (referencia un campo
+   * que no existe), la excepción se deja propagar a propósito: silenciar
+   * un asiento contable mal generado es peor que bloquear la
+   * confirmación hasta que un administrador corrija la regla.
+   */
   async confirmarFactura(context: UserContext, id: string): Promise<invoices> {
     const factura = await this.obtener(context, id);
     const statusId = await this.resolverEstadoPorCodigo(context, 'issued');
-    return this.facturaRepository.actualizarEstado(context, factura.id, statusId);
+    const facturaConfirmada = await this.facturaRepository.actualizarEstado(
+      context,
+      factura.id,
+      statusId,
+    );
+    await this.motorContableService.registrarEvento(context, {
+      eventCode: 'ventas.factura.confirmada',
+      companyId: factura.company_id,
+      branchId: factura.branch_id,
+      sourceModule: 'ventas',
+      sourceEntityId: factura.id,
+      description: `Factura ${factura.document_number} confirmada`,
+      hechos: {
+        subtotal_amount: Number(factura.subtotal_amount),
+        tax_amount: Number(factura.tax_amount),
+        total_amount: Number(factura.total_amount),
+      },
+    });
+    return facturaConfirmada;
   }
 
   /** Anula un borrador o una factura ya confirmada — `cancelled` es un estado final, no se puede anular dos veces. */

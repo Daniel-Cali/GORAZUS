@@ -7,6 +7,7 @@ import { ProductoLookupRepository } from '../repositories/producto-lookup.reposi
 import { ClienteLookupRepository } from '../repositories/cliente-lookup.repository';
 import { EmpresaSucursalLookupRepository } from '../repositories/empresa-sucursal-lookup.repository';
 import { TasaImpuestoLookupRepository } from '../repositories/tasa-impuesto-lookup.repository';
+import { MotorContableService } from '@gorazus/modules/contabilidad';
 import {
   VentasService,
   EmpresaInvalidaException,
@@ -59,6 +60,7 @@ describe('VentasService', () => {
   let clienteLookupRepository: ClienteLookupRepository;
   let empresaSucursalLookupRepository: EmpresaSucursalLookupRepository;
   let tasaImpuestoLookupRepository: TasaImpuestoLookupRepository;
+  let motorContableService: MotorContableService;
 
   beforeEach(() => {
     empresaValida = true;
@@ -145,6 +147,10 @@ describe('VentasService', () => {
     tasaImpuestoLookupRepository = {
       tasaVigente: jest.fn(async () => tasaVigente),
     } as unknown as TasaImpuestoLookupRepository;
+
+    motorContableService = {
+      registrarEvento: jest.fn(async () => null),
+    } as unknown as MotorContableService;
   });
 
   function buildService(): VentasService {
@@ -156,6 +162,7 @@ describe('VentasService', () => {
       clienteLookupRepository,
       empresaSucursalLookupRepository,
       tasaImpuestoLookupRepository,
+      motorContableService,
     );
   }
 

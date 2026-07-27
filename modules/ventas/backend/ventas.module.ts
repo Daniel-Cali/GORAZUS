@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DatabaseModule } from '@gorazus/core-database';
+import { ContabilidadModule } from '@gorazus/modules/contabilidad';
 import { FacturasController } from './controllers/facturas.controller';
 import { VentasService } from './services/ventas.service';
 import { FacturaRepository } from './repositories/factura.repository';
@@ -26,7 +27,7 @@ import { TasaImpuestoLookupRepositoryPrisma } from './repositories/tasa-impuesto
  * sin código, ver `POS_ARCHITECTURE.md §3`.
  */
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, ContabilidadModule],
   controllers: [FacturasController],
   providers: [
     VentasService,
