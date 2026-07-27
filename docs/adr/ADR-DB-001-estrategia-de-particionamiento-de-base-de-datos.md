@@ -433,3 +433,181 @@ como consecuencia aceptada de la decisión, no como una limitación que condicio
 - La fila de `sales.invoice_lines` en
   [07-estrategia-particionamiento.md §1](../database/07-estrategia-particionamiento.md#1-qué-se-particiona-y-qué-no)
   queda señalada (§4.3) para corrección de redacción en una revisión documental posterior.
+
+## 7. Catálogo Detallado de Particionamiento por Tabla
+
+Esta sección aplica los principios de §2 a cada tabla candidata del sistema, tabla por tabla. Cada
+fila distingue explícitamente entre **estado actual** (verificado contra el schema Prisma
+certificado, `core/database/prisma/schemas/`) y **recomendación de este ADR** cuando ambos no
+coinciden — ninguna fila afirma como implementado algo que no lo está.
+
+Nomenclatura de "Tipo de partición": todas las entradas de este catálogo usan `RANGE` (§3.1), el
+método por defecto de GORAZUS (§4.1). Ninguna tabla de este catálogo requiere `LIST` o `HASH` como
+estrategia primaria — `HASH` solo aparece como sub-partición quirúrgica opcional de segundo nivel
+(§4.4), señalada donde aplica.
+
+| Tabla real                         | Crecimiento esperado                                                                                            | Tipo de partición                    | Clave de partición | Frecuencia                         | Justificación técnica                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------ | ------------------ | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core.audit_logs`                  | No acotado — una fila por cada operación mutante auditable, de por vida del sistema, en todos los tenants.      | RANGE (implementado)                 | `occurred_at`      | Mensual                            | Append-only puro, nunca se actualiza ni se borra fila a fila (retención vía `DETACH PARTITION`, §4.6). Consulta dominante es "auditoría de una tabla/fila en un rango de fechas reciente" — la poda de particiones evita escanear el historial completo.                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `core.activity_logs`               | No acotado — una fila por acción de usuario relevante (no toda petición HTTP), por tenant.                      | RANGE (implementado)                 | `created_at`       | Mensual                            | Mismo patrón que `audit_logs`: append-only, consulta dominante acotada a una ventana de tiempo reciente por usuario o tenant.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `core.system_logs`                 | No acotado — logging técnico interno del propio sistema (nivel/mensaje/contexto), volumen ligado al tráfico.    | RANGE (implementado)                 | `created_at`       | Mensual                            | Append-only, valor decae rápido con el tiempo — candidato natural también a retención agresiva (ver §4.6, `DETACH` + archivado en frío antes que `audit_logs`, cuyo valor legal/de cumplimiento es más duradero).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `inventory.stock_movements`        | No acotado — una fila por cada entrada/salida/ajuste/transferencia de inventario, en todos los almacenes.       | RANGE (implementado)                 | `created_at`       | Mensual                            | Tabla de mayor volumen esperado del dominio operativo (no contable): con miles de empresas y catálogos grandes, cientos de millones de filas en pocos años. `inventory.v_kardex` (ver fila siguiente) depende de que esta tabla soporte poda de particiones para no degradar con el tiempo.                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `inventory.v_kardex`               | No aplica — es una **vista**, no una tabla física.                                                              | No particionable                     | No aplica          | No aplica                          | `inventory.v_kardex` es una `VIEW` sobre `stock_movements` con saldo corrido (`docs/database/sql/24_views.sql`), documentada explícitamente como sustituto de una tabla física `inventory.kardex_entries` que nunca se materializó. Una vista no se particiona: hereda el beneficio de la poda de particiones de `stock_movements`, su única tabla base. "Kardex" y "movimientos de inventario" son, en GORAZUS, la misma tabla física — no dos tablas distintas.                                                                                                                                                                                                                                               |
+| `sales.invoices`                   | No acotado — una fila por factura de venta emitida, por tenant.                                                 | RANGE (implementado)                 | `issued_at`        | Mensual                            | Documento transaccional de alto volumen con fuerte localidad temporal de consulta ("facturas del mes/trimestre actual"). PK compuesta `(id, issued_at)` ya certificada en el schema (§4.3).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `sales.invoice_lines`              | No acotado — de 1 a N filas por cada fila de `sales.invoices`, mismo orden de magnitud multiplicado.            | Regular (no particionada) — ver nota | No aplica (hoy)    | No aplica (hoy)                    | Estado real verificado: PK simple `id`, sin clave de partición, referencia suelta a `invoices` por UUID sin FK declarada (§4.3/§4.5 — Postgres exige que la clave de partición forme parte de cualquier PK/UNIQUE referenciada por FK). Nota de consistencia documental ya registrada en §4.3: `07-estrategia-particionamiento.md` la describe como particionada "vía la fecha de la factura padre", lo cual no es literalmente cierto a nivel de motor — es la misma tabla, sin partición física propia. Este ADR no cambia esa decisión de diseño (mantenerla sin particionar es válida, igual que `journal_entry_lines`/`purchase_invoice_lines` abajo); solo dejamos constancia de la redacción a corregir. |
+| `purchases.purchase_invoices`      | No acotado — una fila por factura de compra recibida, por tenant.                                               | RANGE (implementado)                 | `received_at`      | Mensual                            | Mismo patrón que `sales.invoices`: PK compuesta `(id, received_at)` ya certificada.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `purchases.purchase_invoice_lines` | No acotado — de 1 a N filas por cada fila de `purchase_invoices`.                                               | Regular (no particionada)            | No aplica          | No aplica                          | Mismo patrón exacto que `sales.invoice_lines`: PK simple `id`, referencia suelta por UUID sin FK declarada. Tercer módulo independiente donde se confirma el mismo criterio de diseño consistente (§4.3): la tabla "encabezado" se particiona, la tabla "línea" no.                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `accounting.journal_entries`       | No acotado — un asiento contable por cada evento de negocio contabilizable, por tenant.                         | RANGE (implementado)                 | `posting_date`     | Anual, alineada a ejercicio fiscal | El libro diario es el registro contable de mayor volumen y de mayor exigencia de integridad e inmutabilidad del sistema. Partición anual (no mensual) porque los reportes contables dominantes son por ejercicio fiscal completo (§4.1) — cerrar/archivar un año fiscal completo mapea 1:1 a una operación de partición.                                                                                                                                                                                                                                                                                                                                                                                        |
+| `accounting.journal_entry_lines`   | No acotado — de 2 a N filas (partida doble) por cada fila de `journal_entries`.                                 | Regular (no particionada)            | No aplica          | No aplica                          | Mismo patrón "encabezado particionado / línea no particionada" que las dos filas anteriores — la partida doble exige que las líneas de un mismo asiento permanezcan agrupables sin fragmentación adicional por partición propia.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `core.notifications`               | Alto — una fila por notificación generada hacia un usuario destinatario, por tenant.                            | RANGE (recomendado, no implementado) | `created_at`       | Mensual                            | Estado real verificado: PK simple `id`, sin clave de partición hoy. Es una tabla append-only con fuerte localidad temporal de consulta ("notificaciones no leídas recientes") y candidata clara a retención agresiva (una notificación de más de N meses rara vez se consulta). Su tabla hija `core.notification_delivery_logs` **ya está particionada** (mensual, según `07-estrategia-particionamiento.md`) — se recomienda cerrar la misma brecha en la cabecera para evitar que `notifications` se convierta en el cuello de botella no particionado del subsistema.                                                                                                                                        |
+| `core.background_jobs`             | No acotado — una fila por trabajo asíncrono encolado (`queue_name`/`status`/reintentos), por tenant.            | RANGE (implementado)                 | `created_at`       | Mensual                            | PK compuesta `(id, created_at)` ya certificada. Tabla de cola de trabajos de alto volumen y vida corta por fila (se completa o falla en minutos/horas) — la retención agresiva de particiones vencidas evita que la cola de ejecución activa comparta partición física con millones de trabajos ya completados hace meses.                                                                                                                                                                                                                                                                                                                                                                                      |
+| `core.scheduled_jobs`              | Acotado — una fila por definición de trabajo programado (cron), no por ejecución.                               | Regular (no particionar)             | No aplica          | No aplica                          | Es una tabla de **configuración**, no de eventos: crece con la cantidad de trabajos programados distintos que existan en el sistema (decenas, no millones), nunca con el tiempo. Ver `core.scheduled_job_runs` en la fila siguiente para el historial de ejecuciones, que sí es de alto volumen.                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `core.scheduled_job_runs`          | No acotado — una fila por cada ejecución de cada `scheduled_job`, indefinidamente.                              | RANGE (recomendado, no implementado) | `started_at`       | Mensual                            | Estado real verificado: PK simple `id`, sin clave de partición hoy. Es el historial de ejecución real (no la definición) — crece sin límite con el tiempo, exactamente el patrón que justifica RANGE mensual en el resto del catálogo. No estaba en la lista de tablas solicitadas explícitamente, pero es la contraparte real de alto volumen de `scheduled_jobs` y se incluye por completitud.                                                                                                                                                                                                                                                                                                                |
+| `core.edi_transactions`            | No acotado — una fila por transacción de intercambio de datos (EDI) entrante o saliente por integración activa. | RANGE (recomendado, no implementado) | `created_at`       | Mensual                            | Es el equivalente real más cercano al "integration_logs" solicitado: GORAZUS no tiene una tabla genérica con ese nombre, pero `edi_transactions` cumple exactamente ese rol (bitácora de tráfico de integración, con `raw_payload`). PK simple `id` hoy, sin clave de partición — mismo patrón append-only de alto volumen que justifica la recomendación.                                                                                                                                                                                                                                                                                                                                                      |
+| `core.webhook_delivery_logs`       | No acotado — una fila por cada intento de entrega de webhook (incluye reintentos), por suscripción activa.      | RANGE (recomendado, no implementado) | `created_at`       | Mensual                            | Es el equivalente real de "webhook_logs": el volumen escala con `eventos × suscripciones activas × reintentos`, potencialmente el subsistema de más rápido crecimiento de integración. PK simple `id` hoy — mismo criterio de recomendación que `edi_transactions`.                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+
+**Tablas solicitadas sin equivalente real distinto en el schema certificado** (se documentan
+explícitamente en vez de inventar una tabla que no existe):
+
+- **`api_logs`** — no existe una tabla dedicada a bitácora de peticiones HTTP/API en el schema
+  certificado. El logging técnico general vive en `core.system_logs` (ya en el catálogo, ya
+  particionada). Si en el futuro se introduce un logging de peticiones API dedicado y de alto
+  volumen, debe seguir el mismo criterio RANGE mensual por `created_at` de esta sección.
+- **`inventory_transactions`** — mismo concepto físico que `inventory_movements`; en GORAZUS ambos
+  nombres genéricos mapean a la única tabla real `inventory.stock_movements`, ya cubierta arriba.
+- **`stock_kardex`** — ver `inventory.v_kardex` en la tabla: es una vista derivada, no una tabla
+  independiente.
+- **`queue_jobs`** — mapea a `core.background_jobs`, ya cubierta arriba.
+- **`integration_logs`** — sin tabla genérica con ese nombre; el rol real lo cumple
+  `core.edi_transactions`, ya cubierta arriba.
+
+## 8. Tablas Que NO Deben Particionarse
+
+Estas tablas se evaluaron explícitamente contra los tres criterios de §2.3 (crecimiento no acotado
+en el tiempo, patrón de acceso dominante por rango temporal reciente, tamaño proyectado que
+degrade índices/`VACUUM` convencionales) y **no cumplen ninguno** — son tablas de catálogo o de
+estado maestro, cuyo tamaño crece con el número de entidades de negocio (usuarios, empresas,
+productos, reglas fiscales), no con el paso del tiempo. Aplicarles RANGE por fecha no reduciría el
+volumen físico por consulta (siguen siendo, en la práctica, una sola partición "caliente" con todo
+el catálogo activo) y sí añadiría el costo real descrito en §2.2: más objetos que planificar,
+vigilar e indexar, sin beneficio de poda.
+
+| Tabla real                                         | Por qué permanece como tabla regular                                                                                                                                                                                                                                                                                                                                                |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `core.users`                                       | Crece con la cantidad de usuarios humanos del sistema (miles por tenant, no millones). Es el destino de decenas de claves foráneas en todo el schema (`created_by`/`updated_by`/`deleted_by` en prácticamente cada tabla) — necesita una PK simple, estable y de búsqueda puntual O(1) por índice, que una clave de partición por fecha no aportaría.                               |
+| `core.roles`                                       | Tabla de configuración de seguridad — decenas de filas por tenant como máximo. Consultada en cada verificación de permiso (ruta caliente de autorización); debe permanecer como el índice B-tree más simple y compacto posible.                                                                                                                                                     |
+| `core.permissions`                                 | Catálogo global de permisos del sistema — cientos de filas en total, no por tenant. No tiene componente temporal en absoluto.                                                                                                                                                                                                                                                       |
+| `core.companies`                                   | Crece con la cantidad de empresas por tenant (decenas, no millones) — es una tabla de identidad organizacional, no de eventos. Es además el ancla de RLS (`company_id`) referenciada por prácticamente toda tabla particionada del catálogo de §7; debe resolverse con una búsqueda puntual, no con poda temporal.                                                                  |
+| `core.branches`                                    | Igual criterio que `companies`, un nivel más abajo en la jerarquía organizacional — decenas por empresa.                                                                                                                                                                                                                                                                            |
+| `inventory.warehouses`                             | Crece con la cantidad de almacenes físicos por sucursal (unidades a decenas) — tabla de configuración operativa, referenciada constantemente por `stock_movements` (§7) pero ella misma no genera eventos.                                                                                                                                                                          |
+| `products.products`                                | Crece con el tamaño del catálogo de productos (puede llegar a millones de SKU en escenarios grandes, pero por **cantidad de productos**, no por tiempo) — el patrón de acceso dominante es búsqueda puntual por SKU/código de barras/nombre, no por rango de fecha de creación; particionar por fecha de alta fragmentaría exactamente ese patrón de búsqueda sin reducir su costo. |
+| `products.product_variant_attribute_values`        | Solicitada genéricamente como "product_variants" — el nombre real en GORAZUS es distinto (variantes se modelan como valores de atributo por producto, no como una tabla `product_variants` independiente). Mismo criterio que `products`: crece con el catálogo, no con el tiempo.                                                                                                  |
+| `products.brands`                                  | Catálogo de marcas — cientos de filas típicamente, sin componente temporal relevante para la consulta.                                                                                                                                                                                                                                                                              |
+| `products.product_categories`                      | Solicitada genéricamente como "categories" — el nombre real es `product_categories`. Es una jerarquía (árbol) de categorías, consultada por estructura, no por fecha — particionar por fecha rompería la localidad de una consulta jerárquica típica ("todas las categorías bajo X").                                                                                               |
+| `configuration.payment_methods` / `.payment_forms` | Solicitada como "payment_methods" — GORAZUS certifica **dos** tablas de configuración de pago distintas (`payment_methods` y `payment_forms`), ambas catálogos pequeños y casi estáticos (efectivo, tarjeta, transferencia, crédito, contado, etc.), sin componente temporal.                                                                                                       |
+| `configuration.currencies`                         | Catálogo casi estático de monedas (ISO 4217) — decenas de filas en total, prácticamente de solo lectura.                                                                                                                                                                                                                                                                            |
+| `taxes.taxes` / `taxes.tax_rates`                  | Catálogo de impuestos y sus tasas vigentes — crece con la cantidad de reglas fiscales configuradas por jurisdicción/tenant (decenas a cientos), no con el volumen de transacciones que las referencian (eso vive en las tablas de facturación/contabilidad ya particionadas en §7).                                                                                                 |
+
+## 9. Diagramas de Particionamiento
+
+Diagramas conceptuales de la estructura física resultante de aplicar §4 y §7. No representan
+sintaxis SQL — solo la relación entre la tabla lógica y sus particiones físicas.
+
+### 9.1 Particiones mensuales (patrón por defecto — logs, movimientos, colas)
+
+Aplica a: `audit_logs`, `activity_logs`, `system_logs`, `stock_movements`, `invoices`,
+`purchase_invoices`, `background_jobs`, `notifications` (recomendada), `scheduled_job_runs`
+(recomendada), `edi_transactions` (recomendada), `webhook_delivery_logs` (recomendada).
+
+```
+                         core.audit_logs (tabla particionada, lógica)
+                                          │
+        ┌───────────────┬────────────────┼────────────────┬───────────────┐
+        │                │                │                │               │
+ audit_logs_2026_04  audit_logs_2026_05  audit_logs_2026_06  audit_logs_2026_07  audit_logs_2026_08
+ (may. cerrada,       (jun. cerrada,      (jul. cerrada,      (mes actual,        (partición futura,
+  solo lectura /       solo lectura /      solo lectura /      lectura+escritura)  creada de antemano
+  candidata a          candidata a         candidata a                            por pg_partman,
+  DETACH)               DETACH)             DETACH)                               §4.6 — vacía)
+                                                                    ▲
+                                                                    │
+                                                         100% de los INSERT
+                                                         nuevos llegan aquí
+```
+
+Puntos clave del diagrama:
+
+- Solo la partición del mes en curso recibe escrituras — todas las anteriores son, en la práctica,
+  de solo lectura (§4.1).
+- `pg_partman` mantiene siempre al menos una partición futura ya creada antes de que empiece el mes
+  (§4.6) — nunca se crea una partición de forma reactiva ante el primer `INSERT` que fallaría.
+- Las particiones más antiguas se `DETACH`an según la política de retención de cada tabla (§4.6),
+  no se `DELETE`an fila por fila.
+
+### 9.2 Particiones anuales alineadas a ejercicio fiscal (patrón contable)
+
+Aplica a: `accounting.journal_entries` (y, por el mismo criterio ya documentado en
+`07-estrategia-particionamiento.md`, `assets.asset_depreciation_entries`).
+
+```
+                    accounting.journal_entries (tabla particionada, lógica)
+                                          │
+              ┌───────────────────────────┼───────────────────────────┐
+              │                            │                            │
+  journal_entries_2024        journal_entries_2025        journal_entries_2026
+  (ejercicio fiscal            (ejercicio fiscal            (ejercicio fiscal
+   cerrado y auditado —         cerrado y auditado —         en curso —
+   candidato a archivado        candidato a archivado        lectura+escritura,
+   en frío tras el plazo        en frío tras el plazo        crece mes a mes
+   legal de retención,          legal de retención,          dentro de la misma
+   §4.6)                        §4.6)                        partición anual)
+```
+
+Puntos clave del diagrama:
+
+- La frecuencia es **anual**, no mensual, porque el patrón de consulta dominante del libro diario es
+  el ejercicio fiscal completo (cierres, estados financieros, auditoría) — una partición mensual
+  fragmentaría innecesariamente un reporte que casi siempre cruza los 12 meses del año (§4.1).
+- `journal_entry_lines` (partida doble) permanece sin particionar (§7) — todas las líneas de un
+  asiento del ejercicio 2026 se consultan junto a su encabezado en `journal_entries_2026` por el
+  UUID de referencia, sin necesidad de que la tabla de líneas tenga su propia partición.
+
+### 9.3 Jerarquía multinivel (compuesta): RANGE por fecha + HASH por tenant
+
+Aplica solo como **escape quirúrgico** (§4.4) para el caso específico de un tenant "vecino
+ruidoso" dentro de una tabla ya particionada por RANGE — no es el diseño por defecto de ninguna
+tabla del catálogo de §7. Ejemplo ilustrativo sobre `inventory.stock_movements`:
+
+```
+                    inventory.stock_movements (tabla particionada, lógica)
+                                          │
+              ┌───────────────────────────┼───────────────────────────┐
+              │                            │                            │
+  stock_movements_2026_06      stock_movements_2026_07      stock_movements_2026_08
+  (partición RANGE mensual,     (partición RANGE mensual,     (partición RANGE mensual,
+   caso normal: sin              caso normal: sin              MES CON TENANT DE ALTO
+   sub-partición, un solo         sub-partición)                 VOLUMEN — sub-particionada
+   segmento físico)                                              por HASH(tenant_id))
+                                                                          │
+                                                    ┌─────────────────────┼─────────────────────┐
+                                                    │                     │                     │
+                                        stock_movements_2026_08   stock_movements_2026_08   stock_movements_2026_08
+                                            _hash_0                   _hash_1                   _hash_2
+                                        (subconjunto de           (subconjunto de           (subconjunto de
+                                         tenants, incluye          tenants, incluye          tenants normales,
+                                         al tenant ruidoso          tenants normales)          sin el ruidoso)
+                                         aislado en su propio
+                                         segmento de escritura)
+```
+
+Puntos clave del diagrama:
+
+- El primer nivel (RANGE por fecha) es idéntico al patrón por defecto de §9.1 — se mantiene igual
+  para todos los meses y todos los tenants.
+- El segundo nivel (HASH por `tenant_id`) solo se activa dentro del mes/los meses donde un tenant
+  específico satura la partición mensual normal con un volumen de escritura desproporcionado al
+  resto — es una decisión operativa puntual, no una política general aplicada a todas las
+  particiones desde el diseño (§4.4, §5 — descartado como estrategia primaria).
+- Los meses sin ese problema (`2026_06`, `2026_07` en el diagrama) permanecen como una sola
+  partición física, sin el costo adicional de gestionar sub-particiones que no aportan beneficio
+  ahí.
