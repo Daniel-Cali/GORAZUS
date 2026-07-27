@@ -174,6 +174,40 @@ no una reescritura del schema. Detalle completo:
 
 ### Añadido
 
+- **Contabilidad Enterprise, Parte 1: Núcleo Contable + Estados Financieros (2026-07-27), `v0.23.0`.**
+  - Origen: pedido "PROMPT MAESTRO — MÓDULO DE CONTABILIDAD ENTERPRISE" con 20 secciones — alcance
+    real de varias semanas. Se acordó con el usuario el orden de partes (`AskUserQuestion`) antes
+    de escribir código; esta Parte 1 cubre plan de cuentas, motor de reglas, asientos, Libro
+    Diario/Mayor, Balance General, Estado de Resultados y Flujo de Efectivo.
+  - Reality-check previo: `modules/contabilidad/backend` estaba vacío, pero el schema `accounting`
+    ya tenía 28 tablas reales certificadas — se construyó sobre 17, sin tablas nuevas.
+  - **Nuevo**: `PlanCuentasService` (jerárquico, código único por empresa), `MotorContableService`
+    (traduce un evento de negocio confirmado en un asiento balanceado — `amount_formula` es el
+    nombre de un campo, nunca una expresión evaluada, decisión de seguridad deliberada),
+    `AsientosService` (`draft`/`pending` → `posted` → `cancelled`/`reversed`, entidad `Asiento`
+    valida partida doble), Libro Diario/Mayor, `EstadosFinancierosService` (Balance General/Estado
+    de Resultados/Flujo de Efectivo, generados en vivo desde `journal_entry_lines`).
+  - **Integración real y no bloqueante con `ventas`**: `confirmarFactura()` dispara el motor; sin
+    regla configurada, `ventas` sigue igual que antes — cumple "nunca romper compatibilidad".
+  - **Bug real encontrado y corregido en la verificación manual end-to-end** (no un test): un
+    asiento revertido (`status='reversed'`) quedaba excluido de los reportes mientras su reversión
+    (`posted`) sí contaba — el Balance General mostraba `-$100` en vez de `$0` tras crear y revertir
+    una transacción. Corregido: filtro `status IN ('posted', 'reversed')` en las 3 consultas
+    afectadas. Verificado de nuevo contra Postgres real: Balance General vuelve a `$0`/`$0`.
+  - **Gap real de schema encontrado al sembrar datos**: `account_types.code` tiene un CHECK real
+    que solo permite 5 valores (no los 8 del pedido) — resuelto con listas explícitas de cuentas
+    (`costAccountIds`/etc.) para la subclasificación del Estado de Resultados.
+  - Tests: 31 nuevos (7+5 entidades, 5+10 servicios, 4 e2e real), 31/31 ✅. Sin regresión en
+    `ventas-backend` (30/30) ni `pos-backend` (9/9). Build/lint limpios, arranque real de la API
+    (26 rutas de `/contabilidad/*`), OpenAPI regenerado. Permisos
+    `contabilidad.gestionar_plan_cuentas`/`gestionar_asientos`/`ver_reportes` sembrados.
+  - CxC/CxP avanzadas, Bancos, Conciliación, Activos Fijos, Depreciaciones, Impuestos, Presupuestos,
+    Cierre Contable, Auditoría dedicada, Reportes exportables — fuera de esta parte, ver
+    `docs/reports/contabilidad/ACCOUNTING_ROADMAP.md`.
+  - Documentos nuevos: `modules/contabilidad/README.md`,
+    `docs/reports/contabilidad/ACCOUNTING_*.md` (ARCHITECTURE/API_REPORT/TEST_REPORT/
+    HEALTH_REPORT/ROADMAP/REPORT).
+
 - **FASE 04 — Módulo Facturación Enterprise, Parte 1: Motor de Facturación (2026-07-26), `v0.22.0`.**
   - Origen: pedido con arquitectura CQRS/DDD/Value Objects/Factories y stack PHP/PHPUnit/PHPStan —
     no aplica a este proyecto (NestJS/TypeScript/Prisma). Reality-check obligatorio (mismo

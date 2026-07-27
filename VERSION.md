@@ -11,7 +11,62 @@ todavía, así que no hay compromiso de compatibilidad entre versiones `0.x`.
 > `DATABASE_SPANISH_STANDARD.md`/`DATABASE_DICTIONARY.md`/`DATABASE_MIGRATION_REPORT.md` para el
 > resultado completo de esa fase de diseño — sigue siendo `0.11.1` hasta que se apruebe y ejecute.
 
-## Versión actual: **0.22.0** (2026-07-26)
+## Versión actual: **0.23.0** (2026-07-27)
+
+Contabilidad Enterprise, Parte 1 (Núcleo Contable + Estados Financieros). Origen: pedido "PROMPT
+MAESTRO — MÓDULO DE CONTABILIDAD ENTERPRISE" con 20 secciones (plan de cuentas, motor contable
+automático, asientos, libros, estados financieros, CxC/CxP, bancos, conciliación, activos fijos,
+depreciación, impuestos, centros de costo, presupuestos, cierre, auditoría, reportes) — alcance
+real de varias semanas. Se acordó con el usuario (`AskUserQuestion`) el orden de partes antes de
+escribir código: esta Parte 1 cubre el núcleo del que dependen las demás.
+
+Reality-check previo: `modules/contabilidad/backend` estaba vacío, pero el schema `accounting` ya
+tenía 28 tablas reales desde la certificación original de base de datos — se construyó código de
+aplicación sobre 17 de ellas, sin agregar tablas nuevas.
+
+Lo construido: plan de cuentas jerárquico (`chart_of_accounts`, código único por empresa), motor de
+reglas contables (`accounting_rules`/`accounting_rule_lines` — `amount_formula` es el nombre de un
+campo del "hecho contable" del módulo de origen, nunca una expresión evaluada, decisión de
+seguridad deliberada contra ejecución de código arbitrario), asientos con ciclo de vida completo
+(`draft`/`pending` → `posted` → `cancelled`/`reversed`, entidad `Asiento` valida partida doble
+balanceada), Libro Diario, Libro Mayor, Balance General, Estado de Resultados y Flujo de Efectivo
+(aproximado — ver limitaciones). Integración real y no bloqueante con `ventas`:
+`VentasService.confirmarFactura()` dispara el motor; sin ninguna regla configurada para la empresa
+(caso real de la mayoría hoy), no pasa nada — cumple "nunca romper compatibilidad con módulos
+existentes".
+
+**Hallazgo real corregido durante la verificación manual end-to-end** (no un test, un bug real):
+`journal_entries` particionada por `posting_date` (mismo patrón que `sales.invoices`) — las
+agregaciones de reportes (`$queryRaw` con `JOIN` manual, `journal_entry_lines` no tiene relación
+real de Prisma hacia `journal_entries`) filtraban solo `status='posted'`. Al revertir un asiento,
+el original pasa a `status='reversed'` y **desaparecía por completo** de los reportes mientras su
+reversión (sí `posted`) seguía contando — el Balance General mostraba `-$100` en vez de `$0` tras
+crear y revertir una transacción de `$100`. Corregido: el filtro pasa a
+`status IN ('posted', 'reversed')` en las 3 consultas afectadas — un asiento revertido sigue siendo
+historia real del libro, la reversión es un asiento nuevo que lo cancela, no un borrado del
+original. Verificado de nuevo contra Postgres real tras el fix: Balance General vuelve a `$0`/`$0`.
+
+**Gap real de diseño encontrado al sembrar datos reales** (no un bug, una restricción de schema):
+`account_types.code` tiene un CHECK real que solo permite 5 valores (`asset`/`liability`/`equity`/
+`income`/`expense`), no los 8 que el pedido original distingue (incluye Costos/Otros
+Ingresos/Otros Gastos) — resuelto con listas explícitas de cuentas
+(`costAccountIds`/`otherIncomeAccountIds`/`otherExpenseAccountIds`) para la subclasificación fina
+del Estado de Resultados, en vez de inventar códigos de tipo que el CHECK real rechazaría.
+
+`MINOR`: 31 tests nuevos (7 entidad `Asiento` + 5 entidad `CuentaContable` + 5 servicio
+`MotorContableService` + 10 servicio `AsientosService` + 4 e2e real), 31/31 ✅. Sin regresión en
+`ventas-backend` (30/30) ni `pos-backend` (9/9). Build/lint limpios, arranque real de la API
+verificado (26 rutas de `/contabilidad/*` mapeadas), OpenAPI regenerado y confirmado. Verificación
+manual completa contra Postgres real: crear factura → confirmar → asiento automático → Balance
+General cuadra (Activos = Pasivos + Patrimonio + Utilidad) → revertir → Balance General vuelve a
+cero. Permisos `contabilidad.gestionar_plan_cuentas`/`gestionar_asientos`/`ver_reportes` sembrados.
+Sin migración de base de datos — las 17 tablas usadas ya existían completas.
+
+CxC/CxP avanzadas, Bancos, Conciliación Bancaria, Activos Fijos, Depreciaciones, Impuestos (motor
+completo), Presupuestos (ejecución), Cierre Contable, Auditoría dedicada, Reportes exportables —
+explícitamente fuera de esta parte, ver `docs/reports/contabilidad/ACCOUNTING_ROADMAP.md`.
+
+## 0.22.0 (2026-07-26)
 
 FASE 04 — Módulo Facturación Enterprise, Parte 1 (Motor de Facturación). Origen: pedido con
 arquitectura CQRS/DDD/Value Objects/Factories y stack PHP/PHPUnit/PHPStan — no aplica a este
@@ -445,10 +500,11 @@ FASE 2 — Backend Core (endurecimiento de `auth` + capacidades nuevas de infrae
 
 ## Próxima versión prevista
 
-`0.23.0` — alcance a confirmar: Facturación Enterprise Parte 2 (vista previa/PDF/impresión/envío
-por correo, requiere elegir una librería de generación de PDF), Roles Enterprise Subfases 4.2-4.8
-(pausadas, esperando aprobación explícita), o Clientes/CRM Parte 02.2+ (Categorías, Notas/Timeline,
-Crédito, Tags, Documentos, Dashboard). Sin fecha comprometida.
+`0.24.0` — alcance a confirmar: Contabilidad Enterprise Parte 2 (CxC/CxP avanzadas, o Bancos/
+Conciliación), Facturación Enterprise Parte 2 (vista previa/PDF/impresión/envío por correo, requiere
+elegir una librería de generación de PDF), Roles Enterprise Subfases 4.2-4.8 (pausadas, esperando
+aprobación explícita), o Clientes/CRM Parte 02.2+ (Categorías, Notas/Timeline, Crédito, Tags,
+Documentos, Dashboard). Sin fecha comprometida.
 
 ## Versionado del modelo de datos (track independiente)
 
