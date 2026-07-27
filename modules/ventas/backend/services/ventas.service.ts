@@ -261,6 +261,7 @@ export class VentasService {
       taxAmount,
       totalAmount,
       generalDiscountPercentage,
+      salesOrderId: input.salesOrderId ?? null,
       lines: lineasCalculadas,
     });
   }

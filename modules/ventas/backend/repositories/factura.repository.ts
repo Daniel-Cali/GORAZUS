@@ -23,6 +23,8 @@ export interface CrearFacturaParams {
   taxAmount: number;
   totalAmount: number;
   generalDiscountPercentage: number;
+  /** Pedido de origen (Módulo de Ventas Enterprise, Parte 1) — `null` para una factura directa, sin pedido previo (POS, mismo comportamiento que hasta ahora). */
+  salesOrderId?: string | null;
   lines: LineaFacturaParams[];
 }
 

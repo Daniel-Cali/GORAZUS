@@ -18,6 +18,8 @@ export const crearFacturaSchema = z.object({
   customerId: z.string().uuid('El id de cliente debe ser un UUID válido'),
   salesChannel: z.enum(['store', 'pos', 'ecommerce', 'phone', 'mobile']).default('store'),
   currencyCode: z.string().length(3, 'El código de moneda debe tener 3 letras (ISO 4217)'),
+  /** Pedido de origen (Módulo de Ventas Enterprise, Parte 1) — lo fija `PedidosVentaService.convertirAFactura`, nunca lo envía un cliente HTTP directo. */
+  salesOrderId: z.string().uuid('El id de pedido debe ser un UUID válido').optional(),
   /** Distinto del descuento por línea — se aplica sobre el subtotal ya neto de descuentos de línea. */
   generalDiscountPercentage: z
     .number()

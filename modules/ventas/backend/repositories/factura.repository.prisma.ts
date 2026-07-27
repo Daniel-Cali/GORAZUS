@@ -47,6 +47,7 @@ export class FacturaRepositoryPrisma extends FacturaRepository {
           tax_amount: params.taxAmount,
           total_amount: params.totalAmount,
           general_discount_percentage: params.generalDiscountPercentage,
+          sales_order_id: params.salesOrderId ?? null,
         },
       });
       await tx.invoice_lines.createMany({
