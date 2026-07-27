@@ -53,6 +53,8 @@ const PERMISSIONS: Array<{ moduleCode: string; actionCode: string }> = [
   { moduleCode: 'caja', actionCode: 'gestionar_caja' },
   { moduleCode: 'ventas', actionCode: 'ver' },
   { moduleCode: 'ventas', actionCode: 'gestionar_ventas' },
+  { moduleCode: 'ventas', actionCode: 'gestionar_cotizaciones' },
+  { moduleCode: 'ventas', actionCode: 'gestionar_pedidos' },
   { moduleCode: 'pos', actionCode: 'operar_pos' },
   { moduleCode: 'crm', actionCode: 'ver' },
   { moduleCode: 'crm', actionCode: 'ver_leads' },
