@@ -181,6 +181,24 @@ export type {
   receipt_allocations,
 } from '../prisma/schemas/sales/generated';
 /**
+ * Módulo de Ventas Enterprise, Parte 1 (Cotización → Pedido → Factura) —
+ * 8 tablas más del schema `sales` (13 de 55 en total). `quotes`/
+ * `quote_lines`/`sales_orders`/`sales_order_lines` NO están particionadas
+ * (a diferencia de `invoices`) y SÍ tienen relación real de Prisma hacia
+ * sus líneas — aceptan `create` anidado, mismo criterio que
+ * `accounting_rules`/`accounting_rule_lines`.
+ */
+export type {
+  quotes,
+  quote_lines,
+  quote_status,
+  quote_status_history,
+  sales_orders,
+  sales_order_lines,
+  sales_order_status,
+  sales_order_status_history,
+} from '../prisma/schemas/sales/generated';
+/**
  * Cliente Prisma del schema `cash` — noveno cliente independiente
  * (`PRISMA_CASH`), mismo criterio que los anteriores. Primer consumidor:
  * `modules/caja/backend` (FASE 06 Parte 01 — `cash_registers`,

@@ -14,3 +14,10 @@ export {
   StockInsuficienteException,
 } from './backend/services/movimientos.service';
 export { TiposMovimientoService } from './backend/services/tipos-movimiento.service';
+/** Consumido por Pedidos de Venta (`modules/ventas/backend`, Módulo de Ventas Enterprise Parte 1) — reserva real de inventario al crear un pedido. */
+export {
+  ReservasService,
+  ReservaNoEncontradaException,
+  ReservaYaLiberadaException,
+  CapacidadReservaInsuficienteException,
+} from './backend/services/reservas.service';

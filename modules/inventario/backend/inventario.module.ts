@@ -122,7 +122,9 @@ import { ProgramaConteoCiclicoRepositoryPrisma } from './repositories/programa-c
   // primer consumidor real del patrón de barrel documentado en
   // `docs/architecture/01-estructura-monorepo.md §5` ("`modules/<x>/backend`
   // puede importar `modules/<y>/index.ts`"), nunca importado por ruta
-  // profunda. Ver `modules/inventario/index.ts`.
-  exports: [StockService, MovimientosService, TiposMovimientoService],
+  // profunda. `ReservasService` exportado para Pedidos de Venta (Módulo de
+  // Ventas Enterprise Parte 1, `modules/ventas/backend`) — reserva real de
+  // inventario al crear un pedido. Ver `modules/inventario/index.ts`.
+  exports: [StockService, MovimientosService, TiposMovimientoService, ReservasService],
 })
 export class InventarioModule {}
