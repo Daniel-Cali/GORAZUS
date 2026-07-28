@@ -48,6 +48,7 @@ notas puente.
 - [[Knowledge Evolution Report — 2026-07-28]] (Second Brain Protocol, Level 3 — primer reporte formal)
 - [[Enterprise Optimization Report — 2026-07-28]] (Second Brain Protocol, Level 4 — roadmap priorizado, sin proyecciones sin evidencia)
 - [[Enterprise Governance Report — 2026-07-28]] (Second Brain Protocol, Level 5 — ciclo de vida de ADR formalizado, registro de riesgos consolidado)
+- [[Innovation Report — 2026-07-28]] (Second Brain Protocol, Level 6 — mayoría Discard/Monitor, sin fabricar necesidad de negocio)
 
 ## 01 Platform
 
