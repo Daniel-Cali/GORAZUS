@@ -51,6 +51,7 @@ notas puente.
 - [[Innovation Report — 2026-07-28]] (Second Brain Protocol, Level 6 — mayoría Discard/Monitor, sin fabricar necesidad de negocio)
 - [[GEMM — Enterprise Maturity Model — 2026-07-28]] (Second Brain Protocol, GEMM v1.0 — dashboard de madurez, cada cifra trazable a evidencia real)
 - [[Engineering Review — ADR-INV-004]] (revisión consolidada del Motor de Costeo de Inventario)
+- [[Engineering Review — ADR-INV-005]] (revisión consolidada del Motor de Disponibilidad de Inventario)
 
 ## 01 Platform
 
@@ -64,7 +65,7 @@ notas puente.
 
 ## 02 Domains
 
-- [[Inventory]] (único dominio con contenido real — 15 notas, incluye [[Dynamic Attribute Engine]] y [[ADR-INV-004]])
+- [[Inventory]] (único dominio con contenido real — 16 notas, incluye [[Dynamic Attribute Engine]], [[ADR-INV-004]] y [[ADR-INV-005]])
 - [[Sales]] · [[Purchasing]] · [[Accounting]] · [[CRM]] · [[HR]] (sin ADR propio todavía)
 
 ## 03 Shared Kernel
