@@ -102,6 +102,17 @@ cubra. Si la serie continúa, el candidato de mayor evidencia sigue siendo `Comp
 Proveedor (§4.9) ya está diseñada para conectarse ahí en el momento en que exista código real de
 `purchases`.
 
+# Update — Digital Twin (§15, agregado 2026-07-28)
+
+`ADR-INV-008` se extendió con `§15` (Point-in-Time Reconstruction completo: inventario, valuación,
+estado de almacén, disponibilidad, reservas, asignaciones, snapshots, replay). Reafirma la misma
+disciplina de esta revisión: **hallazgo real nuevo** (`remaining_quantity` de las capas de costo es
+mutable, no una serie de eventos — verificado de nuevo contra el schema antes de diseñar §15.3, no
+asumido) y **hallazgo positivo real** (Point-in-Time Reservations ya 100% reconstruible sin ningún
+cambio de schema). Ambos ya volcados a [[Issue Register]] (`ISSUE-19`) y [[Decision Log]] —
+primera vez en la serie que una extensión de un ADR ya cerrado se consolida directamente en los
+registros canónicos de gobernanza en vez de quedar solo en esta nota de revisión.
+
 # Related ADRs
 
 [[ADR-INV-008]] · [[ADR-INV-000]] · [[ADR-INV-001]] · [[ADR-INV-002]] · [[ADR-INV-003]] · [[ADR-INV-004]] · [[ADR-INV-005]] · [[ADR-INV-006]] · [[ADR-INV-007]]
