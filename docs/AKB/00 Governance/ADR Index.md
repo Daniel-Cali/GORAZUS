@@ -35,6 +35,7 @@ nueva taxonomía a la que pertenece por tema, no todas juntas en un solo lugar.
 | [[ADR-INV-006]] | Motor de Reabastecimiento de Inventario         | Propuesta | `02 Domains/Inventory/` |
 | [[ADR-INV-007]] | Motor de Optimización de Almacenes              | Propuesta | `02 Domains/Inventory/` |
 | [[ADR-INV-008]] | Motor de Trazabilidad de Inventario             | Propuesta | `02 Domains/Inventory/` |
+| [[ADR-INV-009]] | Motor de Conteo Cíclico de Inventario           | Propuesta | `02 Domains/Inventory/` |
 
 # References
 
