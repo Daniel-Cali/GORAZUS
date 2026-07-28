@@ -53,9 +53,19 @@ existir legítimamente sin ese origen.
 de `core` ya resuelve la necesidad.** Ver [[Generic Polymorphic Subsystems]] para el criterio
 completo y los dos ejemplos reales (`core.documents`, `core.tags`).
 
+**6. Una corrección dentro de la ventana operativa normal se aplica sobre el registro existente; una
+corrección después de que esa ventana cerró nunca reescribe el pasado, siempre compensa hacia
+adelante.** Origen: `ADR-INV-004 §5` distingue **Ajuste** (mismo período contable, corrige la fila
+existente) de **Corrección** (período ya cerrado, genera una fila compensatoria nueva, nunca toca la
+original) — la misma asimetría que ya gobierna `ADR-INV-001 §4.3` (`INACTIVE` reversible vs.
+`DISCONTINUED` definitivo) y el [[Append-Only Ledger Pattern]] en general (`DETACH`/archivado en vez
+de `DELETE` retroactivo). Generalización: cualquier corrección de dominio debe preguntar primero "¿el
+período/ventana en la que ocurrió el error sigue abierto?" antes de decidir si corrige en sitio o
+compensa hacia adelante — nunca asumir que "corregir" significa siempre lo mismo.
+
 # Related ADRs
 
-[[ADR-DB-001]] · [[ADR-INV-001]] · `ADR-INV-002` (vía [[Movement Engine]]/[[Reservation]])
+[[ADR-DB-001]] · [[ADR-INV-001]] · [[ADR-INV-004]] · `ADR-INV-002` (vía [[Movement Engine]]/[[Reservation]])
 
 # References
 
