@@ -32,6 +32,7 @@ nueva taxonomía a la que pertenece por tema, no todas juntas en un solo lugar.
 | [[ADR-INF-001]] | Estrategia de Concurrencia de Inventario        | Propuesta | `01 Platform/`          |
 | [[ADR-INV-004]] | Motor de Costeo de Inventario                   | Propuesta | `02 Domains/Inventory/` |
 | [[ADR-INV-005]] | Motor de Disponibilidad de Inventario           | Propuesta | `02 Domains/Inventory/` |
+| [[ADR-INV-006]] | Motor de Reabastecimiento de Inventario         | Propuesta | `02 Domains/Inventory/` |
 
 # References
 
