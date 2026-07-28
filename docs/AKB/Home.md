@@ -45,6 +45,7 @@ notas puente.
 - [[Glossary]]
 - [[Decision Log]]
 - [[Architecture Review — ADR-DB-001 and ADR-INV-001]] (Second Brain Protocol, Level 2 — primera revisión formal)
+- [[Knowledge Evolution Report — 2026-07-28]] (Second Brain Protocol, Level 3 — primer reporte formal)
 
 ## 01 Platform
 
