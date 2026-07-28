@@ -64,6 +64,16 @@ Refuerza (sin resolver) `ISSUE-01` (I4) — la genealogía física depende de qu
 `tracksSerial`/`tracksLot` sean mutuamente excluyentes; este ADR documenta por qué esa brecha importa
 más de lo que parecía antes de diseñarlo, sin corregirla (fuera de su alcance).
 
+# Update — Digital Twin (§15, agregado 2026-07-28)
+
+Extiende `ReconstruirEnPuntoDelTiempo` (§4.5) a las 8 capacidades de reconstrucción histórica
+pedidas explícitamente (inventario/valuación/estado de almacén/disponibilidad/reservas/asignaciones
+en un punto del tiempo, snapshots, replay). **Hallazgo real nuevo**: `remaining_quantity` en
+`fifo_cost_layers`/`lifo_cost_layers` es una columna **mutable, decrementada in-place** — no
+reconstruible históricamente sin una tabla de consumo append-only nueva
+(`fifo_cost_layer_consumptions`, propuesta). Hallazgo positivo: Point-in-Time Reservations ya es
+100% reconstruible hoy sin ningún cambio de schema (`created_at`/`released_at` ya reales).
+
 # Related ADRs
 
 [[ADR-INV-000]] · [[ADR-INV-001]] · [[ADR-INV-002]] · [[ADR-INV-003]] · [[ADR-INV-004]] · [[ADR-INV-005]] · [[ADR-INV-006]] · [[ADR-INV-007]]

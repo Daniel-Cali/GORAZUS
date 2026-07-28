@@ -424,6 +424,157 @@ flowchart LR
 - La brecha de `products.products` sin modelar condiciones especiales de almacenamiento (señalada en
   `ADR-INV-007 §14`) es indirectamente relevante para Quality genealogy — no se resuelve aquí tampoco.
 
+## 15. Digital Twin — Reconstrucción Completa en un Punto del Tiempo
+
+Extiende `§4.5` (`ReconstruirEnPuntoDelTiempo`, hasta ahora solo un párrafo) con las ocho
+capacidades pedidas explícitamente. **Hallazgo real nuevo, más importante que cualquiera de las
+ocho capacidades por sí sola**: verificar `remaining_quantity` en `fifo_cost_layers`/
+`lifo_cost_layers`/`inventory_lots` confirma que es una **columna mutable, decrementada in-place**
+a medida que se consume (`19-modulo-inventory.md §10`: "arranca igual a la original, se consume con
+el tiempo") — no una serie de eventos. Esto significa que, tal como está diseñado hoy, **no es
+posible reconstruir con exactitud** "¿cuánto quedaba en esta capa el 15 de mayo?" una vez que esa
+capa ya se consumió parcialmente después de esa fecha — el valor actual sobrescribe el histórico.
+Un "Digital Twin" que solo lea el estado mutable actual no es un Digital Twin real, es una foto del
+presente con una etiqueta equivocada. Este hallazgo determina el diseño de todo §15.
+
+### 15.1 Principio General — Replay sobre Ledger, nunca lectura de estado mutable
+
+Todo "punto en el tiempo" de este ADR se reconstruye **reproduciendo el ledger append-only desde su
+origen (o desde el snapshot verificado más cercano) hasta la fecha solicitada** — nunca leyendo una
+columna de estado actual y asumiendo que ya reflejaba ese valor en el pasado. Es la aplicación más
+estricta hasta ahora del [[Append-Only Ledger Pattern]]: un Digital Twin es, literalmente, la prueba
+de que ese patrón se diseñó correctamente — o la evidencia de dónde no se aplicó con suficiente
+disciplina (§15.3).
+
+### 15.2 Point-in-Time Inventory (`On Hand`)
+
+✅ **Ya reconstruible con exactitud** sin cambio de schema — `stock_movements` es append-only real
+(`ADR-DB-001 §7`). `CantidadEnMano(productId, warehouseId, fecha) = SUM(quantity × signo del tipo de
+movimiento) WHERE created_at ≤ fecha`. Es la capacidad más sólida de las ocho porque
+[[Movement Engine]] nunca tuvo el problema de mutabilidad que sí tienen las capas de costo.
+
+### 15.3 Point-in-Time Valuation — requiere corrección de diseño, no solo consulta nueva
+
+🔴 **No reconstruible con exactitud hoy**, por el hallazgo de arriba. Se propone
+`fifo_cost_layer_consumptions` (nueva, append-only) — en vez de decrementar `remaining_quantity`
+in-place, cada consumo de una capa se registra como una fila nueva:
+
+```sql
+CREATE TABLE inventory.fifo_cost_layer_consumptions (
+    id                  UUID   NOT NULL DEFAULT gen_random_uuid(),
+    cost_layer_id       UUID   NOT NULL REFERENCES inventory.fifo_cost_layers(id),
+    stock_movement_id   UUID   NOT NULL, -- referencia lógica a stock_movements (id, created_at)
+    quantity_consumed   DECIMAL(18,6) NOT NULL,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (id, created_at)
+) PARTITION BY RANGE (created_at); -- mensual, mismo criterio que cost_adjustments (ADR-INV-004)
+```
+
+`remaining_quantity` en `fifo_cost_layers`/`lifo_cost_layers` **se conserva** como columna
+denormalizada de lectura rápida para el caso operativo normal (resolver el costo de la _próxima_
+salida, `ADR-INV-004 §3.1`) — pero deja de ser la fuente para reconstrucción histórica:
+`RemanenteEnFecha(layerId, fecha) = original_quantity − SUM(quantity_consumed WHERE created_at ≤
+fecha)`. Mismo patrón que `Available` (`ADR-INV-005 §4.1`): la columna mutable optimiza la lectura
+del presente, el ledger es la fuente de verdad del pasado — **no son contradictorios**, son dos
+propósitos distintos que ya coexisten en otras partes de esta serie (`Stock.quantityOnHand`
+denormalizado + [[Movement Engine]] como ledger, exactamente la misma dualidad).
+
+**Point-in-Time Valuation completa** = `RemanenteEnFecha × unit_cost` de cada capa activa en esa
+fecha, sumado — para `average_cost_history` no hace falta corrección, ya es un snapshot por fecha
+(`ADR-INV-004 §2`, ya real).
+
+### 15.4 Point-in-Time Warehouse Status
+
+🟡 Parcial — depende de que `stock_movements.location_id` (`§6.1` de este mismo ADR) y
+`warehouse_tasks` (`ADR-INV-007 §3.10`) existan. Con ambos: `EstadoDeAlmacenEnFecha(warehouseId,
+fecha)` = ocupación por ubicación (§3.2 de `ADR-INV-007`) reconstruida vía replay de movimientos con
+`location_id`, más tareas `completed` antes de esa fecha. Sin `location_id` en movimientos
+históricos anteriores a la migración, la reconstrucción de ese período queda a nivel de almacén, no
+de ubicación — mismo límite ya aceptado en `§6.1` (sin fabricar un dato que nunca se capturó).
+
+### 15.5 Point-in-Time Availability
+
+🟡 Parcial — `Available = On Hand − Reserved − holds` (`ADR-INV-005 §3.14`). `On Hand` en un punto
+del tiempo ya es exacto (§15.2). `Reserved` en un punto del tiempo es exacto también (§15.6). Los
+`stock_quality_holds` (`ADR-INV-005 §3.7`) tienen `released_at`, mismo patrón temporal que
+`stock_reservations` — point-in-time correcto sin cambio de diseño. **Conclusión**: Point-in-Time
+Availability es 100% reconstruible una vez que Point-in-Time Reserved (§15.6) lo es — no requiere
+mecanismo propio adicional, es una composición.
+
+### 15.6 Point-in-Time Reservations — la capacidad mejor soportada de las ocho
+
+✅ **Ya reconstruible con exactitud, sin ningún cambio de schema** — hallazgo real y positivo de esta
+revisión: `stock_reservations.created_at`/`released_at` (ambas ya reales) definen exactamente una
+ventana temporal por reserva. `ReservaActivaEnFecha(fecha) = created_at ≤ fecha AND (released_at IS
+NULL OR released_at > fecha)`. Ninguna otra de las ocho capacidades pedidas estaba tan cerca de
+"ya completa" antes de este ADR.
+
+### 15.7 Point-in-Time Allocations
+
+🔴 Depende enteramente de que `picking_started_at`/`is_committed` (`ADR-INV-005 §3.2`, propuestas,
+sin implementar) existan — sin esas columnas, `Allocated`/`Committed` no tienen ventana temporal que
+reconstruir, porque hoy no se distinguen de `Reserved` en absoluto. Misma brecha ya señalada en
+`ADR-INV-005`, heredada aquí sin resolverse de nuevo.
+
+### 15.8 Historical Snapshots — unificación, no una tabla nueva más
+
+Ya existen, dispersos: `average_cost_history` (real), `availability_snapshots` (`ADR-INV-005 §4.3`,
+propuesta), `traceability_snapshots` (`§4.4` de este ADR, propuesta). Se propone que los tres sigan
+existiendo **separados** (cada uno cachea el resultado de su propio Domain Service) pero que
+`ObtenerFotoCompleta` (§15.10) sea el único punto que los combina — no se fusionan en una tabla
+"snapshots" genérica, porque cada uno cachea una fórmula distinta con una cadencia de recálculo
+distinta (mismo criterio de "no fragmentar, pero tampoco fusionar sin necesidad" ya aplicado
+repetidamente en la serie).
+
+### 15.9 Replay Capability — Domain Service
+
+`ReproducirHastaFecha(entityType, entityId, fecha)` — generaliza `ReconstruirEnPuntoDelTiempo`
+(`§4.5`) explícitamente como el motor de replay: dado un punto de partida (el origen del ledger, o
+el snapshot verificado más cercano anterior a `fecha`, §15.8) y una fecha destino, aplica cada evento
+del ledger correspondiente en orden hasta alcanzarla. Determinístico por construcción — el mismo
+punto de partida y la misma secuencia de eventos siempre producen el mismo resultado, propiedad que
+un ledger mutable (§15.3, antes de la corrección) no podía garantizar.
+
+### 15.10 Digital Twin Reconstruction — la consulta compuesta final
+
+`ObtenerFotoCompleta(warehouseId | productId, fecha)` — combina §15.2 a §15.7 en una sola respuesta:
+inventario, valuación, estado de almacén, disponibilidad, reservas y asignaciones, todas a la misma
+fecha. **No es un mecanismo nuevo** — es la composición de los seis anteriores, mismo criterio que
+`ObtenerDisponibilidadProyectada` (`ADR-INV-005 §4.10`) fue composición en vez de cálculo propio.
+
+### 15.11 Diagrama — Replay hasta un Punto del Tiempo
+
+```mermaid
+sequenceDiagram
+    participant U as Consumidor (auditoría, investigación de calidad)
+    participant DT as ObtenerFotoCompleta
+    participant Snap as Snapshot más cercano anterior
+    participant Ledger as stock_movements / fifo_cost_layer_consumptions / stock_reservations
+
+    U->>DT: ObtenerFotoCompleta(warehouseId, fecha)
+    DT->>Snap: ¿existe snapshot ≤ fecha?
+    alt snapshot disponible
+        Snap-->>DT: estado base + fecha del snapshot
+        DT->>Ledger: reproducir eventos entre snapshot y fecha
+    else sin snapshot
+        DT->>Ledger: reproducir desde el origen del ledger hasta fecha
+    end
+    Ledger-->>DT: estado reconstruido (inventario, valuación, disponibilidad, reservas)
+    DT-->>U: Digital Twin en fecha solicitada
+```
+
+### 15.12 Consecuencias de §15
+
+- `fifo_cost_layers.remaining_quantity`/`lifo_cost_layers.remaining_quantity` **permanecen** como
+  están (columna denormalizada operativa) — `§15.3` no las elimina ni las reemplaza, agrega
+  `fifo_cost_layer_consumptions` como la fuente de reconstrucción histórica, mismo criterio de
+  extensión sin ruptura de toda la serie.
+- Point-in-Time Valuation solo es exacta **desde el momento en que se despliegue**
+  `fifo_cost_layer_consumptions` — consumos históricos anteriores no son reconstruibles
+  retroactivamente, mismo límite ya aceptado explícitamente en `§6.1` para `lot_id`/`serial_id`.
+- Point-in-Time Reservations (§15.6) no requiere ningún trabajo adicional — ya es real, hallazgo
+  positivo que vale la pena destacar en el reporte de cierre de esta extensión.
+
 ---
 
 ## Alternativas Consideradas
@@ -432,4 +583,4 @@ Ver §13.
 
 ## Consecuencias
 
-Ver §14.
+Ver §14, §15.12.
