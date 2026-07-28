@@ -44,6 +44,7 @@ notas puente.
 - [[Issue Register]]
 - [[Glossary]]
 - [[Decision Log]]
+- [[Architecture Review — ADR-DB-001 and ADR-INV-001]] (Second Brain Protocol, Level 2 — primera revisión formal)
 
 ## 01 Platform
 
