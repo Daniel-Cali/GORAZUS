@@ -53,6 +53,7 @@ notas puente.
 - [[Engineering Review — ADR-INV-004]] (revisión consolidada del Motor de Costeo de Inventario)
 - [[Engineering Review — ADR-INV-005]] (revisión consolidada del Motor de Disponibilidad de Inventario)
 - [[Engineering Review — ADR-INV-006]] (revisión consolidada del Motor de Reabastecimiento — cierra la trilogía Costeo/Disponibilidad/Reabastecimiento)
+- [[Engineering Review — ADR-INV-007]] (revisión consolidada del Motor de Optimización de Almacenes — cierra la serie completa de motores de Inventario)
 
 ## 01 Platform
 
@@ -66,7 +67,7 @@ notas puente.
 
 ## 02 Domains
 
-- [[Inventory]] (único dominio con contenido real — 17 notas, incluye [[Dynamic Attribute Engine]], [[ADR-INV-004]], [[ADR-INV-005]] y [[ADR-INV-006]])
+- [[Inventory]] (único dominio con contenido real — 18 notas, incluye [[Dynamic Attribute Engine]], [[ADR-INV-004]], [[ADR-INV-005]], [[ADR-INV-006]] y [[ADR-INV-007]])
 - [[Sales]] · [[Purchasing]] · [[Accounting]] · [[CRM]] · [[HR]] (sin ADR propio todavía)
 
 ## 03 Shared Kernel
