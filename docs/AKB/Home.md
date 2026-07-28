@@ -47,6 +47,7 @@ notas puente.
 - [[Architecture Review — ADR-DB-001 and ADR-INV-001]] (Second Brain Protocol, Level 2 — primera revisión formal)
 - [[Knowledge Evolution Report — 2026-07-28]] (Second Brain Protocol, Level 3 — primer reporte formal)
 - [[Enterprise Optimization Report — 2026-07-28]] (Second Brain Protocol, Level 4 — roadmap priorizado, sin proyecciones sin evidencia)
+- [[Enterprise Governance Report — 2026-07-28]] (Second Brain Protocol, Level 5 — ciclo de vida de ADR formalizado, registro de riesgos consolidado)
 
 ## 01 Platform
 
