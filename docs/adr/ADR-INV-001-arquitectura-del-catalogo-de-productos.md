@@ -629,3 +629,104 @@ Esta es, exactamente, la propiedad que distingue un modelo de datos preparado pa
 real de uno que requeriría una tabla `products_electronica`/`products_indumentaria` separada por
 vertical — el mismo principio de "no toda tabla debe ajustarse a la forma de un solo caso de uso"
 que ya gobierna el resto de la arquitectura de datos de GORAZUS (`ADR-DB-001 §2`).
+
+---
+
+## 9. Alternativas Consideradas
+
+- **Una tabla física distinta por tipo de producto** (`raw_materials`, `finished_products`,
+  `services`, cada una con sus propias columnas). Descartada: fragmenta la búsqueda y el reporte
+  unificado por `sku` en N consultas distintas, contradice el schema real ya certificado (una sola
+  tabla `products` con `product_type` como discriminador, §3.1), y no resuelve nada que el modelo de
+  dos capas (mecánica física real + clasificación de negocio propuesta) no resuelva ya con menos
+  superficie de schema.
+- **Columnas fijas por especificación de industria** (agregar `voltage_v`, `alcohol_content`,
+  `screen_size_inches`... directamente a `products`). Descartada: cada columna nueva exige una
+  migración, la mayoría de las filas tendría esa columna en `NULL` (antipatrón de tabla dispersa), y
+  es exactamente el problema que el Motor de Atributos Dinámicos (§8) ya resuelve sin migración —
+  esta alternativa es la razón de ser del diseño EAV, no una opción real descartada por preferencia
+  sino por necesidad de escalar a industrias no previstas hoy.
+- **Una única taxonomía jerárquica obligatoria** (Categoría → Subcategoría → Familia → Línea,
+  todas anidadas y obligatorias). Descartada en §7.1: no todo producto de toda industria necesita las
+  seis dimensiones, y forzar la jerarquía completa produce niveles vacíos o forzados sin significado
+  real de negocio para catálogos simples.
+- **Modelar Activos Fijos dentro de `products`** (una tabla única "todo lo que la empresa posee o
+  vende"). Descartada en §3.7: GORAZUS ya certifica un dominio `assets` completo con su propio ciclo
+  de vida de depreciación — fusionarlo con `products` mezclaría dos preguntas de negocio distintas
+  ("¿qué vendo?" vs. "¿qué poseo y deprecio?") en una sola entidad, complicando ambas sin beneficio.
+- **Tablas dedicadas por tipo de documento** (`product_certificates`, `product_warranties`,
+  `product_attachments`, cada una repitiendo `file_id`/`title`/auditoría). Descartada en §6: el
+  repositorio polimórfico ya real (`core.documents` + `core.document_types`) resuelve los tres casos
+  con una sola tabla genérica ya certificada — crear tres tablas de una sola columna útil cada una
+  sería reinventar un mecanismo que el sistema ya tiene y ya usa `customers` (`16-modulo-customers.md §6`).
+- **`product_type` como campo de texto libre, sin `CHECK` fijo** (en vez de los 5 valores
+  certificados). Descartada: a diferencia de la clasificación de negocio de §3.2 (que sí debe ser
+  extensible sin límite, porque es solo metadato de reporte), `product_type` determina comportamiento
+  físico real del motor (¿tiene stock?, ¿tiene componentes?, ¿genera transformación?) — dejarlo
+  abierto permitiría crear un valor nuevo sin que ninguna parte del sistema supiera qué reglas
+  aplicarle, un riesgo de integridad de comportamiento, no solo de datos.
+
+## 10. Consecuencias
+
+- Todo módulo de negocio nuevo que necesite referenciar un producto debe hacerlo por `product_id`
+  (UUID), nunca duplicando localmente `sku`/nombre/precio de referencia — la única fuente de verdad
+  de la identidad de un producto es este dominio (§1.1). Un módulo que necesite un valor congelado en
+  el tiempo (p. ej. el precio al momento de una venta) lo copia explícitamente a su propia tabla
+  transaccional, nunca lo lee en vivo desde `products` como si fuera la fuente autoritativa de ese
+  valor histórico (§1.2, fila Ventas).
+- La capa de clasificación de negocio de §3.2 (Producto Digital, Materia Prima, Terminado,
+  Semi-Terminado, Consumible, Repuesto) y la capa de gobierno de atributos de §8.3-§8.5 (grupos,
+  validación, plantillas) son **diseño de este ADR, no schema ya migrado** — cualquier equipo que
+  retome este documento para implementación debe crear las migraciones correspondientes antes de que
+  las reglas de negocio aquí descritas puedan aplicarse a nivel de motor, no solo de convención.
+- El ciclo de vida de §4 depende de que `lifecycle_status` deje de ser una columna inerte — requiere
+  un punto de aplicación real (validación de transición en la capa de servicio, mismo patrón ya usado
+  por la invariante `service` → sin `tracksSerial`/`tracksLot` en `producto.entity.ts`) antes de que
+  las reglas de transición de §4.3 sean algo más que documentación.
+- El límite de dominio con `assets` (§3.7) implica que cualquier flujo futuro de "vender un bien que
+  la empresa también usa internamente" (p. ej. liquidar maquinaria propia) debe diseñarse
+  explícitamente como un puente entre dos dominios — no ocurre automáticamente por compartir una
+  tabla, porque deliberadamente no la comparten.
+- Todo nuevo campo de datos maestros que un equipo futuro considere agregar directamente a `products`
+  debe primero evaluarse contra §8.2 (¿es verdaderamente universal a todo producto de toda industria,
+  o es un atributo dinámico disfrazado de columna fija?) — el criterio ya aplicado en §6 para
+  descartar Adjuntos/Certificados/Garantía/Tags como tablas propias aplica igual a cualquier campo
+  nuevo que se proponga en el futuro.
+
+---
+
+## Conclusión Arquitectónica
+
+El Catálogo de Productos de GORAZUS ERP Enterprise se diseña, desde este ADR, alrededor de una idea
+central: **la mecánica física de un producto (§3.1) y su clasificación de negocio (§3.2) son capas
+independientes**, y esa separación es lo que permite que el mismo modelo de datos sirva a industrias
+tan distintas como manufactura, indumentaria, alimentos o servicios sin una tabla por vertical. Las
+cinco piezas de este documento sostienen esa idea de forma concreta:
+
+1. **Un solo discriminador físico real (`product_type`, 5 valores) gobierna el comportamiento del
+   motor** — existencia física, composición, transformación — mientras que una capa de clasificación
+   de negocio extensible (§3.2, §8) absorbe la variedad real de industrias sin tocar ese
+   discriminador ni el schema.
+2. **Los límites de dominio son tan importantes como el contenido del dominio** — Activos Fijos
+   (§3.7), cantidades de inventario, ejecución de producción, reglas de precio de venta y definición
+   de impuestos están, deliberadamente, fuera de `products` (§2.2), porque cada uno responde una
+   pregunta de negocio distinta que merece su propio dominio autoritativo.
+3. **La reutilización de mecanismos genéricos ya certificados** (`core.documents`, `core.tags`) sobre
+   la creación de tablas de propósito único (§6, §9) mantiene el dominio delgado — cada tabla nueva
+   propuesta en este ADR (grupos y plantillas de atributos, §8.3-§8.5) se justificó explícitamente
+   contra esa alternativa antes de proponerse.
+4. **El motor de atributos dinámicos (§8)**, ya con una base real mínima pero funcional, es la pieza
+   que hace posible que una empresa de cualquier industria describa sus productos con precisión sin
+   depender de una migración de schema — la extensibilidad no es una promesa a futuro, es una
+   propiedad que el sistema ya demuestra hoy con las variantes de producto, y que este ADR extiende
+   con gobierno (tipos, validación, plantillas) sin romper esa base.
+5. **El ciclo de vida (§4)** convierte una columna hoy silenciosa en una máquina de estados con
+   intención de negocio explícita — separando decisiones reversibles (activar/desactivar) de
+   decisiones definitivas (descontinuar/archivar), la misma disciplina que un catálogo de miles de
+   productos con años de historial necesita para no acumular productos "zombis" indistinguibles entre
+   los que ya no se compran y los que solo están de pausa temporal.
+
+Ningún elemento de este diseño depende de anticipar qué industria usará GORAZUS a continuación — esa
+es, precisamente, la propiedad que un catálogo de productos de nivel SAP/Dynamics/NetSuite/Odoo debe
+tener: suficientemente estructurado para garantizar integridad (§2, §3.1), suficientemente extensible
+para no requerir una reescritura cada vez que aparece un caso de uso nuevo (§7, §8).
