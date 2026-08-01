@@ -1,7 +1,7 @@
 ---
 id: governance-decision-log
 title: Decision Log
-version: 1.2.0
+version: 1.3.0
 status: active
 owner: Chief Software Architect
 domain: governance
@@ -38,6 +38,7 @@ real en que se tomó cada decisión y por qué.
 | 2026-07-28 | Motor de Trazabilidad: un solo Domain Service parametrizado (`RecorrerGenealogia`) resuelve los 25 puntos de entrada pedidos, nunca 25 motores separados                                                                                                                                      | [[ADR-INV-008]] §1                      |
 | 2026-07-28 | Digital Twin: `remaining_quantity` de las capas de costo es mutable — se agrega un ledger de consumo paralelo (`fifo_cost_layer_consumptions`) para reconstrucción histórica, sin modificar la columna operativa existente                                                                    | [[ADR-INV-008]] §15.3                   |
 | 2026-07-28 | Motor de Conteo Cíclico: `EvaluarTolerancia` se inserta como paso obligatorio antes de `completar()` real — cierra el hallazgo de que hoy cualquier discrepancia de conteo genera ajuste automático sin tolerancia ni aprobación, con compatibilidad hacia atrás explícita si no se configura | [[ADR-INV-009]] §5.1                    |
+| 2026-07-28 | Motor de Analítica: `Inventory Health Score` colisionaba entre `ADR-INV-006`/`ADR-INV-009` con fórmulas distintas — resuelto con jerarquía de composición (no eligiendo un ganador), reutiliza `bi.kpi_snapshots` real en vez de crear una tabla paralela                                     | [[ADR-INV-010]] §2.1                    |
 
 # Related ADRs
 
