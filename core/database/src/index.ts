@@ -119,6 +119,20 @@ export type {
   cycle_count_schedules,
 } from '../prisma/schemas/inventory/generated';
 /**
+ * Motor de Costeo (FIFO/LIFO/Promedio Ponderado, `ADR-INV-004` fase 1) —
+ * agrega las tres tablas de costeo que ya existían en el schema desde
+ * Database Parte 02 pero seguían sin código de aplicación (`fifo_cost_layers`/
+ * `lifo_cost_layers`/`average_cost_history`), mismo criterio "una tabla a
+ * la vez" que el resto de este archivo. Standard/Specific/Landed/
+ * Replacement Cost siguen sin tabla real (`ADR-INV-004 §2`), no se
+ * exportan tipos que no existen todavía.
+ */
+export type {
+  fifo_cost_layers,
+  lifo_cost_layers,
+  average_cost_history,
+} from '../prisma/schemas/inventory/generated';
+/**
  * Cliente Prisma del schema `products` — sexto cliente independiente
  * (`PRISMA_PRODUCTS`), mismo criterio que los anteriores. Primer
  * consumidor: `modules/productos/backend` (FASE 04: Unidades de Medida,

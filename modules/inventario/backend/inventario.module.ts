@@ -13,6 +13,7 @@ import { MotivosAjusteController } from './controllers/motivos-ajuste.controller
 import { AjustesController } from './controllers/ajustes.controller';
 import { ConteosController } from './controllers/conteos.controller';
 import { ProgramacionConteosController } from './controllers/programacion-conteos.controller';
+import { CosteoController } from './controllers/costeo.controller';
 import { AlmacenesService } from './services/almacenes.service';
 import { ZonasAlmacenService } from './services/zonas-almacen.service';
 import { UbicacionesAlmacenService } from './services/ubicaciones-almacen.service';
@@ -26,6 +27,7 @@ import { MotivosAjusteService } from './services/motivos-ajuste.service';
 import { AjustesService } from './services/ajustes.service';
 import { ConteosService } from './services/conteos.service';
 import { ProgramacionConteosService } from './services/programacion-conteos.service';
+import { CosteoService } from './services/costeo.service';
 import { AlmacenRepository } from './repositories/almacen.repository';
 import { AlmacenRepositoryPrisma } from './repositories/almacen.repository.prisma';
 import { ZonaAlmacenRepository } from './repositories/zona-almacen.repository';
@@ -56,6 +58,14 @@ import { ConteoFisicoRepository } from './repositories/conteo-fisico.repository'
 import { ConteoFisicoRepositoryPrisma } from './repositories/conteo-fisico.repository.prisma';
 import { ProgramaConteoCiclicoRepository } from './repositories/programa-conteo-ciclico.repository';
 import { ProgramaConteoCiclicoRepositoryPrisma } from './repositories/programa-conteo-ciclico.repository.prisma';
+import { CostingMethodLookupRepository } from './repositories/costing-method-lookup.repository';
+import { CostingMethodLookupRepositoryPrisma } from './repositories/costing-method-lookup.repository.prisma';
+import { FifoCostLayerRepository } from './repositories/fifo-cost-layer.repository';
+import { FifoCostLayerRepositoryPrisma } from './repositories/fifo-cost-layer.repository.prisma';
+import { LifoCostLayerRepository } from './repositories/lifo-cost-layer.repository';
+import { LifoCostLayerRepositoryPrisma } from './repositories/lifo-cost-layer.repository.prisma';
+import { AverageCostHistoryRepository } from './repositories/average-cost-history.repository';
+import { AverageCostHistoryRepositoryPrisma } from './repositories/average-cost-history.repository.prisma';
 
 /**
  * `inventario` — Almacenes (FASE 03, continuidad), motor de stock y
@@ -63,9 +73,13 @@ import { ProgramaConteoCiclicoRepositoryPrisma } from './repositories/programa-c
  * FASE 05 Parte 04 agrega Ajustes (`stock_adjustments`/
  * `stock_adjustment_lines`/`stock_adjustment_reasons`) y Conteos
  * Físicos (`physical_counts`/`physical_count_lines`/
- * `cycle_count_schedules`) — el resto de las 34 tablas del schema
- * (recepciones, salidas, costeo, series, lotes, producción) sigue sin
- * código, ver `INVENTORY_NEXT_PHASE.md`.
+ * `cycle_count_schedules`). Motor de Costeo (`ADR-INV-004` fase 1,
+ * FIFO/LIFO/Promedio Ponderado — `fifo_cost_layers`/`lifo_cost_layers`/
+ * `average_cost_history`) agregado como servicio standalone, sin
+ * conexión automática a `MovimientosService` todavía. Standard/Specific/
+ * Landed/Replacement Cost y el resto de las 31 tablas del schema
+ * (recepciones, salidas, series, lotes, producción) siguen sin código,
+ * ver `INVENTORY_NEXT_PHASE.md`.
  */
 @Module({
   imports: [DatabaseModule],
@@ -83,6 +97,7 @@ import { ProgramaConteoCiclicoRepositoryPrisma } from './repositories/programa-c
     AjustesController,
     ConteosController,
     ProgramacionConteosController,
+    CosteoController,
   ],
   providers: [
     AlmacenesService,
@@ -98,6 +113,7 @@ import { ProgramaConteoCiclicoRepositoryPrisma } from './repositories/programa-c
     AjustesService,
     ConteosService,
     ProgramacionConteosService,
+    CosteoService,
     { provide: AlmacenRepository, useClass: AlmacenRepositoryPrisma },
     { provide: ZonaAlmacenRepository, useClass: ZonaAlmacenRepositoryPrisma },
     { provide: UbicacionAlmacenRepository, useClass: UbicacionAlmacenRepositoryPrisma },
@@ -116,6 +132,10 @@ import { ProgramaConteoCiclicoRepositoryPrisma } from './repositories/programa-c
     { provide: AjusteStockRepository, useClass: AjusteStockRepositoryPrisma },
     { provide: ConteoFisicoRepository, useClass: ConteoFisicoRepositoryPrisma },
     { provide: ProgramaConteoCiclicoRepository, useClass: ProgramaConteoCiclicoRepositoryPrisma },
+    { provide: CostingMethodLookupRepository, useClass: CostingMethodLookupRepositoryPrisma },
+    { provide: FifoCostLayerRepository, useClass: FifoCostLayerRepositoryPrisma },
+    { provide: LifoCostLayerRepository, useClass: LifoCostLayerRepositoryPrisma },
+    { provide: AverageCostHistoryRepository, useClass: AverageCostHistoryRepositoryPrisma },
   ],
   // `StockService`/`MovimientosService`/`TiposMovimientoService` exportados
   // para el checkout de POS (FASE 06 Parte 01, `modules/pos/backend`) —
