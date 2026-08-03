@@ -1,0 +1,251 @@
+RESUMEN DE SESION DE TRABAJO - PROYECTO GORAZUS ERP
+(Texto plano, pensado para pegar directo en ChatGPT u otra IA)
+
+PROYECTO: GORAZUS ERP Enterprise
+REPOSITORIO: https://github.com/Daniel-Cali/GORAZUS.git
+RAMA DE TRABAJO: feature/database-finalization (49 commits por delante del remoto, no pusheados)
+FECHA DE ESTE RESUMEN: 2026-08-03
+
+====================================================================
+QUE ES ESTE DOCUMENTO
+====================================================================
+
+Este texto explica, en lenguaje claro y sin tecnicismos innecesarios,
+todo lo que se hizo durante esta sesion de trabajo con Claude Code
+sobre el proyecto GORAZUS (un ERP multiempresa hecho en NestJS +
+Prisma + PostgreSQL + React, con 27 modulos de negocio planeados,
+de los cuales 11 ya tienen backend funcionando).
+
+Si le vas a pegar esto a ChatGPT (u otra IA) para que te ayude a
+continuar el proyecto o a entender que se hizo, esto le da el
+contexto completo sin que tenga que leer el codigo entero.
+
+====================================================================
+1. PUNTO DE PARTIDA DE LA SESION
+====================================================================
+
+La sesion arranco pidiendo verificar el estado del "Second Brain"
+del proyecto: una base de conocimiento de arquitectura (carpeta
+docs/AKB/) que ya existia de trabajo previo, con documentos de
+decisiones (ADRs), un registro de issues abiertos, y un log de
+decisiones tomadas. Se confirmo que esa base estaba consistente
+(12 decisiones de arquitectura registradas, 22 issues abiertos
+documentados).
+
+Hallazgo importante desde el inicio: el repositorio tenia una
+cantidad enorme de trabajo de OTRA sesion de desarrollo (paralela,
+no de esta conversacion) sin guardar todavia en Git (sin "commit").
+Eso obligo a tener mucho cuidado durante toda la sesion para nunca
+mezclar ese trabajo ajeno con los cambios propios al guardar cosas
+en Git.
+
+====================================================================
+2. DISENO DE ARQUITECTURA: SIETE DOCUMENTOS DE DECISION (ADRs)
+====================================================================
+
+Se disenaron, uno por uno y de forma muy detallada, siete "motores"
+o capacidades del modulo de Inventario, cada uno documentado
+formalmente antes de escribir una sola linea de codigo:
+
+1. Motor de Costeo de Inventario (como se calcula el costo de lo
+   que sale del inventario: PEPS/FIFO, UEPS/LIFO, Costo Promedio).
+   Hallazgo: el metodo LIFO tenia tabla en la base de datos pero
+   nunca se habia disenado el algoritmo. Tambien se encontraron dos
+   huecos reales en la base de datos (falta una validacion y falta
+   una columna de trazabilidad en LIFO).
+
+2. Motor de Disponibilidad de Inventario (cuanto hay realmente
+   disponible para vender, descontando reservas). Se decidio que
+   este valor se calcula al vuelo, nunca se guarda en una tabla,
+   para no tener que mantenerlo sincronizado desde siete lugares
+   distintos.
+
+3. Motor de Reabastecimiento (cuando y cuanto comprar). Se corrigio
+   un error de un reporte anterior que decia que el proyecto no
+   tenia infraestructura de pronostico de demanda - en realidad si
+   la tiene.
+
+4. Motor de Optimizacion de Almacenes (como organizar zonas y
+   ubicaciones dentro de un almacen).
+
+5. Motor de Trazabilidad de Inventario (poder rastrear el historial
+   completo de un lote o producto). Se resolvieron 25 tipos de
+   consulta distintos con un solo mecanismo generico en vez de
+   construir 25 mecanismos separados. Despues se le agrego una
+   capacidad de "Gemelo Digital": poder reconstruir como estaba el
+   inventario exactamente en cualquier fecha pasada.
+
+6. Motor de Conteo Ciclico (conteos fisicos periodicos de
+   inventario). Se encontro un problema real en el codigo que ya
+   estaba funcionando: cualquier diferencia entre lo contado y lo
+   que dice el sistema genera automaticamente un ajuste, sin ningun
+   margen de tolerancia ni aprobacion humana. Se documento como
+   pendiente de corregir.
+
+7. Motor de Analitica de Inventario (indicadores/KPIs). Aqui paso
+   algo interesante: al revisar los seis documentos anteriores para
+   evitar duplicar metricas, se descubrio que dos de ellos (el de
+   Reabastecimiento y el de Conteo Ciclico) habian definido, sin
+   saberlo, un mismo indicador ("Inventory Health Score") con dos
+   formulas distintas. Se corrigio convirtiendo ese indicador en un
+   compuesto de los dos, en vez de elegir uno y descartar el otro.
+
+Cada uno de estos siete documentos se acompano de notas conectadas
+a la base de conocimiento del proyecto, sin nunca reescribir
+archivos compartidos que pertenecen a la otra sesion de trabajo
+paralela - solo se agrego contenido, nunca se borro ni se reemplazo
+nada ajeno.
+
+====================================================================
+3. PASO DE DISENO A CODIGO: MOTOR DE COSTEO REAL
+====================================================================
+
+Despues de completar los siete documentos de diseno, se recomendo
+(varias veces, de forma explicita) dejar de disenar mas y empezar a
+construir codigo real. El usuario confirmo eso y eligio implementar
+el Motor de Costeo (el primero de los siete disenos).
+
+Antes de escribir codigo se investigo a fondo:
+- Se confirmo que no existia absolutamente ningun codigo de costeo
+  todavia (ni siquiera un archivo vacio) - solo las tablas de base
+  de datos ya estaban creadas.
+- Se leyo codigo real ya construido de otras partes del modulo de
+  Inventario para copiar exactamente el mismo estilo y los mismos
+  patrones, en vez de inventar una forma nueva de hacer las cosas.
+- Se decidio, con aprobacion del usuario, limitar el alcance de esta
+  primera version a solo tres metodos de costeo (los unicos que ya
+  tienen tabla en la base de datos: PEPS, UEPS y Promedio), dejar
+  fuera del alcance modificar la base de datos (porque hay trabajo
+  ajeno sin guardar tocando esos mismos archivos en paralelo), y no
+  conectar automaticamente este motor nuevo al motor de movimientos
+  de stock que ya existe y funciona (para no arriesgar romper algo
+  que ya esta probado).
+
+Se construyeron 16 archivos de codigo nuevo: los "repositorios" que
+hablan con la base de datos (con bloqueo de filas para que dos
+operaciones simultaneas no consuman el mismo costo dos veces), el
+servicio central que decide que metodo de costeo usar segun el
+producto, las rutas de la API (crear entrada de costo, resolver
+costo de una salida, consultar capas de costo activas, consultar
+costo vigente), y las validaciones de los datos de entrada.
+
+Se escribieron 17 pruebas automaticas (unitarias) que quedaron
+todas en verde, y una prueba de extremo a extremo (contra una base
+de datos real) que quedo escrita y lista, pero no se pudo ejecutar
+porque en la maquina de desarrollo no habia una base de datos
+Postgres corriendo en ese momento (Docker no estaba activo) - esto
+se dejo documentado con honestidad, no se afirmo que "paso" sin
+haberlo verificado.
+
+Todo esto se guardo en Git (commit real, identificador corto
+2b1dc60), sin subirlo todavia al repositorio remoto en GitHub -
+eso requiere una confirmacion explicita aparte que todavia no se
+dio.
+
+====================================================================
+4. UN INCIDENTE TECNICO Y COMO SE RESOLVIO
+====================================================================
+
+Al guardar el trabajo del Motor de Costeo en Git, una herramienta
+automatica del proyecto (que revisa formato de codigo antes de cada
+guardado) dejo una diferencia rara de formato en 7 de los 17
+archivos, por una interaccion poco comun con la enorme cantidad de
+trabajo ajeno que ya estaba pendiente de guardar en el mismo
+repositorio.
+
+Se investigo con cuidado (sin borrar nada, sin arriesgar el trabajo
+de la otra sesion), se confirmo cual version era la correcta
+probando a guardar de nuevo y viendo que el sistema decia "no hay
+nada nuevo que guardar" (senal de que la version ya guardada era la
+buena), y se dejo todo en el estado correcto sin perder ni un solo
+cambio, ni propio ni ajeno.
+
+====================================================================
+5. RESPALDOS Y DOCUMENTACION GENERADA
+====================================================================
+
+Durante la sesion tambien se hizo:
+
+- Un respaldo completo de esta conversacion (usando el sistema de
+  respaldo automatico que ya tiene el proyecto), verificado que
+  quedo actualizado correctamente.
+
+- Se genero un documento llamado GORAZUS_ENTERPRISE_CONTEXT.md:
+  un mapa completo y honesto de todo el proyecto (base de datos,
+  backend, frontend, seguridad, pruebas, Docker, GitHub, version,
+  deuda tecnica, decisiones de arquitectura), investigado leyendo
+  el proyecto real (no de memoria), citando de donde sale cada dato,
+  y sin ocultar ni inventar nada - incluyendo senalar que el
+  proyecto tiene varios documentos de estado que no coinciden entre
+  si en la version actual (hay 5 numeros de version distintos
+  segun el archivo que mires).
+
+- Se genero un segundo documento, GORAZUS_CONVERSATION_BACKUP.md:
+  un resumen tecnico cronologico de las decisiones tomadas en esta
+  sesion (parecido a lo que estas leyendo ahora, pero mas tecnico y
+  guardado dentro del propio repositorio de codigo).
+
+Ambos documentos quedaron guardados en Git tambien.
+
+====================================================================
+6. ESTADO REAL DEL PROYECTO EN NUMEROS (cada uno con su origen)
+====================================================================
+
+- De 27 modulos de negocio planeados, 11 tienen codigo de backend
+  real (41%). Los otros 16 son carpetas vacias, sin una sola linea
+  de codigo todavia.
+
+- De esos 27 modulos, solo 5 tienen pantallas reales en la pagina
+  web (20%); el resto muestra un aviso honesto de "Proximamente" en
+  vez de datos inventados.
+
+- De los 11 modulos que si tienen backend, solo 5 tambien tienen
+  pantalla web (45%) - los otros 6 funcionan por dentro pero no se
+  pueden usar todavia desde la interfaz.
+
+- Dentro de cada modulo, el avance varia mucho: Contabilidad tiene
+  el 61% de sus tablas de base de datos ya con codigo, Inventario
+  entre 44% y 50%, Ventas 24%, Productos 14%.
+
+- La base de datos en si (no el codigo de negocio, sino la
+  infraestructura) esta en muy buen estado: 99.8% de las tablas
+  tienen aislamiento de seguridad por empresa activado, 100% de las
+  tablas que necesitan particionamiento por volumen ya lo tienen
+  configurado, y no hay tablas duplicadas ni huerfanas.
+
+- Las pruebas automaticas de la pagina web (frontend) actualmente
+  no corren en absoluto (0%) por un problema tecnico de
+  configuracion, documentado como pendiente de arreglar.
+
+No existe un "porcentaje general unico" oficial del proyecto
+completo - mezclar estas cifras tan distintas en un solo numero no
+daria una medida real de avance, por eso no se inventa uno.
+
+====================================================================
+7. QUE FALTA DECIDIR (pendiente de que el usuario elija)
+====================================================================
+
+Hay una decision abierta, explicitamente pendiente, sobre que hacer
+despues: seguir con la Parte 2 del modulo de Punto de Venta (POS),
+o retomar la parte de Inventario que falta (recepciones y salidas
+de mercancia), o seguir construyendo codigo real sobre los seis
+disenos de Inventario que ya estan completos en papel pero sin
+codigo todavia (Disponibilidad, Reabastecimiento, Optimizacion de
+Almacenes, Trazabilidad, Conteo Ciclico, Analitica).
+
+Otros pendientes menores: conseguir que Docker/Postgres este
+disponible para poder correr la prueba de extremo a extremo del
+Motor de Costeo que quedo escrita pero sin ejecutar; y, en algun
+momento, poner de acuerdo entre si los distintos documentos de
+version del proyecto (hoy dicen numeros distintos entre ellos).
+
+====================================================================
+FIN DEL RESUMEN
+====================================================================
+
+Este texto acompana a dos documentos mas detallados dentro del
+propio repositorio del proyecto: GORAZUS_ENTERPRISE_CONTEXT.md
+(estado tecnico completo del proyecto) y GORAZUS_CONVERSATION_BACKUP.md
+(version tecnica mas detallada de este mismo resumen). Si necesitas
+mas detalle tecnico sobre algo puntual de lo mencionado aqui,
+pidelo y se puede ampliar.
