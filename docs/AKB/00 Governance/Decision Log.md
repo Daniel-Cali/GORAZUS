@@ -1,7 +1,7 @@
 ---
 id: governance-decision-log
 title: Decision Log
-version: 1.4.0
+version: 1.5.0
 status: active
 owner: Chief Software Architect
 domain: governance
@@ -41,6 +41,8 @@ real en que se tomó cada decisión y por qué.
 | 2026-07-28 | Motor de Analítica: `Inventory Health Score` colisionaba entre `ADR-INV-006`/`ADR-INV-009` con fórmulas distintas — resuelto con jerarquía de composición (no eligiendo un ganador), reutiliza `bi.kpi_snapshots` real en vez de crear una tabla paralela                                                                                                    | [[ADR-INV-010]] §2.1                                                |
 | 2026-08-03 | Auditoría completa (solo lectura) encontró que `company_isolation`/`branch_isolation` estaban documentadas (`06-estrategia-seguridad.md §1`) y parcialmente seteadas por `withTenantScope`, pero ninguna política Postgres real las aplicaba — solo `tenant_isolation` existía                                                                               | `ISSUE-02`, `ISSUE-23`                                              |
 | 2026-08-03 | Corrección de RLS: políticas `company_isolation`/`branch_isolation` como **RESTRICTIVE** (AND), no permisivas (OR habría permitido fuga cruzando tenants) — alcance deliberadamente limitado a 19 de 21 schemas, excluyendo `core`/`security` por el riesgo de romper 3 tablas de bootstrap de login sin poder probarlo contra Postgres real en este entorno | `docs/database/sql/42_rls_company_branch_isolation.sql`, `ISSUE-23` |
+| 2026-08-03 | Extensión a `core`/`security` (`ISSUE-23`): investigación más profunda encontró 5 tablas de bootstrap, no 3 — `core.tenants`/`core.sessions` ya tenían su propia excepción de bootstrap a nivel de tenant que una política nueva de empresa/sucursal habría neutralizado, no solo las 3 de contexto mínimo ya conocidas de `auth`                            | `docs/database/sql/43_rls_core_security_isolation.sql`, `ISSUE-23`  |
+| 2026-08-03 | `UsuarioAdminRepositoryPrisma` no usa `withTenantScope` en absoluto — hallazgo real, distinto y más grave que lo buscado (ni `tenant_isolation` se fija, no solo `company`/`branch`) — registrado y **no corregido**, decisión explícita del usuario de mantener el alcance acotado a `ISSUE-23` en esta pasada                                              | `ISSUE-24`                                                          |
 
 # Related ADRs
 
