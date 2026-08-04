@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { ColumnDef } from '@tanstack/react-table';
@@ -113,59 +114,64 @@ export function UsuariosListadoPage() {
             Alta y baja de usuarios — la asignación de roles se hace desde el detalle (pendiente).
           </p>
         </div>
-        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-          <DialogTrigger asChild>
-            <Button>Nuevo usuario</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Nuevo usuario</DialogTitle>
-              <DialogDescription>
-                Se genera una contraseña temporal — comunicásela vos mismo, no hay envío de
-                invitación por correo todavía (Fase 2).
-              </DialogDescription>
-            </DialogHeader>
-            <Form {...form}>
-              <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-                <FormField
-                  control={form.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nombre completo</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+        <div className="flex items-center gap-4">
+          <Link to="/seguridad/roles" className="text-sm text-primary hover:underline">
+            Ver roles
+          </Link>
+          <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+            <DialogTrigger asChild>
+              <Button>Nuevo usuario</Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Nuevo usuario</DialogTitle>
+                <DialogDescription>
+                  Se genera una contraseña temporal — comunicásela vos mismo, no hay envío de
+                  invitación por correo todavía (Fase 2).
+                </DialogDescription>
+              </DialogHeader>
+              <Form {...form}>
+                <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+                  <FormField
+                    control={form.control}
+                    name="fullName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nombre completo</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Correo</FormLabel>
+                        <FormControl>
+                          <Input type="email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  {createError && (
+                    <p className="text-sm font-medium text-destructive">{createError}</p>
                   )}
-                />
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Correo</FormLabel>
-                      <FormControl>
-                        <Input type="email" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                {createError && (
-                  <p className="text-sm font-medium text-destructive">{createError}</p>
-                )}
-                <DialogFooter>
-                  <Button type="submit" disabled={crearUsuario.isPending}>
-                    {crearUsuario.isPending && <Loader className="h-4 w-4" />}
-                    Crear
-                  </Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
+                  <DialogFooter>
+                    <Button type="submit" disabled={crearUsuario.isPending}>
+                      {crearUsuario.isPending && <Loader className="h-4 w-4" />}
+                      Crear
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <DataTable

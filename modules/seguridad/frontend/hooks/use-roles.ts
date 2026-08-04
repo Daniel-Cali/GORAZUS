@@ -1,10 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@gorazus/ui-kit';
 
+/** Forma cruda devuelta por el backend (`core.roles` vía Prisma, sin transformar a DTO) — snake_case a propósito, mismo criterio que `UsuarioRecord`. */
 export interface RolRecord {
   id: string;
   name: string;
+  code: string | null;
+  description: string | null;
+  role_type: string;
   is_system_role: boolean;
+  company_id: string | null;
+  branch_id: string | null;
+  created_at: string;
 }
 
 export function useRoles() {
