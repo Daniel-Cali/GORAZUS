@@ -5,8 +5,18 @@ import type { UserContext } from '@gorazus/contracts';
  * verificado) y el aislamiento por Row-Level Security de Postgres —
  * ver docs/database/06-estrategia-seguridad.md §1: las políticas RLS
  * leen `current_setting('app.current_tenant_id')` /
- * `app.current_company_ids`, seteados **una vez por conexión/transacción**,
- * nunca confiados desde un parámetro que el cliente pueda manipular.
+ * `app.current_company_ids` / `app.current_branch_id`, seteados **una
+ * vez por conexión/transacción**, nunca confiados desde un parámetro
+ * que el cliente pueda manipular.
+ *
+ * `branchId` es opcional en la firma (no `Pick<UserContext, 'branchId'>`
+ * a secas) a propósito: algunos repositorios de `auth` (`user.repository.prisma.ts`,
+ * `login-attempt.repository.prisma.ts`, `two-factor-credential.repository.prisma.ts`)
+ * llaman esto con un contexto mínimo `{ tenantId, companyId: null }` ANTES
+ * de que el login resuelva empresa/sucursal — son los propios lookups que
+ * buscan al usuario. Con `branchId` opcional, esos tres sitios siguen
+ * compilando sin tocarlos; el resto del código ya pasa el `UserContext`
+ * completo y lo satisface igual por tipado estructural.
  *
  * Un `PrismaClient` normal reutiliza conexiones de un pool — `SET
  * LOCAL` fuera de una transacción no persiste de forma segura entre
@@ -31,7 +41,7 @@ import type { UserContext } from '@gorazus/contracts';
  */
 export async function withTenantScope<TClient extends { $transaction: unknown }, TResult>(
   client: TClient,
-  context: Pick<UserContext, 'tenantId' | 'companyId'>,
+  context: Pick<UserContext, 'tenantId' | 'companyId'> & { branchId?: string | null },
   operation: (tx: TClient) => Promise<TResult>,
 ): Promise<TResult> {
   // `.call`/extraer `$transaction` como referencia suelta perdería el `this`
@@ -57,6 +67,12 @@ export async function withTenantScope<TClient extends { $transaction: unknown },
       await txWithRaw.$executeRawUnsafe(
         "SELECT set_config('app.current_company_ids', $1, true)",
         context.companyId,
+      );
+    }
+    if (context.branchId) {
+      await txWithRaw.$executeRawUnsafe(
+        "SELECT set_config('app.current_branch_id', $1, true)",
+        context.branchId,
       );
     }
     return operation(tx);
