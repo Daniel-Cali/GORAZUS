@@ -223,6 +223,13 @@ describe('ProductosService', () => {
     expect(producto.list_price).toBe(99.9);
   });
 
+  it('actualizar: rechaza un PATCH que deja tracksSerial y tracksLot en true combinados (I4)', async () => {
+    productos.set('p1', buildProducto({ tracks_serial: true, tracks_lot: false }));
+    await expect(buildService().actualizar(CONTEXT, 'p1', { tracksLot: true })).rejects.toThrow(
+      'invariante I4',
+    );
+  });
+
   it('actualizar: valida el modelo contra la marca ya guardada si no se manda brandId nuevo', async () => {
     productos.set('p1', buildProducto({ brand_id: 'ma-otra' }));
     modeloExistente = { id: 'mo1', brand_id: 'ma1' } as product_models;

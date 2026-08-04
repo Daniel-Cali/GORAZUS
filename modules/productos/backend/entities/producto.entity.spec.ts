@@ -31,8 +31,18 @@ describe('Producto', () => {
     );
   });
 
-  it('acepta un producto tipo good que rastrea serie y lote', () => {
-    expect(() => new Producto('p1', 'SKU-1', 'good', 'u1', 'fifo', true, true)).not.toThrow();
+  it('rechaza un producto que rastrea serie y lote simultáneamente (I4)', () => {
+    expect(() => new Producto('p1', 'SKU-1', 'good', 'u1', 'fifo', true, true)).toThrow(
+      'invariante I4',
+    );
+  });
+
+  it('acepta un producto tipo good que rastrea solo serie', () => {
+    expect(() => new Producto('p1', 'SKU-1', 'good', 'u1', 'fifo', true, false)).not.toThrow();
+  });
+
+  it('acepta un producto tipo good que rastrea solo lote', () => {
+    expect(() => new Producto('p1', 'SKU-1', 'good', 'u1', 'fifo', false, true)).not.toThrow();
   });
 
   it('acepta un servicio que no rastrea nada', () => {

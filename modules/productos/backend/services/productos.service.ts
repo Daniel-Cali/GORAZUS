@@ -9,7 +9,7 @@ import { CategoriaProductoRepository } from '../repositories/categoria-producto.
 import { MarcaRepository } from '../repositories/marca.repository';
 import { ModeloProductoRepository } from '../repositories/modelo-producto.repository';
 import { EmpresaLookupRepository } from '../repositories/empresa-lookup.repository';
-import { Producto } from '../entities/producto.entity';
+import { Producto, type TipoProducto, type MetodoCosteo } from '../entities/producto.entity';
 import type { CrearProductoInput, ActualizarProductoInput } from '../validators/productos.schema';
 
 export class ProductoNoEncontradoException extends DomainException {
@@ -173,6 +173,21 @@ export class ProductosService {
     if (input.modelId) {
       await this.validarModelo(context, input.modelId, brandId);
     }
+
+    // `actualizar` nunca reconstruía la entidad — un PATCH que solo toca
+    // `tracksLot` (o `tracksSerial`) por separado podía dejar el producto
+    // con ambos en `true` sin que nada lo detectara (I4, `ISSUE-01`). Se
+    // valida el estado COMBINADO (actual + lo que cambia este PATCH),
+    // mismo criterio que `brandId` arriba.
+    new Producto(
+      actual.id,
+      actual.sku,
+      input.productType ?? (actual.product_type as TipoProducto),
+      actual.base_unit_id,
+      input.costingMethod ?? (actual.costing_method as MetodoCosteo),
+      input.tracksSerial ?? actual.tracks_serial,
+      input.tracksLot ?? actual.tracks_lot,
+    );
 
     return this.productoRepository.update(
       context,

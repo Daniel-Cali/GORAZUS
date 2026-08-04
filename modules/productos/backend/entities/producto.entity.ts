@@ -17,6 +17,12 @@ export type MetodoCosteo = (typeof METODOS_COSTEO)[number];
  * debe pertenecer a la marca indicada) requiere consultar
  * `product_models` — fuera del alcance de una entidad pura, se valida en
  * `ProductosService`.
+ *
+ * Invariante I4 (`ddd/17_invariants.md`, `ISSUE-01`): un producto se
+ * rastrea por lote **o** por serie, nunca ambos simultáneamente — el
+ * guard estaba documentado como "verificado en `ProductoFactory`", una
+ * clase que no existe en este código; el único guard real era el de
+ * `service` de arriba. Se agrega acá, mismo patrón de una línea.
  */
 export class Producto {
   constructor(
@@ -40,6 +46,11 @@ export class Producto {
     if (productType === 'service' && (tracksSerial || tracksLot)) {
       throw new Error(
         'Un producto de tipo "service" no puede rastrear serie ni lote — no tiene existencia física',
+      );
+    }
+    if (tracksSerial && tracksLot) {
+      throw new Error(
+        'Un producto se rastrea por lote o por serie, nunca ambos simultáneamente (invariante I4)',
       );
     }
   }
