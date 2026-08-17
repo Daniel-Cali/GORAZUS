@@ -464,7 +464,9 @@ model customers {
   customer_credit_profiles          customer_credit_profiles[]
   customer_discounts                customer_discounts[]
   customer_loyalty_accounts         customer_loyalty_accounts[]
+  customer_notes                    customer_notes[]
   customer_price_lists              customer_price_lists[]
+  customer_ratings                  customer_ratings[]
   customer_references               customer_references[]
   customer_statements               customer_statements[]
   customer_visits                   customer_visits[]
@@ -531,5 +533,60 @@ model sales_routes {
   sales_route_customers                sales_route_customers[]
 
   @@index([assigned_salesperson_id], map: "idx_customers_sales_routes_assigned_salesperson_id")
+  @@schema("customers")
+}
+
+model customer_notes {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id       BigInt
+  tenant_id      String    @db.Uuid
+  company_id     String    @db.Uuid
+  branch_id      String?   @db.Uuid
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at     DateTime? @db.Timestamptz(6)
+  created_by     String?   @db.Uuid
+  updated_by     String?   @db.Uuid
+  deleted_by     String?   @db.Uuid
+  version        Int       @default(1)
+  row_version    BigInt    @default(0)
+  is_active      Boolean   @default(true)
+  is_deleted     Boolean?
+  observations   String?
+  metadata       Json      @default("{}")
+  customer_id    String    @db.Uuid
+  author_user_id String    @db.Uuid
+  note_text      String
+  is_pinned      Boolean   @default(false)
+  customers      customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("customers")
+}
+
+model customer_ratings {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id         BigInt
+  tenant_id        String    @db.Uuid
+  company_id       String    @db.Uuid
+  branch_id        String?   @db.Uuid
+  created_at       DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at       DateTime? @db.Timestamptz(6)
+  created_by       String?   @db.Uuid
+  updated_by       String?   @db.Uuid
+  deleted_by       String?   @db.Uuid
+  version          Int       @default(1)
+  row_version      BigInt    @default(0)
+  is_active        Boolean   @default(true)
+  is_deleted       Boolean?
+  observations     String?
+  metadata         Json      @default("{}")
+  customer_id      String    @db.Uuid
+  rated_by_user_id String    @db.Uuid
+  rating_type      String    @default("general")
+  score            Decimal   @db.Decimal(3, 1)
+  rated_at         DateTime  @default(now()) @db.Timestamptz(6)
+  customers        customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
   @@schema("customers")
 }

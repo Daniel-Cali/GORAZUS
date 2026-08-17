@@ -12,9 +12,10 @@ import {
   CapacidadReservaInsuficienteError,
   ReservaYaLiberadaError,
   ReservaNoEncontradaError,
+  SerieYaReservadaError,
   type CrearReservaParams,
 } from './reserva-stock.repository';
-import { lockStockRow } from './stock-lock.util';
+import { lockStockRow, esViolacionDeUnicidad } from './stock-lock.util';
 
 @Injectable()
 export class ReservaStockRepositoryPrisma extends ReservaStockRepository {
@@ -48,19 +49,28 @@ export class ReservaStockRepositoryPrisma extends ReservaStockRepository {
         data: { quantity_reserved: cantidadReservada + params.quantity },
       });
 
-      return tx.stock_reservations.create({
-        data: {
-          tenant_id: context.tenantId,
-          company_id: params.companyId,
-          branch_id: params.branchId,
-          product_id: params.productId,
-          warehouse_id: params.warehouseId,
-          quantity: params.quantity,
-          source_module: params.sourceModule,
-          source_entity_id: params.sourceEntityId,
-          observations: params.observations,
-        },
-      });
+      try {
+        return await tx.stock_reservations.create({
+          data: {
+            tenant_id: context.tenantId,
+            company_id: params.companyId,
+            branch_id: params.branchId,
+            product_id: params.productId,
+            warehouse_id: params.warehouseId,
+            quantity: params.quantity,
+            source_module: params.sourceModule,
+            source_entity_id: params.sourceEntityId,
+            observations: params.observations,
+            lot_id: params.lotId,
+            serial_id: params.serialId,
+          },
+        });
+      } catch (error) {
+        if (params.serialId && esViolacionDeUnicidad(error)) {
+          throw new SerieYaReservadaError(params.serialId);
+        }
+        throw error;
+      }
     });
   }
 

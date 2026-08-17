@@ -26,7 +26,7 @@ EXPOSE 3000
 # Redis/RabbitMQ están momentáneamente caídos, eso es responsabilidad de
 # /health/ready vía depends_on/readinessProbe, no de un reinicio del proceso.
 HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=5 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health/live || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/v1/health/live || exit 1
 CMD ["pnpm", "nx", "serve", "api"]
 
 # -----------------------------------------------------------------------------
@@ -56,5 +56,5 @@ RUN pnpm install --frozen-lockfile
 EXPOSE 3000
 USER node
 HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=5 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health/live || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/v1/health/live || exit 1
 CMD ["node_modules/.bin/ts-node", "--transpile-only", "apps/api/src/main.ts"]

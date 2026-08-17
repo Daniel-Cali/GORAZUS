@@ -7,9 +7,11 @@ import {
   crearCajaSchema,
   abrirCajaSchema,
   cerrarCajaSchema,
+  registrarMovimientoManualSchema,
   type CrearCajaInput,
   type AbrirCajaInput,
   type CerrarCajaInput,
+  type RegistrarMovimientoManualInput,
 } from '../validators/caja.schema';
 
 const PERMISO_GESTIONAR = 'caja.gestionar_caja';
@@ -85,5 +87,52 @@ export class CajaController {
   ) {
     const resultado = await this.cajaService.cerrar(user, body);
     return { data: resultado };
+  }
+
+  @ApiOperation({
+    summary: 'Listar movimientos de caja',
+    description: `Requiere ${PERMISO_GESTIONAR}. Filtrable por openingId o registerId.`,
+  })
+  @RequirePermission(PERMISO_GESTIONAR)
+  @Get('movimientos')
+  async listarMovimientos(
+    @CurrentUser() user: UserContext,
+    @Query('openingId') openingId: string | undefined,
+    @Query('registerId') registerId: string | undefined,
+    @Query('page') page = '1',
+    @Query('pageSize') pageSize = '50',
+  ) {
+    const result = await this.cajaService.listarMovimientos(
+      user,
+      { openingId, registerId },
+      { page: Number(page), pageSize: Number(pageSize) },
+    );
+    return { data: result.data, meta: result.meta };
+  }
+
+  @ApiOperation({
+    summary: 'Listar catálogo de tipos de movimiento de caja',
+    description: `Requiere ${PERMISO_GESTIONAR}. Catálogo de solo lectura (\`cash_movement_types\`).`,
+  })
+  @RequirePermission(PERMISO_GESTIONAR)
+  @Get('tipos-movimiento')
+  async listarTiposMovimiento(@CurrentUser() user: UserContext) {
+    const result = await this.cajaService.listarTiposMovimiento(user);
+    return { data: result.data, meta: result.meta };
+  }
+
+  @ApiOperation({
+    summary: 'Registrar ingreso/egreso manual de efectivo',
+    description: `Requiere ${PERMISO_GESTIONAR}. Falla con 409 si la caja no tiene apertura activa.`,
+  })
+  @RequirePermission(PERMISO_GESTIONAR)
+  @Post('movimientos')
+  async registrarMovimiento(
+    @CurrentUser() user: UserContext,
+    @Body(new ZodValidationPipe(registrarMovimientoManualSchema))
+    body: RegistrarMovimientoManualInput,
+  ) {
+    const movimiento = await this.cajaService.registrarMovimientoManual(user, body);
+    return { data: movimiento };
   }
 }

@@ -30,7 +30,15 @@ export default defineConfig({
     watch: false,
     globals: true,
     environment: 'jsdom',
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    setupFiles: ['./test-setup.ts'],
+    // `modules/*/frontend` no tenía ningún test hasta este bloque — se
+    // amplía el único Vitest ya configurado en vez de crear una segunda
+    // arquitectura de testing (Prompt "Frontend Testing Foundation" §6/§11).
+    include: [
+      'src/**/*.{test,spec}.{ts,tsx}',
+      '../../modules/*/frontend/{hooks,pages,components,test}/**/*.{test,spec}.{ts,tsx}',
+    ],
+    exclude: ['**/node_modules/**', '**/dist/**'],
     reporters: ['default'],
     coverage: {
       reportsDirectory: '../../coverage/apps/web',

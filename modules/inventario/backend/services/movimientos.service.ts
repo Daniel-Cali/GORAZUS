@@ -117,10 +117,27 @@ export class MovimientosService {
       sourceModule: input.sourceModule ?? null,
       sourceEntityId: input.sourceEntityId ?? null,
       observations: input.observations ?? null,
+      idempotencyKey: input.idempotencyKey ?? null,
+      lotId: input.lotId ?? null,
+      serialId: input.serialId ?? null,
     };
   }
 
   async registrar(context: UserContext, input: RegistrarMovimientoInput): Promise<stock_movements> {
+    // ISSUE-07: replay con la misma clave — devuelve el resultado original
+    // tal cual, sin volver a correr `resolverYValidar` (producto/almacén/
+    // ubicación podrían haber cambiado desde la primera vez) ni tocar stock
+    // de nuevo. La ventana de carrera real la cierra
+    // `MovimientoStockRepositoryPrisma.aplicarMovimiento` con la reserva en
+    // `movement_idempotency_keys`, no este lookup.
+    if (input.idempotencyKey) {
+      const existente = await this.movimientoRepository.obtenerPorIdempotencyKey(
+        context,
+        input.idempotencyKey,
+      );
+      if (existente) return existente;
+    }
+
     const params = await this.resolverYValidar(context, input);
     try {
       const { movimiento } = await this.movimientoRepository.registrar(context, params);

@@ -1,0 +1,21 @@
+{
+  "name": "@gorazus/caja-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GORAZUS ERP — feature caja (apertura, movimientos, cierre). Ver docs/frontend/FOLDER_STRUCTURE.md §2.",
+  "dependencies": {
+    "@gorazus/ui-kit": "workspace:*",
+    "@gorazus/contracts": "workspace:*",
+    "@tanstack/react-query": "^5.62.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/user-event": "^14.5.2"
+  }
+}

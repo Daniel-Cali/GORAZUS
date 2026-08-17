@@ -12,6 +12,8 @@ import {
 import { AlmacenRepository } from '../repositories/almacen.repository';
 import { ProductoLookupRepository } from '../repositories/producto-lookup.repository';
 import { TipoMovimientoStockRepository } from '../repositories/tipo-movimiento-stock.repository';
+import { InventoryLotRepository } from '../repositories/inventory-lot.repository';
+import { InventorySerialRepository } from '../repositories/inventory-serial.repository';
 import {
   MovimientosService,
   AlmacenInvalidoException,
@@ -22,6 +24,8 @@ import {
   TransferenciaNoEncontradaException,
   TransicionTransferenciaInvalidaException,
   TipoMovimientoTransferenciaNoConfiguradoException,
+  LoteInvalidoException,
+  SerieInvalidaException,
 } from './transferencias.service';
 import type { CrearTransferenciaInput } from '../validators/transferencias.schema';
 
@@ -78,13 +82,17 @@ describe('TransferenciasService', () => {
   let almacenRepository: AlmacenRepository;
   let productoLookupRepository: ProductoLookupRepository;
   let tipoMovimientoRepository: TipoMovimientoStockRepository;
+  let inventoryLotRepository: InventoryLotRepository;
+  let inventorySerialRepository: InventorySerialRepository;
   let movimientosService: MovimientosService;
+  let controlProducto: { tracksLot: boolean; tracksSerial: boolean };
 
   beforeEach(() => {
     almacenes = { 'w-1': ALMACEN_ORIGEN, 'w-2': ALMACEN_DESTINO };
     productoValido = true;
     transferencia = buildTransferencia();
     tiposDisponibles = [TIPO_TRANSFER_OUT, TIPO_TRANSFER_IN];
+    controlProducto = { tracksLot: false, tracksSerial: false };
 
     transferenciaRepository = {
       crear: jest.fn(async () => transferencia),
@@ -104,7 +112,28 @@ describe('TransferenciasService', () => {
 
     productoLookupRepository = {
       existeProducto: jest.fn(async () => productoValido),
+      obtenerControl: jest.fn(async () => controlProducto),
     } as unknown as ProductoLookupRepository;
+
+    inventoryLotRepository = {
+      obtenerPorId: jest.fn(async () => ({
+        id: 'lot-1',
+        product_id: 'p-1',
+        warehouse_id: 'w-1',
+        remaining_quantity: 10,
+      })),
+      moverAlmacen: jest.fn(async () => ({ id: 'lot-1' })),
+    } as unknown as InventoryLotRepository;
+
+    inventorySerialRepository = {
+      obtenerPorNumero: jest.fn(async () => ({
+        id: 'serial-1',
+        product_id: 'p-1',
+        warehouse_id: 'w-1',
+        status: 'in_stock',
+      })),
+      moverAlmacen: jest.fn(async () => ({ id: 'serial-1' })),
+    } as unknown as InventorySerialRepository;
 
     tipoMovimientoRepository = {
       findMany: jest.fn(async (_ctx: unknown, filter: { code?: string }) => {
@@ -127,6 +156,8 @@ describe('TransferenciasService', () => {
       almacenRepository,
       productoLookupRepository,
       tipoMovimientoRepository,
+      inventoryLotRepository,
+      inventorySerialRepository,
       movimientosService,
     );
   }
@@ -237,5 +268,88 @@ describe('TransferenciasService', () => {
     const resultado = await buildService().cancelar(CONTEXT, 't-1');
     expect(resultado.status).toBe('cancelled');
     expect(movimientosService.registrarLote).not.toHaveBeenCalled();
+  });
+
+  // "Transfers with lots" (test requirement de misión): el movimiento IN
+  // referencia el mismo lotId; al recibir la cantidad COMPLETA del lote,
+  // se reasigna warehouse_id al destino.
+  it('recibir: con línea de lote (transferencia completa), reasigna el almacén del lote', async () => {
+    transferencia = buildTransferencia({
+      status: 'in_transit',
+      stock_transfer_lines: [
+        { id: 'l-1', product_id: 'p-1', quantity: 10, lot_id: 'lot-1', metadata: {} } as never,
+      ],
+    });
+    (transferenciaRepository.obtener as jest.Mock).mockResolvedValue(transferencia);
+    await buildService().recibir(CONTEXT, 't-1');
+    expect(inventoryLotRepository.moverAlmacen).toHaveBeenCalledWith(CONTEXT, {
+      lotId: 'lot-1',
+      warehouseId: 'w-2',
+    });
+    expect(movimientosService.registrarLote).toHaveBeenCalledWith(
+      CONTEXT,
+      expect.arrayContaining([expect.objectContaining({ lotId: 'lot-1', warehouseId: 'w-2' })]),
+    );
+  });
+
+  it('crear: rechaza tracks_lot si el lote no está en el almacén de origen', async () => {
+    controlProducto = { tracksLot: true, tracksSerial: false };
+    (inventoryLotRepository.obtenerPorId as jest.Mock).mockResolvedValueOnce({
+      id: 'lot-1',
+      product_id: 'p-1',
+      warehouse_id: 'w-2',
+      remaining_quantity: 10,
+    });
+    await expect(
+      buildService().crear(CONTEXT, {
+        ...baseInput(),
+        lines: [{ productId: 'p-1', quantity: 10, lotId: 'lot-1' }],
+      }),
+    ).rejects.toThrow(LoteInvalidoException);
+  });
+
+  // "Transfers with serials" (test requirement de misión): un movimiento
+  // OUT/IN por serie (quantity=1), y al recibir se reasigna warehouse_id.
+  it('recibir: con línea serializada, reasigna el almacén de cada serie', async () => {
+    transferencia = buildTransferencia({
+      status: 'in_transit',
+      stock_transfer_lines: [
+        {
+          id: 'l-1',
+          product_id: 'p-1',
+          quantity: 1,
+          lot_id: null,
+          metadata: { serialNumbers: ['SN-1'] },
+        } as never,
+      ],
+    });
+    (transferenciaRepository.obtener as jest.Mock).mockResolvedValue(transferencia);
+    await buildService().recibir(CONTEXT, 't-1');
+    expect(inventorySerialRepository.moverAlmacen).toHaveBeenCalledWith(CONTEXT, {
+      serialId: 'serial-1',
+      warehouseId: 'w-2',
+    });
+    expect(movimientosService.registrarLote).toHaveBeenCalledWith(
+      CONTEXT,
+      expect.arrayContaining([
+        expect.objectContaining({ serialId: 'serial-1', warehouseId: 'w-2', quantity: 1 }),
+      ]),
+    );
+  });
+
+  it('crear: rechaza tracks_serial si la serie no está disponible (ya emitida)', async () => {
+    controlProducto = { tracksLot: false, tracksSerial: true };
+    (inventorySerialRepository.obtenerPorNumero as jest.Mock).mockResolvedValueOnce({
+      id: 'serial-1',
+      product_id: 'p-1',
+      warehouse_id: 'w-1',
+      status: 'issued',
+    });
+    await expect(
+      buildService().crear(CONTEXT, {
+        ...baseInput(),
+        lines: [{ productId: 'p-1', quantity: 1, serialNumbers: ['SN-1'] }],
+      }),
+    ).rejects.toThrow(SerieInvalidaException);
   });
 });

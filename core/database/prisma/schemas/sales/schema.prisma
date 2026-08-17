@@ -514,6 +514,29 @@ model invoices {
   @@schema("sales")
 }
 
+/// P0-1 (auditoría POS): ledger de idempotencia de POST /pos/ventas — ver
+/// docs/database/sql/48_pos_checkout_idempotency_keys.sql. Mismo criterio
+/// que `movement_idempotency_keys` (schema inventory): tabla separada NO
+/// particionada porque `invoices` sí lo está por `issued_at`. `status`
+/// distingue processing/succeeded/failed porque, a diferencia del caso de
+/// Inventario, el checkout de POS no corre dentro de una única transacción.
+model pos_checkout_idempotency_keys {
+  id                   String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id            String   @db.Uuid
+  idempotency_key      String
+  payload_fingerprint  String
+  status               String   @default("processing")
+  invoice_id           String?  @db.Uuid
+  result               Json?
+  error_code           String?
+  error_message        String?
+  created_at           DateTime @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([tenant_id, idempotency_key], map: "uq_sales_pos_checkout_idempotency_keys_tenant_key")
+  @@schema("sales")
+}
+
 model layaway_lines {
   id                                    String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   local_id                              BigInt     @unique @default(autoincrement())
@@ -1066,6 +1089,7 @@ model sales_order_lines {
   quantity                                  Decimal      @db.Decimal(18, 6)
   unit_price                                Decimal      @db.Decimal(18, 4)
   discount_percentage                       Decimal      @default(0) @db.Decimal(5, 2)
+  invoiced_quantity                         Decimal      @default(0) @db.Decimal(18, 6)
   sales_orders                              sales_orders @relation(fields: [sales_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([product_id], map: "idx_sales_sales_order_lines_product_id")

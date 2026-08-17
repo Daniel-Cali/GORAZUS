@@ -7,6 +7,7 @@ import { ConfiguracionController } from './controllers/configuracion.controller'
 import { MonedasController } from './controllers/monedas.controller';
 import { ImpuestosController } from './controllers/impuestos.controller';
 import { TasasImpuestoController } from './controllers/tasas-impuesto.controller';
+import { FormasPagoController } from './controllers/formas-pago.controller';
 import { EmpresasService } from './services/empresas.service';
 import { SucursalesService } from './services/sucursales.service';
 import { ParametrosService } from './services/parametros.service';
@@ -30,6 +31,9 @@ import { TasaImpuestoRepository } from './repositories/tasa-impuesto.repository'
 import { TasaImpuestoRepositoryPrisma } from './repositories/tasa-impuesto.repository.prisma';
 import { JurisdiccionRepository } from './repositories/jurisdiccion.repository';
 import { JurisdiccionRepositoryPrisma } from './repositories/jurisdiccion.repository.prisma';
+import { FormasPagoService } from './services/formas-pago.service';
+import { FormaPagoRepository } from './repositories/forma-pago.repository';
+import { FormaPagoRepositoryPrisma } from './repositories/forma-pago.repository.prisma';
 
 @Module({
   imports: [DatabaseModule],
@@ -41,6 +45,7 @@ import { JurisdiccionRepositoryPrisma } from './repositories/jurisdiccion.reposi
     MonedasController,
     ImpuestosController,
     TasasImpuestoController,
+    FormasPagoController,
   ],
   providers: [
     EmpresasService,
@@ -50,6 +55,7 @@ import { JurisdiccionRepositoryPrisma } from './repositories/jurisdiccion.reposi
     MonedasService,
     ImpuestosService,
     TasasImpuestoService,
+    FormasPagoService,
     { provide: EmpresaRepository, useClass: EmpresaRepositoryPrisma },
     { provide: SucursalRepository, useClass: SucursalRepositoryPrisma },
     { provide: ParametroRepository, useClass: ParametroRepositoryPrisma },
@@ -58,6 +64,7 @@ import { JurisdiccionRepositoryPrisma } from './repositories/jurisdiccion.reposi
     { provide: ImpuestoRepository, useClass: ImpuestoRepositoryPrisma },
     { provide: TasaImpuestoRepository, useClass: TasaImpuestoRepositoryPrisma },
     { provide: JurisdiccionRepository, useClass: JurisdiccionRepositoryPrisma },
+    { provide: FormaPagoRepository, useClass: FormaPagoRepositoryPrisma },
   ],
 })
 export class ConfiguracionModule {}

@@ -1,0 +1,20 @@
+{
+  "name": "@gorazus/inventario-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GORAZUS ERP — feature inventario (Control Center, stock, movimientos, lotes, series). Ver docs/frontend/FOLDER_STRUCTURE.md §2. Solo se importa por ruta relativa desde modules/inventario/index.ts, nunca por nombre de paquete.",
+  "dependencies": {
+    "@gorazus/ui-kit": "workspace:*",
+    "@gorazus/contracts": "workspace:*",
+    "@tanstack/react-query": "^5.62.0",
+    "@tanstack/react-table": "^8.20.5",
+    "lucide-react": "^0.469.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0"
+  }
+}

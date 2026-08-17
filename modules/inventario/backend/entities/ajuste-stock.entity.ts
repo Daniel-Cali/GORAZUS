@@ -2,6 +2,9 @@ export interface LineaAjusteInput {
   productId: string;
   previousQuantity: number;
   newQuantity: number;
+  /** Prompt 1 (Foundation Completion): lote/serie EXISTENTE afectado por el ajuste — opcional. `null` cuando `AjustesService` ya resolvió que no aplica (producto sin tracks_lot/tracks_serial). */
+  lotId?: string | null;
+  serialNumbers?: string[] | null;
 }
 
 /**

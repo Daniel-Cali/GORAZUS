@@ -21,6 +21,10 @@ import { InventarioModule } from '../../../../modules/inventario/backend/inventa
 // eslint-disable-next-line @nx/enforce-module-boundaries -- mismo motivo que arriba
 import { ProductosModule } from '../../../../modules/productos/backend/productos.module';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- mismo motivo que arriba
+import { ProveedoresModule } from '../../../../modules/proveedores/backend/proveedores.module';
+// eslint-disable-next-line @nx/enforce-module-boundaries -- mismo motivo que arriba
+import { ComprasModule } from '../../../../modules/compras/backend/compras.module';
+// eslint-disable-next-line @nx/enforce-module-boundaries -- mismo motivo que arriba
 import { ClientesModule } from '../../../../modules/clientes/backend/clientes.module';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- mismo motivo que arriba
 import { CajaModule } from '../../../../modules/caja/backend/caja.module';
@@ -28,6 +32,8 @@ import { CajaModule } from '../../../../modules/caja/backend/caja.module';
 import { VentasModule } from '../../../../modules/ventas/backend/ventas.module';
 // eslint-disable-next-line @nx/enforce-module-boundaries -- mismo motivo que arriba
 import { PosModule } from '../../../../modules/pos/backend/pos.module';
+// eslint-disable-next-line @nx/enforce-module-boundaries -- mismo motivo que arriba
+import { CrmModule } from '../../../../modules/crm/backend/crm.module';
 
 /**
  * Composition root — ver docs/architecture/01-estructura-monorepo.md §3:
@@ -58,10 +64,13 @@ import { PosModule } from '../../../../modules/pos/backend/pos.module';
     ConfiguracionModule,
     InventarioModule,
     ProductosModule,
+    ProveedoresModule,
+    ComprasModule,
     ClientesModule,
     CajaModule,
     VentasModule,
     PosModule,
+    CrmModule,
   ],
 })
 export class AppModule {}

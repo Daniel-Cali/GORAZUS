@@ -121,6 +121,11 @@ export class CotizacionesService {
     private readonly empresaSucursalLookupRepository: EmpresaSucursalLookupRepository,
   ) {}
 
+  /** Catálogo de estados de cotización (`quote_status`) — de solo lectura desde la app, mismo motivo que `VentasService.listarEstados`. */
+  async listarEstados(context: UserContext) {
+    return this.estadoCotizacionRepository.findMany(context, {}, { page: 1, pageSize: 50 });
+  }
+
   private async resolverEstadoPorCodigo(context: UserContext, code: string): Promise<string> {
     const existente = await this.estadoCotizacionRepository.findMany(
       context,

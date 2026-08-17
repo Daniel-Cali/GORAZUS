@@ -91,6 +91,7 @@ describe('MovimientosService', () => {
         }));
       }),
       listar: jest.fn(async () => ({ data: [], meta: { page: 1, pageSize: 20, total: 0 } })),
+      obtenerPorIdempotencyKey: jest.fn(async () => null),
     } as unknown as MovimientoStockRepository;
 
     tipoMovimientoRepository = {
@@ -219,5 +220,59 @@ describe('MovimientosService', () => {
     const resultado = await buildService().listar(CONTEXT, {}, { page: 1, pageSize: 20 });
     expect(resultado.meta.total).toBe(0);
     expect(movimientoRepository.listar).toHaveBeenCalled();
+  });
+
+  describe('ISSUE-07: idempotencyKey', () => {
+    it('registrar: sin idempotencyKey, nunca consulta obtenerPorIdempotencyKey', async () => {
+      await buildService().registrar(CONTEXT, baseInput());
+      expect(movimientoRepository.obtenerPorIdempotencyKey).not.toHaveBeenCalled();
+      expect(movimientoRepository.registrar).toHaveBeenCalledWith(
+        CONTEXT,
+        expect.objectContaining({ idempotencyKey: null }),
+      );
+    });
+
+    it('registrar: clave nueva (sin registro previo) — sigue el flujo normal y la propaga al repositorio', async () => {
+      await buildService().registrar(CONTEXT, baseInput({ idempotencyKey: 'abc' }));
+      expect(movimientoRepository.obtenerPorIdempotencyKey).toHaveBeenCalledWith(CONTEXT, 'abc');
+      expect(tipoMovimientoRepository.findById).toHaveBeenCalled(); // sí corrió resolverYValidar
+      expect(movimientoRepository.registrar).toHaveBeenCalledWith(
+        CONTEXT,
+        expect.objectContaining({ idempotencyKey: 'abc' }),
+      );
+    });
+
+    it('registrar: clave con movimiento previo — devuelve el original, NUNCA valida ni crea de nuevo', async () => {
+      const movimientoExistente = { id: 'mv-existente' } as stock_movements;
+      (movimientoRepository.obtenerPorIdempotencyKey as jest.Mock).mockResolvedValueOnce(
+        movimientoExistente,
+      );
+
+      const resultado = await buildService().registrar(
+        CONTEXT,
+        baseInput({ idempotencyKey: 'abc' }),
+      );
+
+      expect(resultado).toBe(movimientoExistente);
+      expect(tipoMovimientoRepository.findById).not.toHaveBeenCalled(); // resolverYValidar NUNCA corrió
+      expect(movimientoRepository.registrar).not.toHaveBeenCalled();
+    });
+
+    it('registrar: dos claves distintas producen dos llamadas independientes al repositorio', async () => {
+      await buildService().registrar(CONTEXT, baseInput({ idempotencyKey: 'key-1' }));
+      await buildService().registrar(CONTEXT, baseInput({ idempotencyKey: 'key-2' }));
+
+      expect(movimientoRepository.registrar).toHaveBeenCalledTimes(2);
+      expect(movimientoRepository.registrar).toHaveBeenNthCalledWith(
+        1,
+        CONTEXT,
+        expect.objectContaining({ idempotencyKey: 'key-1' }),
+      );
+      expect(movimientoRepository.registrar).toHaveBeenNthCalledWith(
+        2,
+        CONTEXT,
+        expect.objectContaining({ idempotencyKey: 'key-2' }),
+      );
+    });
   });
 });

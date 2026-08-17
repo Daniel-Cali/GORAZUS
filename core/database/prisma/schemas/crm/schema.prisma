@@ -211,6 +211,7 @@ model follow_up_activities {
   assigned_to_user_id                                   String         @db.Uuid
   due_at                                                DateTime       @db.Timestamptz(6)
   completed_at                                          DateTime?      @db.Timestamptz(6)
+  customer_id                                           String?        @db.Uuid
   leads                                                 leads?         @relation(fields: [lead_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   opportunities                                         opportunities? @relation(fields: [opportunity_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 

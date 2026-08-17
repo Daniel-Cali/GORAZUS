@@ -21,7 +21,7 @@ const fs = require('node:fs');
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');
 const SQL_DIR = path.join(ROOT, 'docs', 'database', 'sql');
-const COMPOSE_FILES = ['-f', path.join(ROOT, 'infra', 'docker', 'docker-compose.yml'), '-f', path.join(ROOT, 'infra', 'docker', 'docker-compose.dev.yml')];
+const COMPOSE_FILES = ['--env-file', path.join(ROOT, '.env'), '-f', path.join(ROOT, 'infra', 'docker', 'docker-compose.yml'), '-f', path.join(ROOT, 'infra', 'docker', 'docker-compose.dev.yml')];
 
 const dbUser = process.env['POSTGRES_USER'] || 'gorazus_app';
 const dbName = process.env['POSTGRES_DB'] || 'gorazus';

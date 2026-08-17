@@ -15,8 +15,18 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
+    "@gorazus/core-cache": "workspace:*",
+    "@gorazus/core-config": "workspace:*",
+    "@gorazus/core-logging": "workspace:*",
+    "@gorazus/core-observability": "workspace:*",
+    "@gorazus/core-storage": "workspace:*",
+    "@nestjs/platform-express": "^10.4.0",
     "@nestjs/testing": "^10.4.0",
+    "@types/jsonwebtoken": "^9.0.7",
     "@types/multer": "^1.4.12",
-    "@types/node": "^20.19.43"
+    "@types/node": "^20.19.43",
+    "@types/supertest": "^6.0.2",
+    "jsonwebtoken": "^9.0.2",
+    "supertest": "^7.0.0"
   }
 }

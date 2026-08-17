@@ -2,6 +2,7 @@ import type { UserContext } from '@gorazus/contracts';
 import type { cycle_count_schedules, warehouse_zones } from '@gorazus/core-database';
 import { ProgramaConteoCiclicoRepository } from '../repositories/programa-conteo-ciclico.repository';
 import { ZonaAlmacenRepository } from '../repositories/zona-almacen.repository';
+import { ProductoLookupRepository } from '../repositories/producto-lookup.repository';
 import { ConteosService } from './conteos.service';
 import {
   ProgramacionConteosService,
@@ -34,6 +35,7 @@ describe('ProgramacionConteosService', () => {
   let programas: Map<string, cycle_count_schedules>;
   let programaRepository: ProgramaConteoCiclicoRepository;
   let zonaAlmacenRepository: ZonaAlmacenRepository;
+  let productoLookupRepository: ProductoLookupRepository;
   let conteosService: ConteosService;
 
   beforeEach(() => {
@@ -71,12 +73,17 @@ describe('ProgramacionConteosService', () => {
     conteosService = {
       crear: jest.fn(async () => ({ id: 'c-1' })),
     } as unknown as ConteosService;
+
+    productoLookupRepository = {
+      listarPorCategoria: jest.fn(async () => []),
+    } as unknown as ProductoLookupRepository;
   });
 
   function buildService(): ProgramacionConteosService {
     return new ProgramacionConteosService(
       programaRepository,
       zonaAlmacenRepository,
+      productoLookupRepository,
       conteosService,
     );
   }
@@ -131,6 +138,30 @@ describe('ProgramacionConteosService', () => {
     const resultado = await buildService().generar(CONTEXT, 's-1');
     expect(new Date(resultado.programa.next_run_date!).toISOString().slice(0, 10)).toBe(
       '2026-01-08',
+    );
+  });
+
+  // "Support scheduled counts by... Product class" (test requirement de misión).
+  it('generar: con product_category_id, resuelve productIds de la categoría y los pasa al conteo', async () => {
+    programas.set('s-1', buildPrograma({ product_category_id: 'cat-1' }));
+    (productoLookupRepository.listarPorCategoria as jest.Mock).mockResolvedValueOnce([
+      'p-1',
+      'p-2',
+    ]);
+    await buildService().generar(CONTEXT, 's-1');
+    expect(conteosService.crear).toHaveBeenCalledWith(
+      CONTEXT,
+      expect.objectContaining({ productIds: ['p-1', 'p-2'] }),
+    );
+  });
+
+  // "Support scheduled counts by... Location" (test requirement de misión).
+  it('generar: con location_id, pasa locationId al conteo en vez de zoneId', async () => {
+    programas.set('s-1', buildPrograma({ location_id: 'loc-1' }));
+    await buildService().generar(CONTEXT, 's-1');
+    expect(conteosService.crear).toHaveBeenCalledWith(
+      CONTEXT,
+      expect.objectContaining({ locationId: 'loc-1' }),
     );
   });
 });

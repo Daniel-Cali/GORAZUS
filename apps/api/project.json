@@ -16,9 +16,13 @@
       }
     },
     "serve": {
-      "executor": "@nx/js:node",
+      "executor": "nx:run-commands",
       "options": {
-        "buildTarget": "api:build"
+        "command": "node --watch -r ts-node/register -r tsconfig-paths/register apps/api/src/main.ts",
+        "env": {
+          "TS_NODE_TRANSPILE_ONLY": "true",
+          "TS_NODE_PROJECT": "apps/api/tsconfig.json"
+        }
       }
     },
     "lint": {

@@ -26,7 +26,11 @@
       "@gorazus/tooling/*": ["packages/tooling/*"],
       "@gorazus/ui-kit": ["ui-kit/index.ts"],
       "@gorazus/ui-kit/*": ["ui-kit/*"],
-      "@gorazus/modules/*": ["modules/*/index.ts"]
+      "@gorazus/modules/*": ["modules/*/index.ts"],
+      "@gorazus/modules/caja-frontend": ["modules/caja/frontend/index.ts"],
+      "@gorazus/modules/clientes-frontend": ["modules/clientes/frontend/index.ts"],
+      "@gorazus/modules/inventario-frontend": ["modules/inventario/frontend/index.ts"],
+      "@gorazus/modules/ventas-frontend": ["modules/ventas/frontend/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp", "dist"]

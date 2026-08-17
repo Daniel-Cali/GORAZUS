@@ -14,6 +14,8 @@ import { AlmacenRepository } from '../repositories/almacen.repository';
 import { MotivoAjusteRepository } from '../repositories/motivo-ajuste.repository';
 import { ProductoLookupRepository } from '../repositories/producto-lookup.repository';
 import { TipoMovimientoStockRepository } from '../repositories/tipo-movimiento-stock.repository';
+import { InventoryLotRepository } from '../repositories/inventory-lot.repository';
+import { InventorySerialRepository } from '../repositories/inventory-serial.repository';
 import { StockService } from './stock.service';
 import {
   MovimientosService,
@@ -26,6 +28,7 @@ import {
   MotivoAjusteInvalidoException,
   AjusteYaConfirmadoException,
   TipoMovimientoAjusteNoConfiguradoException,
+  LoteOSerieRequeridoException,
 } from './ajustes.service';
 import type { CrearAjusteInput } from '../validators/ajustes.schema';
 
@@ -83,8 +86,11 @@ describe('AjustesService', () => {
   let motivoAjusteRepository: MotivoAjusteRepository;
   let productoLookupRepository: ProductoLookupRepository;
   let tipoMovimientoRepository: TipoMovimientoStockRepository;
+  let inventoryLotRepository: InventoryLotRepository;
+  let inventorySerialRepository: InventorySerialRepository;
   let stockService: StockService;
   let movimientosService: MovimientosService;
+  let controlProducto: { tracksLot: boolean; tracksSerial: boolean };
 
   beforeEach(() => {
     almacen = ALMACEN;
@@ -93,6 +99,7 @@ describe('AjustesService', () => {
     quantityOnHand = 10;
     ajuste = buildAjuste();
     tiposDisponibles = [TIPO_INCREMENTO, TIPO_DECREMENTO];
+    controlProducto = { tracksLot: false, tracksSerial: false };
 
     ajusteRepository = {
       crear: jest.fn(async () => ajuste),
@@ -107,7 +114,26 @@ describe('AjustesService', () => {
     } as unknown as MotivoAjusteRepository;
     productoLookupRepository = {
       existeProducto: jest.fn(async () => productoValido),
+      obtenerControl: jest.fn(async () => controlProducto),
     } as unknown as ProductoLookupRepository;
+    inventoryLotRepository = {
+      obtenerPorId: jest.fn(async () => ({
+        id: 'lot-1',
+        product_id: 'p-1',
+        remaining_quantity: 10,
+      })),
+      incrementar: jest.fn(async () => ({ id: 'lot-1' })),
+      consumir: jest.fn(async () => ({ id: 'lot-1' })),
+    } as unknown as InventoryLotRepository;
+    inventorySerialRepository = {
+      obtenerPorNumero: jest.fn(async () => ({
+        id: 'serial-1',
+        product_id: 'p-1',
+        status: 'in_stock',
+      })),
+      devolverStock: jest.fn(async () => ({ id: 'serial-1' })),
+      emitir: jest.fn(async () => ({ id: 'serial-1' })),
+    } as unknown as InventorySerialRepository;
     tipoMovimientoRepository = {
       findMany: jest.fn(async (_ctx: unknown, filter: { code?: string }) => {
         const data = tiposDisponibles.filter((t) => !filter.code || t.code === filter.code);
@@ -139,6 +165,8 @@ describe('AjustesService', () => {
       motivoAjusteRepository,
       productoLookupRepository,
       tipoMovimientoRepository,
+      inventoryLotRepository,
+      inventorySerialRepository,
       stockService,
       movimientosService,
     );
@@ -244,5 +272,67 @@ describe('AjustesService', () => {
   it('listar: delega al repositorio', async () => {
     const resultado = await buildService().listar(CONTEXT, {}, { page: 1, pageSize: 20 });
     expect(resultado.meta.total).toBe(0);
+  });
+
+  // "Adjustments with lots" (test requirement de misión): decremento
+  // atómico del lote (Loss/Damage/Correction hacia abajo) + movimiento con lotId.
+  it('confirmar: con línea de lote a la baja, consume el lote y crea el movimiento con lotId', async () => {
+    ajuste = buildAjuste({
+      stock_adjustment_lines: [
+        {
+          id: 'l-1',
+          product_id: 'p-1',
+          previous_quantity: 10,
+          new_quantity: 8,
+          lot_id: 'lot-1',
+          metadata: {},
+        } as never,
+      ],
+    });
+    (ajusteRepository.obtener as jest.Mock).mockResolvedValueOnce(ajuste);
+    await buildService().confirmar(CONTEXT, 'a-1');
+    expect(inventoryLotRepository.consumir).toHaveBeenCalledWith(CONTEXT, {
+      lotId: 'lot-1',
+      productId: 'p-1',
+      quantity: 2,
+    });
+    expect(movimientosService.registrarLote).toHaveBeenCalledWith(
+      CONTEXT,
+      expect.arrayContaining([expect.objectContaining({ lotId: 'lot-1', quantity: 2 })]),
+    );
+  });
+
+  it('crear: rechaza tracks_lot sin lotId', async () => {
+    controlProducto = { tracksLot: true, tracksSerial: false };
+    await expect(buildService().crear(CONTEXT, baseInput())).rejects.toThrow(
+      LoteOSerieRequeridoException,
+    );
+  });
+
+  // "Adjustments with serials" (test requirement de misión): un ajuste a la
+  // baja (Loss) emite la serie; un movimiento quantity=1 con serialId.
+  it('confirmar: con línea serializada a la baja, emite la serie y crea el movimiento con serialId', async () => {
+    ajuste = buildAjuste({
+      stock_adjustment_lines: [
+        {
+          id: 'l-1',
+          product_id: 'p-1',
+          previous_quantity: 1,
+          new_quantity: 0,
+          lot_id: null,
+          metadata: { serialNumbers: ['SN-1'] },
+        } as never,
+      ],
+    });
+    (ajusteRepository.obtener as jest.Mock).mockResolvedValueOnce(ajuste);
+    await buildService().confirmar(CONTEXT, 'a-1');
+    expect(inventorySerialRepository.emitir).toHaveBeenCalledWith(CONTEXT, {
+      serialId: 'serial-1',
+      productId: 'p-1',
+    });
+    expect(movimientosService.registrarLote).toHaveBeenCalledWith(
+      CONTEXT,
+      expect.arrayContaining([expect.objectContaining({ serialId: 'serial-1', quantity: 1 })]),
+    );
   });
 });

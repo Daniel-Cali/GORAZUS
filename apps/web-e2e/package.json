@@ -4,6 +4,7 @@
   "private": true,
   "description": "GORAZUS ERP — Playwright E2E real contra apps/web + apps/api. Ver README.md de esta carpeta.",
   "devDependencies": {
+    "@axe-core/playwright": "4.10.2",
     "@playwright/test": "^1.49.0"
   }
 }

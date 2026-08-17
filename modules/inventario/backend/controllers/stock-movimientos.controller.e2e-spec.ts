@@ -267,4 +267,73 @@ describe('TiposMovimientoController / StockController / MovimientosController / 
       });
     expect(response.status).toBe(400);
   });
+
+  /**
+   * ISSUE-07 — idempotencia real contra Postgres vía
+   * `inventory.movement_idempotency_keys` (`45_movement_idempotency_keys.sql`).
+   * NO EJECUTADO en el entorno donde se escribió (Docker/Postgres inactivo)
+   * — mismo patrón que el resto de la suite. El Caso 2 es la única prueba
+   * real de que el `INSERT` del ledger serializa la carrera concurrente
+   * (nunca dos `stock_movements`), no solo el lookup previo del servicio.
+   */
+  it('ISSUE-07: idempotencyKey evita duplicados en Movimientos de Inventario', async () => {
+    const crearTipo = await request(app.getHttpServer())
+      .post('/api/v1/inventario/tipos-movimiento')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ code: `E2E-IDEMP-${Date.now()}`, direction: 'in' });
+    const movementTypeId = crearTipo.body.data.id;
+
+    // Caso 1: misma clave, secuencial — segunda llamada devuelve el mismo movimiento, no crea uno nuevo.
+    const primeraAbc = await request(app.getHttpServer())
+      .post('/api/v1/inventario/movimientos')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ productId, warehouseId, movementTypeId, quantity: 5, idempotencyKey: 'abc' });
+    expect(primeraAbc.status).toBe(201);
+
+    const segundaAbc = await request(app.getHttpServer())
+      .post('/api/v1/inventario/movimientos')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ productId, warehouseId, movementTypeId, quantity: 5, idempotencyKey: 'abc' });
+    expect(segundaAbc.status).toBe(201);
+    expect(segundaAbc.body.data.id).toBe(primeraAbc.body.data.id);
+
+    // Caso 2: misma clave, concurrente — nunca dos stock_movements (INSERT del ledger serializa la carrera).
+    const [concurrenteA, concurrenteB] = await Promise.all([
+      request(app.getHttpServer())
+        .post('/api/v1/inventario/movimientos')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ productId, warehouseId, movementTypeId, quantity: 5, idempotencyKey: 'xyz' }),
+      request(app.getHttpServer())
+        .post('/api/v1/inventario/movimientos')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ productId, warehouseId, movementTypeId, quantity: 5, idempotencyKey: 'xyz' }),
+    ]);
+    expect(concurrenteA.status).toBe(201);
+    expect(concurrenteB.status).toBe(201);
+    expect(concurrenteA.body.data.id).toBe(concurrenteB.body.data.id);
+
+    // Caso 3: claves diferentes — dos operaciones independientes, dos movimientos reales.
+    const claveUno = await request(app.getHttpServer())
+      .post('/api/v1/inventario/movimientos')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ productId, warehouseId, movementTypeId, quantity: 5, idempotencyKey: 'key-1' });
+    const claveDos = await request(app.getHttpServer())
+      .post('/api/v1/inventario/movimientos')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ productId, warehouseId, movementTypeId, quantity: 5, idempotencyKey: 'key-2' });
+    expect(claveUno.status).toBe(201);
+    expect(claveDos.status).toBe(201);
+    expect(claveUno.body.data.id).not.toBe(claveDos.body.data.id);
+
+    // Verificación final: exactamente 4 movimientos reales para este tipo
+    // (abc x1, xyz x1, key-1, key-2) — nunca 6, pese a 6 solicitudes HTTP. Solo
+    // 4 * quantity=5 = 20 unidades aplicadas al stock, no 30.
+    const listado = await request(app.getHttpServer())
+      .get(`/api/v1/inventario/movimientos?productId=${productId}&warehouseId=${warehouseId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    const deEsteTipo = listado.body.data.filter(
+      (m: { movementTypeId: string }) => m.movementTypeId === movementTypeId,
+    );
+    expect(deEsteTipo).toHaveLength(4);
+  });
 });

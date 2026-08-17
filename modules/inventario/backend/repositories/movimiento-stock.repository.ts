@@ -17,6 +17,11 @@ export interface RegistrarMovimientoParams {
   sourceModule: string | null;
   sourceEntityId: string | null;
   observations: string | null;
+  /** ISSUE-07: si se provee, `registrar`/`registrarLote` son idempotentes por `(tenant_id, idempotencyKey)` vía `inventory.movement_idempotency_keys` — ver `MovimientoStockRepositoryPrisma`. */
+  idempotencyKey: string | null;
+  /** Inventario Parte 05 Subfase 3: lote/serie de origen o destino — resueltos y validados por el llamador (Recepciones/Salidas), este repositorio solo persiste la referencia (`46_stock_movements_lot_serial_traceability.sql`). */
+  lotId: string | null;
+  serialId: string | null;
 }
 
 /** Lanzado por el adaptador si una salida ('out') dejaría `quantity_on_hand` negativo — traducido a excepción de dominio en `MovimientosService`. */
@@ -44,6 +49,12 @@ export abstract class MovimientoStockRepository {
     context: UserContext,
     params: RegistrarMovimientoParams,
   ): Promise<{ movimiento: stock_movements; stockActualizado: stock }>;
+
+  /** ISSUE-07: lookup de solo lectura por clave de idempotencia — usado por el servicio para saltar `resolverYValidar` si ya existe un movimiento completado para esa clave. */
+  abstract obtenerPorIdempotencyKey(
+    context: UserContext,
+    idempotencyKey: string,
+  ): Promise<stock_movements | null>;
 
   /**
    * Igual que `registrar`, pero para varios movimientos en la MISMA

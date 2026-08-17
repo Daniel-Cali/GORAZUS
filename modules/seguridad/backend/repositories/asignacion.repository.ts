@@ -25,4 +25,6 @@ export abstract class AsignacionRepository {
     context: Pick<UserContext, 'tenantId' | 'companyId'>,
     userId: string,
   ): Promise<string[]>;
+  /** Códigos de permiso asignados directamente a un rol (no resuelve por usuario). */
+  abstract listarPermisosDeRol(context: UserContext, rolId: string): Promise<string[]>;
 }

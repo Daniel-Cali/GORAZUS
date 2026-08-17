@@ -16,6 +16,8 @@ import { ProductoLookupRepository } from '../repositories/producto-lookup.reposi
 import { AlmacenRepository } from '../repositories/almacen.repository';
 import { ZonaAlmacenRepository } from '../repositories/zona-almacen.repository';
 import { MotivoAjusteRepository } from '../repositories/motivo-ajuste.repository';
+import { InventoryLotRepository } from '../repositories/inventory-lot.repository';
+import { InventorySerialRepository } from '../repositories/inventory-serial.repository';
 import { AjustesService } from './ajustes.service';
 import { AlmacenInvalidoException, ProductoInvalidoException } from './movimientos.service';
 import {
@@ -66,6 +68,8 @@ describe('ConteosService', () => {
   let almacenRepository: AlmacenRepository;
   let zonaAlmacenRepository: ZonaAlmacenRepository;
   let motivoAjusteRepository: MotivoAjusteRepository;
+  let inventoryLotRepository: InventoryLotRepository;
+  let inventorySerialRepository: InventorySerialRepository;
   let ajustesService: AjustesService;
 
   beforeEach(() => {
@@ -120,6 +124,15 @@ describe('ConteosService', () => {
     ajustesService = {
       crear: jest.fn(async () => ({ id: 'aj-1' }) as AjusteConLineas),
     } as unknown as AjustesService;
+
+    inventoryLotRepository = {
+      listar: jest.fn(async () => ({ data: [], meta: { page: 1, pageSize: 10000, total: 0 } })),
+    } as unknown as InventoryLotRepository;
+
+    inventorySerialRepository = {
+      listar: jest.fn(async () => ({ data: [], meta: { page: 1, pageSize: 10000, total: 0 } })),
+      obtenerPorId: jest.fn(async () => null),
+    } as unknown as InventorySerialRepository;
   });
 
   function buildService(): ConteosService {
@@ -130,12 +143,19 @@ describe('ConteosService', () => {
       almacenRepository,
       zonaAlmacenRepository,
       motivoAjusteRepository,
+      inventoryLotRepository,
+      inventorySerialRepository,
       ajustesService,
     );
   }
 
   function baseInput(overrides: Partial<CrearConteoInput> = {}): CrearConteoInput {
-    return { warehouseId: 'w-1', scheduledDate: new Date('2026-08-01'), ...overrides };
+    return {
+      warehouseId: 'w-1',
+      scheduledDate: new Date('2026-08-01'),
+      countBy: 'product',
+      ...overrides,
+    };
   }
 
   it('crear: rechaza un almacén inexistente', async () => {
@@ -272,6 +292,61 @@ describe('ConteosService', () => {
         warehouseId: 'w-1',
         reasonId: 'r-1',
         lines: [expect.objectContaining({ productId: 'p-1', newQuantity: 7 })],
+      }),
+    );
+  });
+
+  // "Physical count traceability" (test requirement de misión): countBy
+  // 'lot' autogenera una línea por lote con remaining_quantity > 0.
+  it('crear countBy lot: autogenera una línea por lote con lotId', async () => {
+    (inventoryLotRepository.listar as jest.Mock).mockResolvedValueOnce({
+      data: [{ id: 'lot-1', product_id: 'p-1', remaining_quantity: 30 }],
+      meta: { page: 1, pageSize: 10000, total: 1 },
+    });
+    await buildService().crear(CONTEXT, baseInput({ countBy: 'lot' }));
+    expect(conteoRepository.crear).toHaveBeenCalledWith(
+      CONTEXT,
+      expect.objectContaining({
+        lines: [expect.objectContaining({ productId: 'p-1', systemQuantity: 30, lotId: 'lot-1' })],
+      }),
+    );
+  });
+
+  it('crear countBy serial: autogenera una línea por serie disponible con serialId', async () => {
+    (inventorySerialRepository.listar as jest.Mock).mockResolvedValueOnce({
+      data: [{ id: 'serial-1', product_id: 'p-1' }],
+      meta: { page: 1, pageSize: 10000, total: 1 },
+    });
+    await buildService().crear(CONTEXT, baseInput({ countBy: 'serial' }));
+    expect(conteoRepository.crear).toHaveBeenCalledWith(
+      CONTEXT,
+      expect.objectContaining({
+        lines: [
+          expect.objectContaining({ productId: 'p-1', systemQuantity: 1, serialId: 'serial-1' }),
+        ],
+      }),
+    );
+  });
+
+  it('completar: con discrepancia de línea con lote, genera el ajuste referenciando el mismo lotId', async () => {
+    conteo = buildConteo({
+      status: 'in_progress',
+      physical_count_lines: [
+        {
+          id: 'l-1',
+          product_id: 'p-1',
+          system_quantity: 10,
+          counted_quantity: 7,
+          lot_id: 'lot-1',
+        } as never,
+      ],
+    });
+    (conteoRepository.obtener as jest.Mock).mockResolvedValue(conteo);
+    await buildService().completar(CONTEXT, 'c-1');
+    expect(ajustesService.crear).toHaveBeenCalledWith(
+      CONTEXT,
+      expect.objectContaining({
+        lines: [expect.objectContaining({ productId: 'p-1', newQuantity: 7, lotId: 'lot-1' })],
       }),
     );
   });

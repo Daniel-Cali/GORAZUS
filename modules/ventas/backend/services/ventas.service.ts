@@ -109,6 +109,11 @@ export class VentasService {
     private readonly motorContableService: MotorContableService,
   ) {}
 
+  /** Catálogo de estados de factura (`invoice_status`) — de solo lectura desde la app, consumido por el frontend para pintar el badge de estado sin adivinar códigos. */
+  async listarEstados(context: UserContext) {
+    return this.estadoFacturaRepository.findMany(context, {}, { page: 1, pageSize: 50 });
+  }
+
   /** Get-or-create idempotente del estado por código — mismo patrón que `CajaService.resolverTipoPorCodigo`. */
   async resolverEstadoPorCodigo(context: UserContext, code: string): Promise<string> {
     const existente = await this.estadoFacturaRepository.findMany(
@@ -400,6 +405,8 @@ export class VentasService {
       branchId?: string;
       customerId?: string;
       statusId?: string;
+      /** POS (`listarSuspendidas`) filtra por `sales_channel='pos'` — antes de este campo, el filtro no distinguía canal en absoluto. */
+      salesChannel?: string;
       issuedFrom?: Date;
       issuedTo?: Date;
     },
@@ -412,6 +419,7 @@ export class VentasService {
         ...(filtros.branchId && { branch_id: filtros.branchId }),
         ...(filtros.customerId && { customer_id: filtros.customerId }),
         ...(filtros.statusId && { status_id: filtros.statusId }),
+        ...(filtros.salesChannel && { sales_channel: filtros.salesChannel }),
         ...((filtros.issuedFrom || filtros.issuedTo) && {
           issued_at: {
             ...(filtros.issuedFrom && { gte: filtros.issuedFrom }),

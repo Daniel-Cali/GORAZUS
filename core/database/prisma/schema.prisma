@@ -6097,6 +6097,9 @@ model roles {
   metadata                      Json                @default("{}")
   name                          String
   is_system_role                Boolean             @default(false)
+  code                          String?
+  description                   String?
+  role_type                     String              @default("custom")
   approval_matrices             approval_matrices[]
   role_permissions              role_permissions[]
   branches                      branches?           @relation(fields: [branch_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -7742,9 +7745,6 @@ model users {
   permissions_permissions_created_byTousers                                                   permissions[]                          @relation("permissions_created_byTousers")
   permissions_permissions_deleted_byTousers                                                   permissions[]                          @relation("permissions_deleted_byTousers")
   permissions_permissions_updated_byTousers                                                   permissions[]                          @relation("permissions_updated_byTousers")
-  restore_test_logs_restore_test_logs_created_byTousers                                       restore_test_logs[]                    @relation("restore_test_logs_created_byTousers")
-  restore_test_logs_restore_test_logs_deleted_byTousers                                       restore_test_logs[]                    @relation("restore_test_logs_deleted_byTousers")
-  restore_test_logs_restore_test_logs_updated_byTousers                                       restore_test_logs[]                    @relation("restore_test_logs_updated_byTousers")
   role_permissions_role_permissions_created_byTousers                                         role_permissions[]                     @relation("role_permissions_created_byTousers")
   role_permissions_role_permissions_deleted_byTousers                                         role_permissions[]                     @relation("role_permissions_deleted_byTousers")
   role_permissions_role_permissions_updated_byTousers                                         role_permissions[]                     @relation("role_permissions_updated_byTousers")
@@ -9351,6 +9351,7 @@ model follow_up_activities {
   assigned_to_user_id                                   String         @db.Uuid
   due_at                                                DateTime       @db.Timestamptz(6)
   completed_at                                          DateTime?      @db.Timestamptz(6)
+  customer_id                                           String?        @db.Uuid
   users_follow_up_activities_assigned_to_user_idTousers users          @relation("follow_up_activities_assigned_to_user_idTousers", fields: [assigned_to_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   branches                                              branches?      @relation(fields: [branch_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   companies                                             companies      @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -10316,7 +10317,9 @@ model customers {
   customer_credit_profiles          customer_credit_profiles[]
   customer_discounts                customer_discounts[]
   customer_loyalty_accounts         customer_loyalty_accounts[]
+  customer_notes                    customer_notes[]
   customer_price_lists              customer_price_lists[]
+  customer_ratings                  customer_ratings[]
   customer_references               customer_references[]
   customer_statements               customer_statements[]
   customer_visits                   customer_visits[]
@@ -11570,6 +11573,7 @@ model goods_issue_lines {
   issue_id                                  String       @db.Uuid
   product_id                                String       @db.Uuid
   quantity                                  Decimal      @db.Decimal(18, 6)
+  lot_id                                    String?      @db.Uuid
   branches                                  branches?    @relation(fields: [branch_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   companies                                 companies?   @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_goods_issue_lines_created_byTousers users?       @relation("goods_issue_lines_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -11581,6 +11585,7 @@ model goods_issue_lines {
 
   @@index([issue_id], map: "idx_inventory_goods_issue_lines_issue_id")
   @@index([product_id], map: "idx_inventory_goods_issue_lines_product_id")
+  @@index([lot_id], map: "idx_inventory_goods_issue_lines_lot_id")
   @@schema("inventory")
 }
 
@@ -11676,6 +11681,7 @@ model goods_receipt_lines {
   product_id                                  String             @db.Uuid
   quantity                                    Decimal            @db.Decimal(18, 6)
   unit_cost                                   Decimal?           @db.Decimal(18, 4)
+  lot_id                                      String?            @db.Uuid
   fifo_cost_layers                            fifo_cost_layers[]
   branches                                    branches?          @relation(fields: [branch_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   companies                                   companies?         @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -11688,6 +11694,7 @@ model goods_receipt_lines {
 
   @@index([product_id], map: "idx_inventory_goods_receipt_lines_product_id")
   @@index([receipt_id], map: "idx_inventory_goods_receipt_lines_receipt_id")
+  @@index([lot_id], map: "idx_inventory_goods_receipt_lines_lot_id")
   @@schema("inventory")
 }
 
@@ -11760,6 +11767,7 @@ model inventory_lots {
   users_inventory_lots_updated_byTousers users?      @relation("inventory_lots_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   warehouses                             warehouses? @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@unique([tenant_id, product_id, lot_number], map: "uq_inventory_inventory_lots_identity")
   @@index([warehouse_id], map: "idx_inventory_inventory_lots_warehouse_id")
   @@schema("inventory")
 }
@@ -11798,6 +11806,7 @@ model inventory_serials {
   users_inventory_serials_updated_byTousers users?      @relation("inventory_serials_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   warehouses                                warehouses? @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
+  @@unique([tenant_id, serial_number], map: "uq_inventory_inventory_serials_identity")
   @@index([warehouse_id], map: "idx_inventory_inventory_serials_warehouse_id")
   @@schema("inventory")
 }
@@ -12449,6 +12458,8 @@ model stock_movements {
   unit_cost                               Decimal?             @db.Decimal(18, 4)
   source_module                           String?
   source_entity_id                        String?              @db.Uuid
+  lot_id                                   String?              @db.Uuid
+  serial_id                               String?              @db.Uuid
   branches                                branches?            @relation(fields: [branch_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   companies                               companies            @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_stock_movements_created_byTousers users?               @relation("stock_movements_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -12465,6 +12476,22 @@ model stock_movements {
   @@index([created_at], map: "idx_inventory_stock_movements_created_brin", type: Brin)
   @@index([movement_type_id], map: "idx_inventory_stock_movements_movement_type_id")
   @@index([warehouse_id], map: "idx_inventory_stock_movements_warehouse_id")
+  @@index([lot_id], map: "idx_inventory_stock_movements_lot_id")
+  @@index([serial_id], map: "idx_inventory_stock_movements_serial_id")
+  @@schema("inventory")
+}
+
+/// ISSUE-07: reserva de claves de idempotencia para stock_movements — tabla separada porque
+/// stock_movements está particionada por created_at (ver 45_movement_idempotency_keys.sql).
+model movement_idempotency_keys {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id       String   @db.Uuid
+  idempotency_key String
+  movement_id     String?  @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+  tenants         tenants  @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([tenant_id, idempotency_key], map: "uq_inventory_movement_idempotency_keys_tenant_key")
   @@schema("inventory")
 }
 
@@ -15478,6 +15505,7 @@ model goods_receipt_notes {
   metadata                                    Json                        @default("{}")
   purchase_order_id                           String                      @db.Uuid
   inventory_receipt_id                        String?                     @db.Uuid
+  idempotency_key                             String?
   goods_receipt_note_lines                    goods_receipt_note_lines[]
   branches                                    branches?                   @relation(fields: [branch_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   companies                                   companies                   @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -17404,6 +17432,7 @@ model invoices {
   tax_amount                       Decimal                @default(0) @db.Decimal(18, 4)
   total_amount                     Decimal                @default(0) @db.Decimal(18, 4)
   issued_at                        DateTime               @default(now()) @db.Timestamptz(6)
+  general_discount_percentage      Decimal                @default(0) @db.Decimal(5, 2)
   fiscal_document_types            fiscal_document_types? @relation(fields: [fiscal_document_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_sales_invoices_fiscal_doc_type")
   branches                         branches               @relation(fields: [branch_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   companies                        companies              @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -18127,6 +18156,7 @@ model sales_order_lines {
   quantity                                  Decimal      @db.Decimal(18, 6)
   unit_price                                Decimal      @db.Decimal(18, 4)
   discount_percentage                       Decimal      @default(0) @db.Decimal(5, 2)
+  invoiced_quantity                         Decimal      @default(0) @db.Decimal(18, 6)
   branches                                  branches?    @relation(fields: [branch_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   companies                                 companies?   @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_sales_order_lines_created_byTousers users?       @relation("sales_order_lines_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -21189,72 +21219,63 @@ model withholding_rules {
 }
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model restore_test_logs {
-  id                                        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  local_id                                  BigInt    @unique @default(autoincrement())
-  tenant_id                                 String    @default(dbgenerated("'00000000-0000-0000-0000-000000000000'::uuid")) @db.Uuid
-  company_id                                String?   @db.Uuid
-  branch_id                                 String?   @db.Uuid
-  created_at                                DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at                                DateTime  @default(now()) @db.Timestamptz(6)
-  deleted_at                                DateTime? @db.Timestamptz(6)
-  created_by                                String?   @db.Uuid
-  updated_by                                String?   @db.Uuid
-  deleted_by                                String?   @db.Uuid
-  version                                   Int       @default(1)
-  row_version                               BigInt    @default(0)
-  is_active                                 Boolean   @default(true)
-  is_deleted                                Boolean?  @default(dbgenerated("(deleted_at IS NOT NULL)"))
-  observations                              String?
-  metadata                                  Json      @default("{}")
-  backup_source                             String
-  restore_started_at                        DateTime  @db.Timestamptz(6)
-  restore_finished_at                       DateTime? @db.Timestamptz(6)
-  all_checks_passed                         Boolean?
-  check_results                             Json?
-  users_restore_test_logs_created_byTousers users?    @relation("restore_test_logs_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users_restore_test_logs_deleted_byTousers users?    @relation("restore_test_logs_deleted_byTousers", fields: [deleted_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users_restore_test_logs_updated_byTousers users?    @relation("restore_test_logs_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model customer_notes {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id       BigInt
+  tenant_id      String    @db.Uuid
+  company_id     String    @db.Uuid
+  branch_id      String?   @db.Uuid
+  created_at     DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at     DateTime? @db.Timestamptz(6)
+  created_by     String?   @db.Uuid
+  updated_by     String?   @db.Uuid
+  deleted_by     String?   @db.Uuid
+  version        Int       @default(1)
+  row_version    BigInt    @default(0)
+  is_active      Boolean   @default(true)
+  is_deleted     Boolean?
+  observations   String?
+  metadata       Json      @default("{}")
+  customer_id    String    @db.Uuid
+  author_user_id String    @db.Uuid
+  note_text      String
+  is_pinned      Boolean   @default(false)
+  customers      customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@schema("core")
+  @@schema("customers")
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model product_physical_attributes {
-  id                                                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  local_id                                            BigInt    @unique @default(autoincrement())
-  tenant_id                                           String    @db.Uuid
-  company_id                                          String    @db.Uuid
-  branch_id                                           String?   @db.Uuid
-  created_at                                          DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at                                          DateTime  @default(now()) @db.Timestamptz(6)
-  deleted_at                                          DateTime? @db.Timestamptz(6)
-  created_by                                          String?   @db.Uuid
-  updated_by                                          String?   @db.Uuid
-  deleted_by                                          String?   @db.Uuid
-  version                                             Int       @default(1)
-  row_version                                         BigInt    @default(0)
-  is_active                                           Boolean   @default(true)
-  is_deleted                                          Boolean?  @default(dbgenerated("(deleted_at IS NOT NULL)"))
-  observations                                        String?
-  metadata                                            Json      @default("{}")
-  product_id                                          String    @unique @db.Uuid
-  requires_manufacture_date                           Boolean   @default(false)
-  weight_kg                                           Decimal?  @db.Decimal(12, 4)
-  length_cm                                           Decimal?  @db.Decimal(12, 4)
-  width_cm                                            Decimal?  @db.Decimal(12, 4)
-  height_cm                                           Decimal?  @db.Decimal(12, 4)
-  volume_m3                                           Decimal?  @db.Decimal(12, 6)
-  branches                                            branches? @relation(fields: [branch_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  companies                                           companies @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users_product_physical_attributes_created_byTousers users?    @relation("product_physical_attributes_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users_product_physical_attributes_deleted_byTousers users?    @relation("product_physical_attributes_deleted_byTousers", fields: [deleted_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  products                                            products  @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  tenants                                             tenants   @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users_product_physical_attributes_updated_byTousers users?    @relation("product_physical_attributes_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+model customer_ratings {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id         BigInt
+  tenant_id        String    @db.Uuid
+  company_id       String    @db.Uuid
+  branch_id        String?   @db.Uuid
+  created_at       DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at       DateTime? @db.Timestamptz(6)
+  created_by       String?   @db.Uuid
+  updated_by       String?   @db.Uuid
+  deleted_by       String?   @db.Uuid
+  version          Int       @default(1)
+  row_version      BigInt    @default(0)
+  is_active        Boolean   @default(true)
+  is_deleted       Boolean?
+  observations     String?
+  metadata         Json      @default("{}")
+  customer_id      String    @db.Uuid
+  rated_by_user_id String    @db.Uuid
+  rating_type      String    @default("general")
+  score            Decimal   @db.Decimal(3, 1)
+  rated_at         DateTime  @default(now()) @db.Timestamptz(6)
+  customers        customers @relation(fields: [customer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@schema("products")
+  @@schema("customers")
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -21297,3 +21318,47 @@ model supplier_contracts {
   @@index([supplier_id], map: "idx_suppliers_supplier_contracts_supplier_id")
   @@schema("suppliers")
 }
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model product_physical_attributes {
+  id                                                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  local_id                                            BigInt    @unique @default(autoincrement())
+  tenant_id                                           String    @db.Uuid
+  company_id                                          String    @db.Uuid
+  branch_id                                           String?   @db.Uuid
+  created_at                                          DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                                          DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at                                          DateTime? @db.Timestamptz(6)
+  created_by                                          String?   @db.Uuid
+  updated_by                                          String?   @db.Uuid
+  deleted_by                                          String?   @db.Uuid
+  version                                             Int       @default(1)
+  row_version                                         BigInt    @default(0)
+  is_active                                           Boolean   @default(true)
+  is_deleted                                          Boolean?  @default(dbgenerated("(deleted_at IS NOT NULL)"))
+  observations                                        String?
+  metadata                                            Json      @default("{}")
+  product_id                                          String    @unique @db.Uuid
+  requires_manufacture_date                           Boolean   @default(false)
+  weight_kg                                           Decimal?  @db.Decimal(12, 4)
+  length_cm                                           Decimal?  @db.Decimal(12, 4)
+  width_cm                                            Decimal?  @db.Decimal(12, 4)
+  height_cm                                           Decimal?  @db.Decimal(12, 4)
+  volume_m3                                           Decimal?  @db.Decimal(12, 6)
+  branches                                            branches? @relation(fields: [branch_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  companies                                           companies @relation(fields: [company_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_product_physical_attributes_created_byTousers users?    @relation("product_physical_attributes_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_product_physical_attributes_deleted_byTousers users?    @relation("product_physical_attributes_deleted_byTousers", fields: [deleted_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  products                                            products  @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tenants                                             tenants   @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_product_physical_attributes_updated_byTousers users?    @relation("product_physical_attributes_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@schema("products")
+}
+
+/// We could not retrieve columns for the underlying table. Either it has none or you are missing rights to see them. Please check your privileges.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+// model restore_test_logs {
+// @@schema("core")
+// }

@@ -15,7 +15,14 @@ PLAYWRIGHT_BROWSERS_PATH="$PWD/../../.playwright-browsers" npx playwright test
 
 # O contra el stack completo de Docker Compose (nginx + HTTPS)
 E2E_BASE_URL=https://localhost PLAYWRIGHT_BROWSERS_PATH="$PWD/../../.playwright-browsers" npx playwright test
+
+# Solo el control público de accesibilidad (WCAG A y AA) del inicio de sesión
+PLAYWRIGHT_BROWSERS_PATH="$PWD/../../.playwright-browsers" npx playwright test accessibility.spec.ts
 ```
+
+La suite incluye `@axe-core/playwright`. Las rutas públicas se comprueban sin
+credenciales; para las rutas autenticadas, los tests existentes necesitan el
+usuario demo y los servicios locales indicados arriba.
 
 Requiere el tenant/usuario de prueba ya sembrado — ver
 `modules/seguridad/backend/scripts/seed-rbac.ts demo admin@demo.local`.

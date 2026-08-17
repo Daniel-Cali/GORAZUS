@@ -51,6 +51,17 @@ export class PedidosVentaController {
   }
 
   @ApiOperation({
+    summary: 'Listar catálogo de estados de pedido',
+    description: `Requiere ${PERMISO_GESTIONAR}. Catálogo de solo lectura (\`sales_order_status\`) — declarado antes de ":id" para no colisionar con esa ruta.`,
+  })
+  @RequirePermission(PERMISO_GESTIONAR)
+  @Get('estados')
+  async listarEstados(@CurrentUser() user: UserContext) {
+    const result = await this.pedidosVentaService.listarEstados(user);
+    return { data: result.data, meta: result.meta };
+  }
+
+  @ApiOperation({
     summary: 'Obtener pedido por id (con líneas)',
     description: `Requiere ${PERMISO_GESTIONAR}.`,
   })

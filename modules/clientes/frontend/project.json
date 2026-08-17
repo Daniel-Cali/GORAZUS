@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "clientes-frontend",
+  "sourceRoot": "modules/clientes/frontend",
+  "projectType": "library",
+  "tags": ["type:frontend"],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    }
+  }
+}

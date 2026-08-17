@@ -11,7 +11,13 @@ export interface CrearAjusteParams {
   branchId: string | null;
   warehouseId: string;
   reasonId: string;
-  lines: Array<{ productId: string; previousQuantity: number; newQuantity: number }>;
+  lines: Array<{
+    productId: string;
+    previousQuantity: number;
+    newQuantity: number;
+    lotId: string | null;
+    serialNumbers: string[] | null;
+  }>;
 }
 
 export type AjusteConLineas = stock_adjustments & {

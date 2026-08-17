@@ -1600,6 +1600,9 @@ model roles {
   metadata                      Json                @default("{}")
   name                          String
   is_system_role                Boolean             @default(false)
+  code                          String?
+  description                   String?
+  role_type                     String              @default("custom")
   approval_matrices             approval_matrices[]
   role_permissions              role_permissions[]
   branches                      branches?           @relation(fields: [branch_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -2474,9 +2477,6 @@ model users {
   permissions_permissions_created_byTousers                                                   permissions[]                          @relation("permissions_created_byTousers")
   permissions_permissions_deleted_byTousers                                                   permissions[]                          @relation("permissions_deleted_byTousers")
   permissions_permissions_updated_byTousers                                                   permissions[]                          @relation("permissions_updated_byTousers")
-  restore_test_logs_restore_test_logs_created_byTousers                                       restore_test_logs[]                    @relation("restore_test_logs_created_byTousers")
-  restore_test_logs_restore_test_logs_deleted_byTousers                                       restore_test_logs[]                    @relation("restore_test_logs_deleted_byTousers")
-  restore_test_logs_restore_test_logs_updated_byTousers                                       restore_test_logs[]                    @relation("restore_test_logs_updated_byTousers")
   role_permissions_role_permissions_created_byTousers                                         role_permissions[]                     @relation("role_permissions_created_byTousers")
   role_permissions_role_permissions_deleted_byTousers                                         role_permissions[]                     @relation("role_permissions_deleted_byTousers")
   role_permissions_role_permissions_updated_byTousers                                         role_permissions[]                     @relation("role_permissions_updated_byTousers")
@@ -2792,36 +2792,6 @@ model workflows {
   users_workflows_deleted_byTousers users?               @relation("workflows_deleted_byTousers", fields: [deleted_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   tenants                           tenants              @relation(fields: [tenant_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   users_workflows_updated_byTousers users?               @relation("workflows_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
-  @@schema("core")
-}
-
-model restore_test_logs {
-  id                                        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  local_id                                  BigInt    @unique @default(autoincrement())
-  tenant_id                                 String    @default(dbgenerated("'00000000-0000-0000-0000-000000000000'::uuid")) @db.Uuid
-  company_id                                String?   @db.Uuid
-  branch_id                                 String?   @db.Uuid
-  created_at                                DateTime  @default(now()) @db.Timestamptz(6)
-  updated_at                                DateTime  @default(now()) @db.Timestamptz(6)
-  deleted_at                                DateTime? @db.Timestamptz(6)
-  created_by                                String?   @db.Uuid
-  updated_by                                String?   @db.Uuid
-  deleted_by                                String?   @db.Uuid
-  version                                   Int       @default(1)
-  row_version                               BigInt    @default(0)
-  is_active                                 Boolean   @default(true)
-  is_deleted                                Boolean?  @default(dbgenerated("(deleted_at IS NOT NULL)"))
-  observations                              String?
-  metadata                                  Json      @default("{}")
-  backup_source                             String
-  restore_started_at                        DateTime  @db.Timestamptz(6)
-  restore_finished_at                       DateTime? @db.Timestamptz(6)
-  all_checks_passed                         Boolean?
-  check_results                             Json?
-  users_restore_test_logs_created_byTousers users?    @relation("restore_test_logs_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users_restore_test_logs_deleted_byTousers users?    @relation("restore_test_logs_deleted_byTousers", fields: [deleted_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  users_restore_test_logs_updated_byTousers users?    @relation("restore_test_logs_updated_byTousers", fields: [updated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@schema("core")
 }

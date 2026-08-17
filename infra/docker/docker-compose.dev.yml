@@ -31,12 +31,46 @@ services:
       - ../../modules:/app/modules
       - ../../packages:/app/packages
       - /app/node_modules
+      # Cada paquete pnpm-workspace tiene su PROPIO node_modules (symlinks al
+      # store central /app/node_modules/.pnpm) — los bind mounts de arriba lo
+      # reemplazan, y el symlink que arma pnpm ahí durante el build de la
+      # imagen apunta a una ruta /mnt/host/d/... que solo existe en el
+      # sandbox de BuildKit, no en runtime (confirmado con `docker exec ...
+      # readlink`). Un volumen anónimo por paquete evita que el bind mount lo
+      # pise; el `command` de abajo reinstala al arrancar para recrear los
+      # symlinks con rutas de runtime válidas. Lista = apps/api + todo
+      # core/* (los módulos de negocio de modules/*/backend importan
+      # @gorazus/core-* entre sí en cascada — confirmado con errores reales
+      # de "Cannot find module '@gorazus/core-logging'" en core/http,
+      # core/messaging, etc. — así que se protege todo core/* de una vez en
+      # vez de ir paquete por paquete).
+      - /app/apps/api/node_modules
+      - /app/core/cache/node_modules
+      - /app/core/config/node_modules
+      - /app/core/database/node_modules
+      - /app/core/health/node_modules
+      - /app/core/http/node_modules
+      - /app/core/kernel/node_modules
+      - /app/core/logging/node_modules
+      - /app/core/messaging/node_modules
+      - /app/core/notifications/node_modules
+      - /app/core/observability/node_modules
+      - /app/core/ollama/node_modules
+      - /app/core/realtime/node_modules
+      - /app/core/scheduler/node_modules
+      - /app/core/storage/node_modules
     environment:
       NODE_ENV: development
+      # Sin esto, `pnpm install` en el arranque queda colgado después de
+      # imprimir "Done" (confirmado: CPU time practicamente plano, nunca
+      # llega a `nx serve`) — pnpm intenta chequear actualizaciones/telemetría
+      # por red al salir; CI=true es la señal estándar (pnpm/nx/husky) para
+      # saltarse eso, no es específico de GORAZUS.
+      CI: 'true'
     ports:
       - '3000:3000' # acceso directo sin pasar por nginx, útil para debug/Postman
       - '9464:9464' # métricas Prometheus (core/observability/metrics.ts) — acceso directo para debug local, ver docker-compose.monitoring.yml
-    command: pnpm nx serve api --watch
+    command: sh -c "npm_config_node_linker=hoisted pnpm install --frozen-lockfile && pnpm nx serve api --watch"
 
   web:
     build:
@@ -70,6 +104,8 @@ services:
       - '9000:9000' # API S3
       - '9001:9001' # console web
 
+  # Solo aplica si se levanta con --profile ollama-docker (ver docker-compose.yml) —
+  # por defecto se usa el Ollama nativo del host, este mapeo de puerto no compite con él.
   ollama:
     ports:
       - '11434:11434' # acceso directo para `ollama pull <modelo>`/debug local, ver core/ollama

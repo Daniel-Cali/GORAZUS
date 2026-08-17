@@ -11,7 +11,12 @@ export interface CrearConteoParams {
   branchId: string | null;
   warehouseId: string;
   scheduledDate: Date;
-  lines: Array<{ productId: string; systemQuantity: number }>;
+  lines: Array<{
+    productId: string;
+    systemQuantity: number;
+    lotId: string | null;
+    serialId: string | null;
+  }>;
 }
 
 export type ConteoConLineas = physical_counts & { physical_count_lines: physical_count_lines[] };

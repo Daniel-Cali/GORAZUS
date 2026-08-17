@@ -24,6 +24,8 @@ export interface ContextoPos {
   branchId: string;
   registerId: string;
   openingId: string;
+  /** Prompt 3C — moneda real de la empresa (`companies.functional_currency_code`), nunca 'USD' fijo. */
+  currencyCode: string;
 }
 
 /**
@@ -51,7 +53,19 @@ export function CashRegisterGate({
   const abrirCaja = useAbrirCaja();
 
   if (apertura.data?.data?.is_open && registerId && companyId && branchId) {
-    return <>{children({ companyId, branchId, registerId, openingId: apertura.data.data.id })}</>;
+    const currencyCode =
+      empresas.data?.data.find((e) => e.id === companyId)?.functional_currency_code ?? 'USD';
+    return (
+      <>
+        {children({
+          companyId,
+          branchId,
+          registerId,
+          openingId: apertura.data.data.id,
+          currencyCode,
+        })}
+      </>
+    );
   }
 
   return (

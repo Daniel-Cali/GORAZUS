@@ -5,14 +5,19 @@ import {
   CapacidadReservaInsuficienteError,
   ReservaYaLiberadaError,
   ReservaNoEncontradaError,
+  SerieYaReservadaError,
 } from '../repositories/reserva-stock.repository';
 import { ProductoLookupRepository } from '../repositories/producto-lookup.repository';
 import { AlmacenRepository } from '../repositories/almacen.repository';
+import { InventoryLotRepository } from '../repositories/inventory-lot.repository';
+import { InventorySerialRepository } from '../repositories/inventory-serial.repository';
 import {
   ReservasService,
   ReservaNoEncontradaException,
   ReservaYaLiberadaException,
   CapacidadReservaInsuficienteException,
+  SerieYaReservadaException,
+  SerieInvalidaException,
 } from './reservas.service';
 import { ProductoInvalidoException, AlmacenInvalidoException } from './movimientos.service';
 
@@ -44,12 +49,16 @@ describe('ReservasService', () => {
   let reservaRepository: ReservaStockRepository;
   let productoLookupRepository: ProductoLookupRepository;
   let almacenRepository: AlmacenRepository;
+  let inventoryLotRepository: InventoryLotRepository;
+  let inventorySerialRepository: InventorySerialRepository;
+  let controlProducto: { tracksLot: boolean; tracksSerial: boolean };
 
   beforeEach(() => {
     productoValido = true;
     almacen = ALMACEN;
     crearError = null;
     liberarError = null;
+    controlProducto = { tracksLot: false, tracksSerial: false };
 
     reservaRepository = {
       crear: jest.fn(async () => {
@@ -66,15 +75,38 @@ describe('ReservasService', () => {
 
     productoLookupRepository = {
       existeProducto: jest.fn(async () => productoValido),
+      obtenerControl: jest.fn(async () => controlProducto),
     } as unknown as ProductoLookupRepository;
 
     almacenRepository = {
       findById: jest.fn(async () => almacen),
     } as unknown as AlmacenRepository;
+
+    inventoryLotRepository = {
+      obtenerPorId: jest.fn(async () => ({
+        id: 'lot-1',
+        product_id: 'p-1',
+        remaining_quantity: 10,
+      })),
+    } as unknown as InventoryLotRepository;
+
+    inventorySerialRepository = {
+      obtenerPorNumero: jest.fn(async () => ({
+        id: 'serial-1',
+        product_id: 'p-1',
+        status: 'in_stock',
+      })),
+    } as unknown as InventorySerialRepository;
   });
 
   function buildService(): ReservasService {
-    return new ReservasService(reservaRepository, productoLookupRepository, almacenRepository);
+    return new ReservasService(
+      reservaRepository,
+      productoLookupRepository,
+      almacenRepository,
+      inventoryLotRepository,
+      inventorySerialRepository,
+    );
   }
 
   it('crear: rechaza cantidad cero (defensa en profundidad de la entidad)', async () => {
@@ -130,5 +162,38 @@ describe('ReservasService', () => {
   it('liberar: caso feliz', async () => {
     const reserva = await buildService().liberar(CONTEXT, 'r-1');
     expect(reserva.released_at).toBeInstanceOf(Date);
+  });
+
+  // "Reservation conflicts" (test requirement de misión): "Prevent double
+  // reservation of serials" — el repositorio detecta la carrera vía el
+  // índice único parcial y lanza SerieYaReservadaError; el servicio lo
+  // traduce a excepción de dominio.
+  it('crear: rechaza reservar una serie que ya tiene una reserva activa', async () => {
+    controlProducto = { tracksLot: false, tracksSerial: true };
+    crearError = new SerieYaReservadaError('serial-1');
+    await expect(
+      buildService().crear(CONTEXT, { ...baseInput(), quantity: 1, serialNumber: 'SN-1' }),
+    ).rejects.toThrow(SerieYaReservadaException);
+  });
+
+  it('crear: rechaza tracks_serial si la serie no está disponible (ya emitida)', async () => {
+    controlProducto = { tracksLot: false, tracksSerial: true };
+    (inventorySerialRepository.obtenerPorNumero as jest.Mock).mockResolvedValueOnce({
+      id: 'serial-1',
+      product_id: 'p-1',
+      status: 'issued',
+    });
+    await expect(
+      buildService().crear(CONTEXT, { ...baseInput(), quantity: 1, serialNumber: 'SN-1' }),
+    ).rejects.toThrow(SerieInvalidaException);
+  });
+
+  it('crear: con tracks_lot, propaga lotId al repositorio', async () => {
+    controlProducto = { tracksLot: true, tracksSerial: false };
+    await buildService().crear(CONTEXT, { ...baseInput(), lotId: 'lot-1' });
+    expect(reservaRepository.crear).toHaveBeenCalledWith(
+      CONTEXT,
+      expect.objectContaining({ lotId: 'lot-1' }),
+    );
   });
 });

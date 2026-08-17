@@ -1,0 +1,26 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "crm-backend",
+  "sourceRoot": "modules/crm/backend",
+  "projectType": "library",
+  "tags": ["type:backend", "scope:crm"],
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/dist/modules/crm/backend"],
+      "options": {
+        "command": "tsc -p modules/crm/backend/tsconfig.json"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/modules/crm/backend"],
+      "options": {
+        "jestConfig": "modules/crm/backend/jest.config.ts"
+      }
+    }
+  }
+}

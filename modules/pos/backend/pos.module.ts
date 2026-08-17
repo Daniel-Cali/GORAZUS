@@ -8,6 +8,8 @@ import { PosController } from './controllers/pos.controller';
 import { PosCheckoutService } from './services/pos-checkout.service';
 import { ProductoLookupRepository } from './repositories/producto-lookup.repository';
 import { ProductoLookupRepositoryPrisma } from './repositories/producto-lookup.repository.prisma';
+import { CheckoutIdempotencyRepository } from './repositories/checkout-idempotency.repository';
+import { CheckoutIdempotencyRepositoryPrisma } from './repositories/checkout-idempotency.repository.prisma';
 
 /**
  * `pos` — orquestador del checkout (FASE 06 Parte 01, sin tablas
@@ -24,6 +26,7 @@ import { ProductoLookupRepositoryPrisma } from './repositories/producto-lookup.r
   providers: [
     PosCheckoutService,
     { provide: ProductoLookupRepository, useClass: ProductoLookupRepositoryPrisma },
+    { provide: CheckoutIdempotencyRepository, useClass: CheckoutIdempotencyRepositoryPrisma },
   ],
 })
 export class PosModule {}

@@ -3,6 +3,9 @@ export type EstadoTransferencia = 'draft' | 'in_transit' | 'received' | 'cancell
 export interface LineaTransferenciaInput {
   productId: string;
   quantity: number;
+  /** Prompt 1 (Foundation Completion): lote EXISTENTE a mover — a diferencia de Recepciones, una transferencia nunca crea un lote nuevo. */
+  lotId?: string;
+  serialNumbers?: string[];
 }
 
 /**

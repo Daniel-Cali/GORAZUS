@@ -12,6 +12,8 @@ import { ProductoLookupRepository } from '../repositories/producto-lookup.reposi
 import { AlmacenRepository } from '../repositories/almacen.repository';
 import { ZonaAlmacenRepository } from '../repositories/zona-almacen.repository';
 import { MotivoAjusteRepository } from '../repositories/motivo-ajuste.repository';
+import { InventoryLotRepository } from '../repositories/inventory-lot.repository';
+import { InventorySerialRepository } from '../repositories/inventory-serial.repository';
 import { AjustesService } from './ajustes.service';
 import { ConteoFisico } from '../entities/conteo-fisico.entity';
 import { ProductoInvalidoException, AlmacenInvalidoException } from './movimientos.service';
@@ -108,6 +110,8 @@ export class ConteosService {
     private readonly almacenRepository: AlmacenRepository,
     private readonly zonaAlmacenRepository: ZonaAlmacenRepository,
     private readonly motivoAjusteRepository: MotivoAjusteRepository,
+    private readonly inventoryLotRepository: InventoryLotRepository,
+    private readonly inventorySerialRepository: InventorySerialRepository,
     private readonly ajustesService: AjustesService,
   ) {}
 
@@ -124,7 +128,13 @@ export class ConteosService {
 
     const lineas = input.productIds
       ? await this.resolverLineasExplicitas(context, input.warehouseId, input.productIds)
-      : await this.autogenerarLineas(context, input.warehouseId, input.zoneId);
+      : await this.autogenerarLineas(
+          context,
+          input.warehouseId,
+          input.zoneId,
+          input.locationId,
+          input.countBy,
+        );
 
     new ConteoFisico('pendiente', input.warehouseId, input.scheduledDate, lineas); // valida invariantes antes de tocar la base
 
@@ -141,7 +151,7 @@ export class ConteosService {
     context: UserContext,
     warehouseId: string,
     productIds: string[],
-  ): Promise<Array<{ productId: string; systemQuantity: number }>> {
+  ): Promise<Array<{ productId: string; systemQuantity: number; lotId: null; serialId: null }>> {
     const lineas = [];
     for (const productId of productIds) {
       const productoValido = await this.productoLookupRepository.existeProducto(context, productId);
@@ -152,7 +162,12 @@ export class ConteosService {
         warehouseId,
         locationId: null,
       });
-      lineas.push({ productId, systemQuantity: fila ? Number(fila.quantity_on_hand) : 0 });
+      lineas.push({
+        productId,
+        systemQuantity: fila ? Number(fila.quantity_on_hand) : 0,
+        lotId: null,
+        serialId: null,
+      });
     }
     return lineas;
   }
@@ -160,14 +175,28 @@ export class ConteosService {
   private async autogenerarLineas(
     context: UserContext,
     warehouseId: string,
-    zoneId?: string,
-  ): Promise<Array<{ productId: string; systemQuantity: number }>> {
+    zoneId: string | undefined,
+    locationId: string | undefined,
+    countBy: 'product' | 'lot' | 'serial',
+  ): Promise<
+    Array<{
+      productId: string;
+      systemQuantity: number;
+      lotId: string | null;
+      serialId: string | null;
+    }>
+  > {
+    if (countBy === 'lot') return this.autogenerarLineasPorLote(context, warehouseId);
+    if (countBy === 'serial') return this.autogenerarLineasPorSerie(context, warehouseId);
+
     const resultado = await this.stockRepository.listar(
       context,
       {
         warehouse_id: warehouseId,
         quantity_on_hand: { gt: 0 },
-        ...(zoneId && { warehouse_locations: { zone_id: zoneId } }),
+        ...(locationId
+          ? { location_id: locationId }
+          : zoneId && { warehouse_locations: { zone_id: zoneId } }),
       },
       { page: 1, pageSize: TOPE_AUTOGENERACION },
     );
@@ -175,6 +204,50 @@ export class ConteosService {
     return resultado.data.map((fila) => ({
       productId: fila.product_id,
       systemQuantity: Number(fila.quantity_on_hand),
+      lotId: null,
+      serialId: null,
+    }));
+  }
+
+  /** "Count by Lot" — una línea por lote con existencia, `system_quantity` = `remaining_quantity` del lote. */
+  private async autogenerarLineasPorLote(
+    context: UserContext,
+    warehouseId: string,
+  ): Promise<
+    Array<{ productId: string; systemQuantity: number; lotId: string | null; serialId: null }>
+  > {
+    const resultado = await this.inventoryLotRepository.listar(
+      context,
+      { warehouse_id: warehouseId, remaining_quantity: { gt: 0 } },
+      { page: 1, pageSize: TOPE_AUTOGENERACION },
+    );
+    if (resultado.data.length === 0) throw new ConteoSinStockException(warehouseId);
+    return resultado.data.map((lote) => ({
+      productId: lote.product_id,
+      systemQuantity: Number(lote.remaining_quantity),
+      lotId: lote.id,
+      serialId: null,
+    }));
+  }
+
+  /** "Count by Serial" — una línea por serie disponible (`status: 'in_stock'`), `system_quantity` siempre 1. */
+  private async autogenerarLineasPorSerie(
+    context: UserContext,
+    warehouseId: string,
+  ): Promise<
+    Array<{ productId: string; systemQuantity: number; lotId: null; serialId: string | null }>
+  > {
+    const resultado = await this.inventorySerialRepository.listar(
+      context,
+      { warehouse_id: warehouseId, status: 'in_stock' },
+      { page: 1, pageSize: TOPE_AUTOGENERACION },
+    );
+    if (resultado.data.length === 0) throw new ConteoSinStockException(warehouseId);
+    return resultado.data.map((serie) => ({
+      productId: serie.product_id,
+      systemQuantity: 1,
+      lotId: null,
+      serialId: serie.id,
     }));
   }
 
@@ -252,13 +325,32 @@ export class ConteosService {
       const reasonId = motivo.data[0]?.id;
       if (!reasonId) throw new MotivoDiferenciaConteoNoConfiguradoException();
 
+      // "Generate adjustment movements preserving traceability": si la línea
+      // de conteo tenía lote/serie (countBy: 'lot'/'serial'), el ajuste
+      // generado referencia el MISMO lote/serie — la cadena Recepción →
+      // Movimiento → Conteo → Ajuste no se corta acá.
+      const lineasAjuste = [];
+      for (const l of discrepancias) {
+        if (l.serial_id) {
+          const serie = await this.inventorySerialRepository.obtenerPorId(context, l.serial_id);
+          lineasAjuste.push({
+            productId: l.product_id,
+            newQuantity: Number(l.counted_quantity),
+            ...(serie && { serialNumbers: [serie.serial_number] }),
+          });
+        } else {
+          lineasAjuste.push({
+            productId: l.product_id,
+            newQuantity: Number(l.counted_quantity),
+            ...(l.lot_id && { lotId: l.lot_id }),
+          });
+        }
+      }
+
       const ajuste = await this.ajustesService.crear(context, {
         warehouseId: conteo.warehouse_id,
         reasonId,
-        lines: discrepancias.map((l) => ({
-          productId: l.product_id,
-          newQuantity: Number(l.counted_quantity),
-        })),
+        lines: lineasAjuste,
       });
       ajusteGeneradoId = ajuste.id;
     }

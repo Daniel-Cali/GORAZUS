@@ -80,4 +80,20 @@ export class AsignacionRepositoryPrisma extends AsignacionRepository {
       return permissions.map((p) => p.code);
     });
   }
+
+  async listarPermisosDeRol(context: UserContext, rolId: string): Promise<string[]> {
+    return withTenantScope(this.client, context, async (tx) => {
+      const rolePermissions = await tx.role_permissions.findMany({
+        where: { role_id: rolId, deleted_at: null },
+        select: { permission_id: true },
+      });
+      if (rolePermissions.length === 0) return [];
+
+      const permissions = await tx.permissions.findMany({
+        where: { id: { in: rolePermissions.map((rp) => rp.permission_id) }, deleted_at: null },
+        select: { code: true },
+      });
+      return permissions.map((p) => p.code);
+    });
+  }
 }

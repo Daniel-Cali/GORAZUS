@@ -62,3 +62,35 @@ apps/web/.vite/
 .playwright-browsers/
 apps/web-e2e/playwright-report/
 apps/web-e2e/test-results/
+
+# Respaldos de PostgreSQL (pg_dump) — datos reales, nunca se commitean.
+# Vive en D:\ (regla "prohibido usar disco C:\"), ver infra/docker/README.md §7.
+backups/
+backups/*.dump
+backups/*/*.dump
+migration-baseline-*.txt
+
+# Storage físico de PostgreSQL (bind mount, FASE 1 migración C:\ -> D:\) —
+# datos binarios reales de la base, nunca se commitean. Ver infra/docker/README.md.
+docker-data/
+
+# Archivos personales de sesión AI (no reutilizables, específico de sesión) —
+# Información importante debe estar en docs/, PROJECT_STATUS.md, etc.
+.claude/SESSION_STATE.md
+.claude/MEMORY.md
+.claude/scheduled_tasks.lock
+.claude/settings.json
+
+# Archivos de sesión anterior (conversaciones punto-en-tiempo, no documentación oficial)
+# La información debe estar consolidada en:
+# - PROJECT_STATUS.md (estado actual)
+# - CHANGELOG.md (historial de cambios)
+# - docs/ (documentación oficial)
+GORAZUS_CONVERSATION_BACKUP.md
+SESSION_BACKUP.md
+RESUMEN_SESION_PARA_GPT.txt
+
+# Carpeta de referencias personales (no debe estar en repo público/shared)
+# Usar docs/ para referencias oficiales del proyecto
+pdf ideas/
+

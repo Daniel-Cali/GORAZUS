@@ -37,6 +37,8 @@ export class ConteoFisicoRepositoryPrisma extends ConteoFisicoRepository {
               branch_id: params.branchId,
               product_id: linea.productId,
               system_quantity: linea.systemQuantity,
+              lot_id: linea.lotId,
+              serial_id: linea.serialId,
             })),
           },
         },

@@ -7,6 +7,8 @@
 export { InventarioModule } from './backend/inventario.module';
 export { StockService } from './backend/services/stock.service';
 export type { StockConDisponible } from './backend/services/stock.service';
+/** Consumido por POS al completar una venta suspendida — resuelve el almacén de la sucursal (Parte 1: un solo almacén por sucursal, mismo criterio que `pos.page.tsx`). */
+export { AlmacenesService } from './backend/services/almacenes.service';
 export {
   MovimientosService,
   ProductoInvalidoException,

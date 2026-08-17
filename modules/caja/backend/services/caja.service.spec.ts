@@ -17,6 +17,7 @@ import {
   CajaNoEncontradaException,
   CajaYaAbiertaException,
   CajaNoAbiertaException,
+  RegistroNoPerteneceASucursalException,
 } from './caja.service';
 
 const CONTEXT: UserContext = {
@@ -156,6 +157,30 @@ describe('CajaService', () => {
     );
   });
 
+  it('obtenerRegistroDeSucursal: acepta cuando registerId realmente pertenece a branchId/companyId', async () => {
+    const caja = await buildService().obtenerRegistroDeSucursal(
+      CONTEXT,
+      'r-1',
+      'branch-1',
+      'company-1',
+    );
+    expect(caja.id).toBe('r-1');
+  });
+
+  it('obtenerRegistroDeSucursal: rechaza si la caja pertenece a otra sucursal (P0-3)', async () => {
+    registro = buildRegistro({ branch_id: 'branch-ajena' });
+    await expect(
+      buildService().obtenerRegistroDeSucursal(CONTEXT, 'r-1', 'branch-1', 'company-1'),
+    ).rejects.toThrow(RegistroNoPerteneceASucursalException);
+  });
+
+  it('obtenerRegistroDeSucursal: rechaza si la caja pertenece a otra empresa (P0-3)', async () => {
+    registro = buildRegistro({ company_id: 'company-ajena' });
+    await expect(
+      buildService().obtenerRegistroDeSucursal(CONTEXT, 'r-1', 'branch-1', 'company-1'),
+    ).rejects.toThrow(RegistroNoPerteneceASucursalException);
+  });
+
   it('abrir: caso feliz crea la apertura', async () => {
     const apertura = await buildService().abrir(CONTEXT, { registerId: 'r-1', openingAmount: 100 });
     expect(apertura.is_open).toBe(true);
@@ -220,5 +245,68 @@ describe('CajaService', () => {
       expect.objectContaining({ expected_amount: 140, counted_amount: 140 }),
     );
     expect(resultado.apertura.is_open).toBe(false);
+  });
+
+  it('listarMovimientos: delega en el repositorio filtrando por openingId', async () => {
+    movimientosRegistrados = [{ id: 'm-1', amount: 50 } as unknown as cash_movements];
+    const resultado = await buildService().listarMovimientos(
+      CONTEXT,
+      { openingId: 'ap-1' },
+      { page: 1, pageSize: 50 },
+    );
+    expect(movimientoCajaRepository.listar).toHaveBeenCalledWith(
+      CONTEXT,
+      { opening_id: 'ap-1' },
+      { page: 1, pageSize: 50 },
+    );
+    expect(resultado.data).toHaveLength(1);
+  });
+
+  it('listarTiposMovimiento: delega en el repositorio de tipos', async () => {
+    tiposExistentes = [{ id: 't-1', code: 'venta_pos', direction: 'in' } as cash_movement_types];
+    const resultado = await buildService().listarTiposMovimiento(CONTEXT);
+    expect(resultado.data).toHaveLength(1);
+  });
+
+  it('registrarMovimientoManual: ingreso usa el código ingreso_manual', async () => {
+    aperturaActiva = buildApertura();
+    await buildService().registrarMovimientoManual(CONTEXT, {
+      registerId: 'r-1',
+      direction: 'in',
+      amount: 200,
+      observations: 'Depósito inicial',
+    });
+    expect(tipoMovimientoCajaRepository.create).toHaveBeenCalledWith(
+      CONTEXT,
+      expect.objectContaining({ code: 'ingreso_manual', direction: 'in' }),
+    );
+    expect(movimientoCajaRepository.registrar).toHaveBeenCalledWith(
+      CONTEXT,
+      expect.objectContaining({ amount: 200, sourceModule: 'caja_manual' }),
+    );
+  });
+
+  it('registrarMovimientoManual: egreso usa el código egreso_manual y monto negativo', async () => {
+    aperturaActiva = buildApertura();
+    const movimiento = await buildService().registrarMovimientoManual(CONTEXT, {
+      registerId: 'r-1',
+      direction: 'out',
+      amount: 75,
+    });
+    expect(tipoMovimientoCajaRepository.create).toHaveBeenCalledWith(
+      CONTEXT,
+      expect.objectContaining({ code: 'egreso_manual', direction: 'out' }),
+    );
+    expect(movimiento.amount).toBe(-75);
+  });
+
+  it('registrarMovimientoManual: rechaza si la caja no está abierta (reutiliza la misma validación)', async () => {
+    await expect(
+      buildService().registrarMovimientoManual(CONTEXT, {
+        registerId: 'r-1',
+        direction: 'in',
+        amount: 100,
+      }),
+    ).rejects.toThrow(CajaNoAbiertaException);
   });
 });

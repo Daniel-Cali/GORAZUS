@@ -1,6 +1,6 @@
 {
   "name": "gorazus-erp",
-  "version": "0.10.0",
+  "version": "0.21.0",
   "private": true,
   "description": "GORAZUS ERP — monolito modular (Clean Architecture + DDD), preparado para extracción a microservicios.",
   "license": "UNLICENSED",
@@ -20,12 +20,17 @@
     "graph": "nx graph",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "docker:up": "docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml up -d",
-    "docker:down": "docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml down",
-    "docker:logs": "docker compose -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml logs -f",
+    "docker:up": "docker compose --env-file .env -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml up -d",
+    "docker:stop": "docker compose --env-file .env -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml stop",
+    "docker:down": "docker compose --env-file .env -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml down",
+    "docker:status": "docker compose --env-file .env -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml ps",
+    "docker:logs": "docker compose --env-file .env -f infra/docker/docker-compose.yml -f infra/docker/docker-compose.dev.yml logs -f",
     "db:pull": "pnpm --filter @gorazus/core-database run db:pull",
     "db:generate": "pnpm --filter @gorazus/core-database run db:generate",
     "db:migrate": "pnpm --filter @gorazus/core-database run db:migrate",
+    "db:gui": "echo pgAdmin: http://localhost:5050 (login: dev@gorazus.dev / clave en .env -> PGADMIN_PASSWORD)",
+    "db:backup": "node infra/docker/postgres/host-backup.js",
+    "db:restore": "node infra/docker/postgres/host-restore.js",
     "prepare": "husky || true"
   },
   "lint-staged": {
@@ -67,5 +72,10 @@
     "prettier": "^3.4.0",
     "ts-jest": "^29.2.0",
     "typescript-eslint": "^8.19.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "vite": "^6.0.5"
+    }
   }
 }

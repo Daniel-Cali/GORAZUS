@@ -137,6 +137,11 @@ export class PedidosVentaService {
     private readonly ventasService: VentasService,
   ) {}
 
+  /** Catálogo de estados de pedido (`sales_order_status`) — de solo lectura desde la app, mismo motivo que `VentasService.listarEstados`. */
+  async listarEstados(context: UserContext) {
+    return this.estadoPedidoRepository.findMany(context, {}, { page: 1, pageSize: 50 });
+  }
+
   private async resolverEstadoPorCodigo(context: UserContext, code: string): Promise<string> {
     const existente = await this.estadoPedidoRepository.findMany(
       context,

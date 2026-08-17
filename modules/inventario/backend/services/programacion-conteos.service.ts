@@ -5,6 +5,7 @@ import type { PaginatedResult, PaginationParams } from '@gorazus/core-database';
 import { DomainException } from '@gorazus/core-http';
 import { ProgramaConteoCiclicoRepository } from '../repositories/programa-conteo-ciclico.repository';
 import { ZonaAlmacenRepository } from '../repositories/zona-almacen.repository';
+import { ProductoLookupRepository } from '../repositories/producto-lookup.repository';
 import { ConteosService } from './conteos.service';
 import { ProgramaConteoCiclico } from '../entities/programa-conteo-ciclico.entity';
 import type { ConteoConLineas } from '../repositories/conteo-fisico.repository';
@@ -40,6 +41,7 @@ export class ProgramacionConteosService {
   constructor(
     private readonly programaRepository: ProgramaConteoCiclicoRepository,
     private readonly zonaAlmacenRepository: ZonaAlmacenRepository,
+    private readonly productoLookupRepository: ProductoLookupRepository,
     private readonly conteosService: ConteosService,
   ) {}
 
@@ -57,6 +59,8 @@ export class ProgramacionConteosService {
       zone_id: input.zoneId,
       frequency_days: input.frequencyDays,
       next_run_date: input.nextRunDate ?? null,
+      location_id: input.locationId ?? null,
+      product_category_id: input.productCategoryId ?? null,
     });
   }
 
@@ -88,6 +92,10 @@ export class ProgramacionConteosService {
       {
         ...(input.frequencyDays !== undefined && { frequency_days: input.frequencyDays }),
         ...(input.nextRunDate !== undefined && { next_run_date: input.nextRunDate }),
+        ...(input.locationId !== undefined && { location_id: input.locationId }),
+        ...(input.productCategoryId !== undefined && {
+          product_category_id: input.productCategoryId,
+        }),
       },
     );
   }
@@ -102,10 +110,25 @@ export class ProgramacionConteosService {
     if (!zona) throw new ZonaProgramaInvalidaException(programa.zone_id);
 
     const hoy = new Date();
+    const productIds = programa.product_category_id
+      ? await this.productoLookupRepository.listarPorCategoria(
+          context,
+          programa.product_category_id,
+        )
+      : undefined;
+
     const conteo = await this.conteosService.crear(context, {
       warehouseId: zona.warehouse_id,
       scheduledDate: hoy,
-      zoneId: programa.zone_id,
+      countBy: 'product',
+      // "by product class" tiene prioridad — productIds explícito reemplaza
+      // la autogeneración por zona/ubicación (mismo criterio que
+      // ConteosService.crear: productIds explícito gana sobre zoneId).
+      ...(productIds && productIds.length > 0
+        ? { productIds }
+        : programa.location_id
+          ? { locationId: programa.location_id }
+          : { zoneId: programa.zone_id }),
     });
 
     const base = programa.next_run_date ?? hoy;

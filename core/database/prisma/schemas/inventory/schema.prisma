@@ -59,9 +59,16 @@ model cycle_count_schedules {
   zone_id                                       String          @db.Uuid
   frequency_days                                Int
   next_run_date                                 DateTime?       @db.Date
+  /// Granularidad mas fina que zone_id — nullable, opcional (Prompt 1 Foundation Completion).
+  location_id                                   String?             @db.Uuid
+  /// Cross-schema hacia products.product_categories — sin relacion Prisma, mismo patron que todos los product_id de este schema.
+  product_category_id                           String?             @db.Uuid
   warehouse_zones                               warehouse_zones @relation(fields: [zone_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  warehouse_locations                           warehouse_locations? @relation(fields: [location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([zone_id], map: "idx_inventory_cycle_count_schedules_zone_id")
+  @@index([location_id], map: "idx_inventory_cycle_count_schedules_location_id")
+  @@index([product_category_id], map: "idx_inventory_cycle_count_schedules_product_category_id")
   @@schema("inventory")
 }
 
@@ -119,10 +126,13 @@ model goods_issue_lines {
   issue_id                                  String       @db.Uuid
   product_id                                String       @db.Uuid
   quantity                                  Decimal      @db.Decimal(18, 6)
+  lot_id                                    String?      @db.Uuid
   goods_issues                              goods_issues @relation(fields: [issue_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  inventory_lots                            inventory_lots? @relation(fields: [lot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([issue_id], map: "idx_inventory_goods_issue_lines_issue_id")
   @@index([product_id], map: "idx_inventory_goods_issue_lines_product_id")
+  @@index([lot_id], map: "idx_inventory_goods_issue_lines_lot_id")
   @@schema("inventory")
 }
 
@@ -203,10 +213,13 @@ model goods_receipt_lines {
   product_id                                  String             @db.Uuid
   quantity                                    Decimal            @db.Decimal(18, 6)
   unit_cost                                   Decimal?           @db.Decimal(18, 4)
+  lot_id                                      String?            @db.Uuid
   fifo_cost_layers                            fifo_cost_layers[]
   goods_receipts                              goods_receipts     @relation(fields: [receipt_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  inventory_lots                              inventory_lots?    @relation(fields: [lot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([product_id], map: "idx_inventory_goods_receipt_lines_product_id")
+  @@index([lot_id], map: "idx_inventory_goods_receipt_lines_lot_id")
   @@index([receipt_id], map: "idx_inventory_goods_receipt_lines_receipt_id")
   @@schema("inventory")
 }
@@ -263,7 +276,15 @@ model inventory_lots {
   expiry_date                            DateTime?   @db.Date
   remaining_quantity                     Decimal     @default(0) @db.Decimal(18, 6)
   warehouses                             warehouses? @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  stock_movements                        stock_movements[]
+  goods_receipt_lines                    goods_receipt_lines[]
+  goods_issue_lines                      goods_issue_lines[]
+  stock_transfer_lines                   stock_transfer_lines[]
+  stock_adjustment_lines                 stock_adjustment_lines[]
+  stock_reservations                     stock_reservations[]
+  physical_count_lines                   physical_count_lines[]
 
+  @@unique([tenant_id, product_id, lot_number], map: "uq_inventory_inventory_lots_identity")
   @@index([warehouse_id], map: "idx_inventory_inventory_lots_warehouse_id")
   @@schema("inventory")
 }
@@ -292,7 +313,11 @@ model inventory_serials {
   status                                    String      @default("in_stock")
   unit_cost                                 Decimal?    @db.Decimal(18, 4)
   warehouses                                warehouses? @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  stock_movements                           stock_movements[]
+  stock_reservations                        stock_reservations[]
+  physical_count_lines                      physical_count_lines[]
 
+  @@unique([tenant_id, serial_number], map: "uq_inventory_inventory_serials_identity")
   @@index([warehouse_id], map: "idx_inventory_inventory_serials_warehouse_id")
   @@schema("inventory")
 }
@@ -349,10 +374,16 @@ model physical_count_lines {
   product_id                                   String          @db.Uuid
   system_quantity                              Decimal         @db.Decimal(18, 6)
   counted_quantity                             Decimal?        @db.Decimal(18, 6)
+  lot_id                                       String?         @db.Uuid
+  serial_id                                    String?         @db.Uuid
   physical_counts                              physical_counts @relation(fields: [physical_count_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  inventory_lots                               inventory_lots?    @relation(fields: [lot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  inventory_serials                            inventory_serials? @relation(fields: [serial_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([physical_count_id], map: "idx_inventory_physical_count_lines_physical_count_id")
   @@index([product_id], map: "idx_inventory_physical_count_lines_product_id")
+  @@index([lot_id], map: "idx_inventory_physical_count_lines_lot_id")
+  @@index([serial_id], map: "idx_inventory_physical_count_lines_serial_id")
   @@schema("inventory")
 }
 
@@ -699,10 +730,13 @@ model stock_adjustment_lines {
   product_id                                     String            @db.Uuid
   previous_quantity                              Decimal           @db.Decimal(18, 6)
   new_quantity                                   Decimal           @db.Decimal(18, 6)
+  lot_id                                         String?           @db.Uuid
   stock_adjustments                              stock_adjustments @relation(fields: [adjustment_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  inventory_lots                                 inventory_lots?   @relation(fields: [lot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([adjustment_id], map: "idx_inventory_stock_adjustment_lines_adjustment_id")
   @@index([product_id], map: "idx_inventory_stock_adjustment_lines_product_id")
+  @@index([lot_id], map: "idx_inventory_stock_adjustment_lines_lot_id")
   @@schema("inventory")
 }
 
@@ -810,8 +844,12 @@ model stock_movements {
   unit_cost                               Decimal?             @db.Decimal(18, 4)
   source_module                           String?
   source_entity_id                        String?              @db.Uuid
+  lot_id                                   String?              @db.Uuid
+  serial_id                               String?              @db.Uuid
   stock_movement_types                    stock_movement_types @relation(fields: [movement_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   warehouses                              warehouses           @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  inventory_lots                          inventory_lots?      @relation(fields: [lot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  inventory_serials                       inventory_serials?   @relation(fields: [serial_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([id, created_at])
   @@unique([local_id, created_at])
@@ -819,6 +857,23 @@ model stock_movements {
   @@index([created_at], map: "idx_inventory_stock_movements_created_brin", type: Brin)
   @@index([movement_type_id], map: "idx_inventory_stock_movements_movement_type_id")
   @@index([warehouse_id], map: "idx_inventory_stock_movements_warehouse_id")
+  @@index([lot_id], map: "idx_inventory_stock_movements_lot_id")
+  @@index([serial_id], map: "idx_inventory_stock_movements_serial_id")
+  @@schema("inventory")
+}
+
+/// ISSUE-07: reserva de claves de idempotencia para stock_movements — tabla separada porque
+/// stock_movements está particionada por created_at (ver 45_movement_idempotency_keys.sql).
+/// movement_id es UUID simple sin relación Prisma: stock_movements tiene PK compuesta (id,
+/// created_at) por el particionamiento, no hay columna única simple contra la cual apuntar.
+model movement_idempotency_keys {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  tenant_id       String   @db.Uuid
+  idempotency_key String
+  movement_id     String?  @db.Uuid
+  created_at      DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([tenant_id, idempotency_key], map: "uq_inventory_movement_idempotency_keys_tenant_key")
   @@schema("inventory")
 }
 
@@ -846,10 +901,16 @@ model stock_reservations {
   source_module                              String
   source_entity_id                           String     @db.Uuid
   released_at                                DateTime?  @db.Timestamptz(6)
+  lot_id                                     String?    @db.Uuid
+  serial_id                                  String?    @db.Uuid
   warehouses                                 warehouses @relation(fields: [warehouse_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  inventory_lots                             inventory_lots?    @relation(fields: [lot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  inventory_serials                          inventory_serials? @relation(fields: [serial_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([product_id], map: "idx_inventory_stock_reservations_product_id")
   @@index([warehouse_id], map: "idx_inventory_stock_reservations_warehouse_id")
+  @@index([lot_id], map: "idx_inventory_stock_reservations_lot_id")
+  @@index([serial_id], map: "idx_inventory_stock_reservations_serial_id")
   @@schema("inventory")
 }
 
@@ -874,10 +935,13 @@ model stock_transfer_lines {
   transfer_id                                  String          @db.Uuid
   product_id                                   String          @db.Uuid
   quantity                                     Decimal         @db.Decimal(18, 6)
+  lot_id                                       String?         @db.Uuid
   stock_transfers                              stock_transfers @relation(fields: [transfer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  inventory_lots                               inventory_lots? @relation(fields: [lot_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([product_id], map: "idx_inventory_stock_transfer_lines_product_id")
   @@index([transfer_id], map: "idx_inventory_stock_transfer_lines_transfer_id")
+  @@index([lot_id], map: "idx_inventory_stock_transfer_lines_lot_id")
   @@schema("inventory")
 }
 
@@ -937,6 +1001,7 @@ model warehouse_locations {
   warehouse_locations                         warehouse_locations?  @relation("warehouse_locationsTowarehouse_locations", fields: [parent_location_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   other_warehouse_locations                   warehouse_locations[] @relation("warehouse_locationsTowarehouse_locations")
   warehouse_zones                             warehouse_zones       @relation(fields: [zone_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  cycle_count_schedules                       cycle_count_schedules[]
 
   @@index([parent_location_id], map: "idx_inventory_warehouse_locations_parent_location_id")
   @@index([zone_id], map: "idx_inventory_warehouse_locations_zone_id")

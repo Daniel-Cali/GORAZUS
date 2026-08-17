@@ -41,6 +41,8 @@ export class TransferenciaRepositoryPrisma extends TransferenciaRepository {
               branch_id: params.branchId,
               product_id: linea.productId,
               quantity: linea.quantity,
+              lot_id: linea.lotId,
+              metadata: linea.serialNumbers ? { serialNumbers: linea.serialNumbers } : undefined,
             })),
           },
         },

@@ -13,12 +13,70 @@ import {
   StockInsuficienteError,
   type RegistrarMovimientoParams,
 } from './movimiento-stock.repository';
-import { lockStockRow } from './stock-lock.util';
+import { lockStockRow, esViolacionDeUnicidad } from './stock-lock.util';
 
 @Injectable()
 export class MovimientoStockRepositoryPrisma extends MovimientoStockRepository {
   constructor(@Inject(PRISMA_INVENTORY) private readonly client: InventoryPrismaClient) {
     super();
+  }
+
+  /**
+   * ISSUE-07: intenta reservar `idempotencyKey` en `movement_idempotency_keys`
+   * (`45_movement_idempotency_keys.sql`, único real por `(tenant_id,
+   * idempotency_key)`). Dos solicitudes concurrentes con la misma clave: el
+   * `INSERT` de Postgres serializa la carrera — una gana, la otra recibe
+   * `P2002` y aquí se recupera el movimiento ya creado por la ganadora en
+   * vez de propagar el error. Devuelve `null` cuando la clave se reservó
+   * recién (el llamador debe continuar con el flujo normal y completar
+   * `movement_id` al final); devuelve el resultado ya existente cuando la
+   * clave ya estaba tomada.
+   */
+  private async reservarIdempotencyKeyOMovimientoExistente(
+    tx: InventoryPrismaClient,
+    context: UserContext,
+    idempotencyKey: string,
+    params: RegistrarMovimientoParams,
+  ): Promise<{ movimiento: stock_movements; stockActualizado: stock } | null> {
+    try {
+      await tx.movement_idempotency_keys.create({
+        data: { tenant_id: context.tenantId, idempotency_key: idempotencyKey },
+      });
+      return null;
+    } catch (error) {
+      if (!esViolacionDeUnicidad(error)) throw error;
+
+      const reserva = await tx.movement_idempotency_keys.findFirst({
+        where: { tenant_id: context.tenantId, idempotency_key: idempotencyKey },
+      });
+      if (!reserva?.movement_id) {
+        throw new Error(
+          `inventory.movement_idempotency_keys tiene una reserva para idempotencyKey="${idempotencyKey}" sin movement_id — no debería ocurrir dentro de una transacción atómica ya confirmada.`,
+        );
+      }
+
+      const movimientoExistente = await tx.stock_movements.findFirst({
+        where: { id: reserva.movement_id, deleted_at: null },
+      });
+      if (!movimientoExistente) {
+        throw new Error(
+          `inventory.movement_idempotency_keys referencia movement_id="${reserva.movement_id}" que no existe en stock_movements.`,
+        );
+      }
+
+      const stockActual = await lockStockRow(tx, {
+        productId: params.productId,
+        warehouseId: params.warehouseId,
+        locationId: params.locationId,
+      });
+      if (!stockActual) {
+        throw new Error(
+          `inventory.stock no tiene fila para product=${params.productId} warehouse=${params.warehouseId} al recuperar un movimiento ya idempotente.`,
+        );
+      }
+
+      return { movimiento: movimientoExistente, stockActualizado: stockActual as unknown as stock };
+    }
   }
 
   /**
@@ -51,6 +109,16 @@ export class MovimientoStockRepositoryPrisma extends MovimientoStockRepository {
     context: UserContext,
     params: RegistrarMovimientoParams,
   ): Promise<{ movimiento: stock_movements; stockActualizado: stock }> {
+    if (params.idempotencyKey) {
+      const existente = await this.reservarIdempotencyKeyOMovimientoExistente(
+        tx,
+        context,
+        params.idempotencyKey,
+        params,
+      );
+      if (existente) return existente;
+    }
+
     const stockActual = await lockStockRow(tx, {
       productId: params.productId,
       warehouseId: params.warehouseId,
@@ -83,8 +151,26 @@ export class MovimientoStockRepositoryPrisma extends MovimientoStockRepository {
         source_module: params.sourceModule,
         source_entity_id: params.sourceEntityId,
         observations: params.observations,
+        lot_id: params.lotId,
+        serial_id: params.serialId,
       },
     });
+
+    // ISSUE-07: completa la reserva con el id real, dentro de la MISMA
+    // transacción — una lectura concurrente de `reservarIdempotencyKeyOMovimientoExistente`
+    // solo puede ver esta fila después de que la transacción completa (INSERT
+    // del ledger + INSERT del movimiento + este UPDATE) haya confirmado.
+    if (params.idempotencyKey) {
+      await tx.movement_idempotency_keys.update({
+        where: {
+          tenant_id_idempotency_key: {
+            tenant_id: context.tenantId,
+            idempotency_key: params.idempotencyKey,
+          },
+        },
+        data: { movement_id: movimiento.id },
+      });
+    }
 
     // El trigger ya corrió (síncrono, dentro del mismo INSERT) — releer
     // para devolver el saldo real posterior al movimiento.
@@ -109,6 +195,19 @@ export class MovimientoStockRepositoryPrisma extends MovimientoStockRepository {
     return withTenantScope(this.client, context, (tx) =>
       this.aplicarMovimiento(tx, context, params),
     );
+  }
+
+  async obtenerPorIdempotencyKey(
+    context: UserContext,
+    idempotencyKey: string,
+  ): Promise<stock_movements | null> {
+    return withTenantScope(this.client, context, async (tx) => {
+      const reserva = await tx.movement_idempotency_keys.findFirst({
+        where: { tenant_id: context.tenantId, idempotency_key: idempotencyKey },
+      });
+      if (!reserva?.movement_id) return null;
+      return tx.stock_movements.findFirst({ where: { id: reserva.movement_id, deleted_at: null } });
+    });
   }
 
   async registrarLote(

@@ -37,6 +37,8 @@ export class AjusteStockRepositoryPrisma extends AjusteStockRepository {
               product_id: linea.productId,
               previous_quantity: linea.previousQuantity,
               new_quantity: linea.newQuantity,
+              lot_id: linea.lotId,
+              metadata: linea.serialNumbers ? { serialNumbers: linea.serialNumbers } : undefined,
             })),
           },
         },

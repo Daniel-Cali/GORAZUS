@@ -1,0 +1,89 @@
+Resumen del módulo de Ventas - GORAZUS
+
+Este documento describe el módulo de ventas del proyecto GORAZUS y sugiere una pantalla visual impresionante para el área de ventas.
+
+1. Alcance del módulo de ventas
+- Ciclo real: Cotización → Pedido → Factura.
+- Reserva de inventario en pedidos de venta.
+- Facturación con impuesto real por línea.
+- Integración con los módulos de clientes, inventario, caja, contabilidad, POS y CRM.
+- El backend de ventas es funcional y está documentado en la carpeta de reportes y documentos de ventas.
+
+2. Menú principal sugerido
+- Documentos de Venta
+- Facturación Electrónica
+- Precios y Descuentos
+- Equipo de Ventas
+- Facturación Recurrente
+- Reportes de Ventas
+- Consultas
+- Configuraciones del módulo
+
+3. Documentos de Venta
+- Cotización / Presupuesto: creación de ofertas sin compromiso.
+- Pedido de Venta: conversión de cotización o creación directa, con reserva de stock.
+- Remito / Nota de Entrega: entrega física asociada a pedidos.
+- Factura de Venta: documento fiscal generado desde pedido o directo.
+- Nota de Crédito: ajuste total o parcial de factura.
+- Nota de Débito: cargo adicional.
+- Devolución de Venta: reingreso físico de mercancía vendida.
+- Acciones clave: confirmar documento, anular, copiar al siguiente documento, reservar stock, imprimir/exportar PDF, enviar por correo.
+
+4. Facturación Electrónica
+- Configuración de certificados y ambiente fiscal.
+- Timbrado o sellado de comprobantes.
+- Reenvío y cancelación de comprobantes fiscales.
+- Consulta de estado de comprobantes.
+
+5. Precios y Descuentos
+- Listas de precio por producto, moneda y vigencia.
+- Descuentos por cliente o categoría.
+- Promociones y reglas de descuento.
+
+6. Equipo de Ventas
+- Vendedores y zonas de venta.
+- Reglas de comisión.
+- Metas de venta.
+- Reportes de desempeño por vendedor.
+
+7. Facturación Recurrente
+- Plantillas de facturación recurrente.
+- Generación periódica de facturas.
+- Gestión de próximos ciclos de facturación.
+
+8. Reportes de Ventas
+- Libro de Ventas.
+- Ventas por Cliente, Producto, Vendedor y Zona.
+- Márgenes de venta.
+- Pedidos pendientes de entrega.
+- Facturas pendientes de cobro.
+
+9. Consultas
+- Búsqueda por número, cliente, fecha o estado.
+- Historial de venta por cliente.
+- Trazabilidad de documentos: Cotización → Pedido → Remito → Factura → Nota de Crédito.
+
+10. Configuraciones del módulo
+- Series de numeración de comprobantes.
+- Punto de venta y sucursal emisora.
+- Reglas de aprobación de descuento.
+- Permisos de facturación sin stock.
+- Moneda de venta por defecto.
+
+11. Estado actual del frontend
+- Rutas existentes: /ventas, /ventas/facturas, /ventas/facturas/:id, /ventas/cotizaciones, /ventas/pedidos.
+- Dashboard real implementado en modules/ventas/frontend/pages/ventas-dashboard.page.tsx.
+- Uso de KPI cards para facturas, monto facturado, cotizaciones y pedidos.
+- Listado de facturas recientes y componentes de UI ya presentes en el proyecto.
+
+12. Idea de diseño para pantalla visual
+- Header: "Ventas — Control Center".
+- Navegación lateral con submenús de ventas.
+- Grid de KPI grandes y coloridos.
+- Panel principal con documentos recientes y estado rápido.
+- Acciones rápidas para crear cotización, pedido y factura.
+- Tarjetas de acceso a Facturación Electrónica, Precios y Descuentos, Equipo de Ventas, Facturación Recurrente.
+- Sección de reportes destacados con gráficos y tablas.
+- Panel de configuración con reglas fiscales y numeración de comprobantes.
+
+Este documento puede usarse como brief para el diseño UX/UI de la pantalla de ventas dentro del ERP GORAZUS.

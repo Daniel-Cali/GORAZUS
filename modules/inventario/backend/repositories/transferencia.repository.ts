@@ -13,7 +13,12 @@ export interface CrearTransferenciaParams {
   sourceWarehouseId: string;
   destinationWarehouseId: string;
   documentNumber: string;
-  lines: Array<{ productId: string; quantity: number }>;
+  lines: Array<{
+    productId: string;
+    quantity: number;
+    lotId: string | null;
+    serialNumbers: string[] | null;
+  }>;
 }
 
 export type TransferenciaConLineas = stock_transfers & {

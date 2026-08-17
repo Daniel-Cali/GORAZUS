@@ -12,6 +12,8 @@ export interface CrearReservaParams {
   sourceModule: string;
   sourceEntityId: string;
   observations: string | null;
+  lotId: string | null;
+  serialId: string | null;
 }
 
 /** Lanzado si la reserva excede lo disponible (`quantity_on_hand - quantity_reserved`) — traducido a excepción de dominio en `ReservasService`. */
@@ -33,6 +35,13 @@ export class ReservaYaLiberadaError extends Error {
 export class ReservaNoEncontradaError extends Error {
   constructor(id: string) {
     super(`No existe la reserva "${id}"`);
+  }
+}
+
+/** Lanzado si la serie ya tiene una reserva activa (`uq_inventory_stock_reservations_active_serial`) — traducido a excepción de dominio en `ReservasService`. */
+export class SerieYaReservadaError extends Error {
+  constructor(serialId: string) {
+    super(`La serie "${serialId}" ya tiene una reserva activa`);
   }
 }
 

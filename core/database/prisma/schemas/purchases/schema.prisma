@@ -58,6 +58,10 @@ model goods_receipt_notes {
   metadata                                    Json                        @default("{}")
   purchase_order_id                           String                      @db.Uuid
   inventory_receipt_id                        String?                     @db.Uuid
+  /// Clave de idempotencia opcional por tenant — ver 44_idempotency_key_goods_receipt_notes.sql
+  /// para el índice único parcial real (tenant_id, idempotency_key) WHERE idempotency_key IS NOT NULL.
+  /// Prisma no representa la condición WHERE en este schema (mismo patrón ya usado para slug/email/etc.).
+  idempotency_key                             String?
   goods_receipt_note_lines                    goods_receipt_note_lines[]
   purchase_orders                             purchase_orders             @relation(fields: [purchase_order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   purchase_invoice_matching                   purchase_invoice_matching[]

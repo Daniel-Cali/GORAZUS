@@ -8,4 +8,5 @@ export {
   CajaService,
   CajaNoAbiertaException,
   CajaYaAbiertaException,
+  RegistroNoPerteneceASucursalException,
 } from './backend/services/caja.service';

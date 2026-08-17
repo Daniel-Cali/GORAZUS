@@ -7,6 +7,7 @@ import { LoggingModule } from '@gorazus/core-logging';
 import { initMetrics } from '@gorazus/core-observability';
 import { HttpModule } from '@gorazus/core-http';
 import { CacheModule } from '@gorazus/core-cache';
+import { StorageModule } from '@gorazus/core-storage';
 import { DatabaseModule } from '@gorazus/core-database';
 import type { AccessTokenPayload } from '@gorazus/contracts';
 // Ruta relativa — necesita la clase PrismaClient real (constructible) del cliente
@@ -34,6 +35,7 @@ describe('RolesController (e2e)', () => {
   let app: INestApplication;
   let adminToken: string;
   let prisma: PrismaClient;
+  let companyId: string;
 
   beforeAll(async () => {
     initMetrics();
@@ -53,6 +55,14 @@ describe('RolesController (e2e)', () => {
     if (!usuario)
       throw new Error('Falta el usuario de prueba admin@demo.local — correr seed-rbac.ts primero.');
 
+    // `admin@demo.local` es un admin de todo el tenant (`company_id` null) —
+    // el test de scoping necesita una empresa real explícita, no puede
+    // asumir la del actor.
+    const empresa = await prisma.companies.findFirst({ where: { deleted_at: null } });
+    if (!empresa)
+      throw new Error('Falta al menos una empresa real en el tenant "demo" para este test.');
+    companyId = empresa.id;
+
     const payload: Omit<AccessTokenPayload, 'iat' | 'exp'> = {
       sub: usuario.id,
       tenantId: usuario.tenant_id,
@@ -68,6 +78,11 @@ describe('RolesController (e2e)', () => {
         LoggingModule,
         HttpModule,
         CacheModule,
+        // AvatarUsuarioService (dentro de SeguridadModule) inyecta
+        // StorageService — @Global() igual que SeguridadModule, pero sin
+        // este import explícito acá el árbol de testing queda incompleto
+        // (mismo hallazgo que en clientes/crm — ver sus e2e-spec).
+        StorageModule,
         DatabaseModule,
         SeguridadModule,
       ],
@@ -125,11 +140,60 @@ describe('RolesController (e2e)', () => {
 
     expect(createResponse.status).toBe(201);
     expect(createResponse.body.data.name).toBe(nombre);
+    expect(createResponse.body.data.role_type).toBe('custom');
 
-    const listResponse = await request(app.getHttpServer())
-      .get('/api/v1/seguridad/roles')
+    // `GET /seguridad/roles/:id` en vez de paginar el listado completo —
+    // con muchos roles acumulados (uso repetido de este e2e), el nuevo
+    // podía no caer en la página 1 sin depender de un orden explícito.
+    const getResponse = await request(app.getHttpServer())
+      .get(`/api/v1/seguridad/roles/${createResponse.body.data.id}`)
       .set('Authorization', `Bearer ${adminToken}`);
-    expect(listResponse.body.data.some((r: { name: string }) => r.name === nombre)).toBe(true);
+    expect(getResponse.status).toBe(200);
+    expect(getResponse.body.data.name).toBe(nombre);
+  });
+
+  it('POST /seguridad/roles con code/description/roleType los persiste', async () => {
+    const nombre = `Rol con metadata e2e ${Date.now()}`;
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/seguridad/roles')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        name: nombre,
+        code: 'SALES_MANAGER',
+        description: 'Gerencia de ventas',
+        roleType: 'company',
+      });
+    expect(response.status).toBe(201);
+    expect(response.body.data.code).toBe('SALES_MANAGER');
+    expect(response.body.data.description).toBe('Gerencia de ventas');
+    expect(response.body.data.role_type).toBe('company');
+  });
+
+  it('POST /seguridad/roles normaliza el código a mayúsculas', async () => {
+    const nombre = `Rol normalizacion e2e ${Date.now()}`;
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/seguridad/roles')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: `  ${nombre}  `, code: '  sales_rep  ' });
+    expect(response.status).toBe(201);
+    expect(response.body.data.name).toBe(nombre);
+    expect(response.body.data.code).toBe('SALES_REP');
+  });
+
+  it('POST /seguridad/roles con un código con caracteres inválidos devuelve 400', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/seguridad/roles')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: `Rol codigo invalido e2e ${Date.now()}`, code: 'SALES-REP!' });
+    expect(response.status).toBe(400);
+  });
+
+  it('POST /seguridad/roles con roleType "system" devuelve 400 — solo el seed crea roles de fábrica', async () => {
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/seguridad/roles')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: `Rol system e2e ${Date.now()}`, roleType: 'system' });
+    expect(response.status).toBe(400);
   });
 
   it('POST /seguridad/roles con un nombre vacío devuelve 400 (validación Zod)', async () => {
@@ -138,5 +202,108 @@ describe('RolesController (e2e)', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ name: '' });
     expect(response.status).toBe(400);
+  });
+
+  it('flujo completo: crear, obtener con permisos, renombrar, asignar/revocar permiso, eliminar', async () => {
+    const nombre = `Rol de prueba e2e flujo ${Date.now()}`;
+    const createResponse = await request(app.getHttpServer())
+      .post('/api/v1/seguridad/roles')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: nombre });
+    expect(createResponse.status).toBe(201);
+    const rolId = createResponse.body.data.id;
+
+    const getResponse = await request(app.getHttpServer())
+      .get(`/api/v1/seguridad/roles/${rolId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(getResponse.status).toBe(200);
+    expect(getResponse.body.data.permissionCodes).toEqual([]);
+
+    const asignarResponse = await request(app.getHttpServer())
+      .post(`/api/v1/seguridad/roles/${rolId}/permisos`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ permissionCode: 'seguridad.ver_auditoria' });
+    expect(asignarResponse.status).toBe(201);
+
+    const getConPermisoResponse = await request(app.getHttpServer())
+      .get(`/api/v1/seguridad/roles/${rolId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(getConPermisoResponse.body.data.permissionCodes).toContain('seguridad.ver_auditoria');
+
+    const nuevoNombre = `${nombre} (renombrado)`;
+    const actualizarResponse = await request(app.getHttpServer())
+      .patch(`/api/v1/seguridad/roles/${rolId}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: nuevoNombre });
+    expect(actualizarResponse.status).toBe(200);
+    expect(actualizarResponse.body.data.name).toBe(nuevoNombre);
+
+    const revocarResponse = await request(app.getHttpServer())
+      .delete(`/api/v1/seguridad/roles/${rolId}/permisos/seguridad.ver_auditoria`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(revocarResponse.status).toBe(200);
+
+    const eliminarResponse = await request(app.getHttpServer())
+      .delete(`/api/v1/seguridad/roles/${rolId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(eliminarResponse.status).toBe(200);
+    expect(eliminarResponse.body.data.deleted_at).not.toBeNull();
+  });
+
+  it('PATCH /seguridad/roles/:id sobre el rol de fábrica "Administrador" devuelve 409', async () => {
+    const listResponse = await request(app.getHttpServer())
+      .get('/api/v1/seguridad/roles')
+      .set('Authorization', `Bearer ${adminToken}`);
+    const admin = listResponse.body.data.find((r: { name: string }) => r.name === 'Administrador');
+    expect(admin).toBeDefined();
+
+    const response = await request(app.getHttpServer())
+      .patch(`/api/v1/seguridad/roles/${admin.id}`)
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: 'Intento de renombrar' });
+    expect(response.status).toBe(409);
+  });
+
+  it('GET /seguridad/roles/:id con id inexistente devuelve 404', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/seguridad/roles/00000000-0000-0000-0000-000000000099')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(response.status).toBe(404);
+  });
+
+  it('GET /seguridad/roles?companyId= filtra por empresa', async () => {
+    const nombre = `Rol scoping e2e ${Date.now()}`;
+    const createResponse = await request(app.getHttpServer())
+      .post('/api/v1/seguridad/roles')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: nombre, companyId });
+    expect(createResponse.body.data.company_id).toBe(companyId);
+
+    const filtradoResponse = await request(app.getHttpServer())
+      .get(`/api/v1/seguridad/roles?companyId=${companyId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(
+      filtradoResponse.body.data.every(
+        (r: { company_id: string | null }) => r.company_id === companyId,
+      ),
+    ).toBe(true);
+    expect(filtradoResponse.body.data.some((r: { name: string }) => r.name === nombre)).toBe(true);
+
+    const otraEmpresaResponse = await request(app.getHttpServer())
+      .get('/api/v1/seguridad/roles?companyId=00000000-0000-0000-0000-000000000099')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(otraEmpresaResponse.body.data.some((r: { name: string }) => r.name === nombre)).toBe(
+      false,
+    );
+  });
+
+  it('POST /seguridad/roles con companyId null explícito crea un rol de todo el tenant', async () => {
+    const nombre = `Rol tenant-wide e2e ${Date.now()}`;
+    const createResponse = await request(app.getHttpServer())
+      .post('/api/v1/seguridad/roles')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ name: nombre, companyId: null });
+    expect(createResponse.status).toBe(201);
+    expect(createResponse.body.data.company_id).toBeNull();
   });
 });

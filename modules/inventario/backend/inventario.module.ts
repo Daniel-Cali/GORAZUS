@@ -14,6 +14,13 @@ import { AjustesController } from './controllers/ajustes.controller';
 import { ConteosController } from './controllers/conteos.controller';
 import { ProgramacionConteosController } from './controllers/programacion-conteos.controller';
 import { CosteoController } from './controllers/costeo.controller';
+import { RecepcionesInventarioController } from './controllers/recepciones-inventario.controller';
+import { SalidasInventarioController } from './controllers/salidas-inventario.controller';
+import { LotesInventarioController } from './controllers/lotes-inventario.controller';
+import { SeriesInventarioController } from './controllers/series-inventario.controller';
+import { PutawayRulesController } from './controllers/putaway-rules.controller';
+import { PickingRulesController } from './controllers/picking-rules.controller';
+import { ReplenishmentRulesController } from './controllers/replenishment-rules.controller';
 import { AlmacenesService } from './services/almacenes.service';
 import { ZonasAlmacenService } from './services/zonas-almacen.service';
 import { UbicacionesAlmacenService } from './services/ubicaciones-almacen.service';
@@ -28,6 +35,13 @@ import { AjustesService } from './services/ajustes.service';
 import { ConteosService } from './services/conteos.service';
 import { ProgramacionConteosService } from './services/programacion-conteos.service';
 import { CosteoService } from './services/costeo.service';
+import { RecepcionesInventarioService } from './services/recepciones-inventario.service';
+import { SalidasInventarioService } from './services/salidas-inventario.service';
+import { LotesInventarioService } from './services/lotes-inventario.service';
+import { SeriesInventarioService } from './services/series-inventario.service';
+import { PutawayRulesService } from './services/putaway-rules.service';
+import { PickingRulesService } from './services/picking-rules.service';
+import { ReplenishmentRulesService } from './services/replenishment-rules.service';
 import { AlmacenRepository } from './repositories/almacen.repository';
 import { AlmacenRepositoryPrisma } from './repositories/almacen.repository.prisma';
 import { ZonaAlmacenRepository } from './repositories/zona-almacen.repository';
@@ -66,6 +80,20 @@ import { LifoCostLayerRepository } from './repositories/lifo-cost-layer.reposito
 import { LifoCostLayerRepositoryPrisma } from './repositories/lifo-cost-layer.repository.prisma';
 import { AverageCostHistoryRepository } from './repositories/average-cost-history.repository';
 import { AverageCostHistoryRepositoryPrisma } from './repositories/average-cost-history.repository.prisma';
+import { GoodsReceiptRepository } from './repositories/goods-receipt.repository';
+import { GoodsReceiptRepositoryPrisma } from './repositories/goods-receipt.repository.prisma';
+import { GoodsIssueRepository } from './repositories/goods-issue.repository';
+import { GoodsIssueRepositoryPrisma } from './repositories/goods-issue.repository.prisma';
+import { InventoryLotRepository } from './repositories/inventory-lot.repository';
+import { InventoryLotRepositoryPrisma } from './repositories/inventory-lot.repository.prisma';
+import { InventorySerialRepository } from './repositories/inventory-serial.repository';
+import { InventorySerialRepositoryPrisma } from './repositories/inventory-serial.repository.prisma';
+import { PutawayRuleRepository } from './repositories/putaway-rule.repository';
+import { PutawayRuleRepositoryPrisma } from './repositories/putaway-rule.repository.prisma';
+import { PickingRuleRepository } from './repositories/picking-rule.repository';
+import { PickingRuleRepositoryPrisma } from './repositories/picking-rule.repository.prisma';
+import { ReplenishmentRuleRepository } from './repositories/replenishment-rule.repository';
+import { ReplenishmentRuleRepositoryPrisma } from './repositories/replenishment-rule.repository.prisma';
 
 /**
  * `inventario` — Almacenes (FASE 03, continuidad), motor de stock y
@@ -75,11 +103,16 @@ import { AverageCostHistoryRepositoryPrisma } from './repositories/average-cost-
  * Físicos (`physical_counts`/`physical_count_lines`/
  * `cycle_count_schedules`). Motor de Costeo (`ADR-INV-004` fase 1,
  * FIFO/LIFO/Promedio Ponderado — `fifo_cost_layers`/`lifo_cost_layers`/
- * `average_cost_history`) agregado como servicio standalone, sin
- * conexión automática a `MovimientosService` todavía. Standard/Specific/
- * Landed/Replacement Cost y el resto de las 31 tablas del schema
- * (recepciones, salidas, series, lotes, producción) siguen sin código,
- * ver `INVENTORY_NEXT_PHASE.md`.
+ * `average_cost_history`) conectado a `MovimientosService` desde
+ * Recepciones (Parte 05 Subfase 1) y Salidas (Subfase 2). Subfase 3
+ * agrega Lotes y Series (`inventory_lots`/`inventory_serials`,
+ * `stock_movements.lot_id`/`serial_id` — `46_stock_movements_lot_serial_traceability.sql`).
+ * Prompt 1 (Foundation Completion) propaga lote/serie a Transferencias/
+ * Ajustes/Reservas/Conteos Físicos/Conteos Cíclicos
+ * (`47_transfers_adjustments_reservations_counts_lot_serial.sql`) y agrega
+ * WMS Basic (Putaway/Picking/Replenishment Rules, tablas certificadas sin
+ * código previo). Standard/Specific/Landed/Replacement Cost y producción
+ * siguen sin código, ver `INVENTORY_NEXT_PHASE.md`.
  */
 @Module({
   imports: [DatabaseModule],
@@ -98,6 +131,13 @@ import { AverageCostHistoryRepositoryPrisma } from './repositories/average-cost-
     ConteosController,
     ProgramacionConteosController,
     CosteoController,
+    RecepcionesInventarioController,
+    SalidasInventarioController,
+    LotesInventarioController,
+    SeriesInventarioController,
+    PutawayRulesController,
+    PickingRulesController,
+    ReplenishmentRulesController,
   ],
   providers: [
     AlmacenesService,
@@ -114,6 +154,13 @@ import { AverageCostHistoryRepositoryPrisma } from './repositories/average-cost-
     ConteosService,
     ProgramacionConteosService,
     CosteoService,
+    RecepcionesInventarioService,
+    SalidasInventarioService,
+    LotesInventarioService,
+    SeriesInventarioService,
+    PutawayRulesService,
+    PickingRulesService,
+    ReplenishmentRulesService,
     { provide: AlmacenRepository, useClass: AlmacenRepositoryPrisma },
     { provide: ZonaAlmacenRepository, useClass: ZonaAlmacenRepositoryPrisma },
     { provide: UbicacionAlmacenRepository, useClass: UbicacionAlmacenRepositoryPrisma },
@@ -136,6 +183,13 @@ import { AverageCostHistoryRepositoryPrisma } from './repositories/average-cost-
     { provide: FifoCostLayerRepository, useClass: FifoCostLayerRepositoryPrisma },
     { provide: LifoCostLayerRepository, useClass: LifoCostLayerRepositoryPrisma },
     { provide: AverageCostHistoryRepository, useClass: AverageCostHistoryRepositoryPrisma },
+    { provide: GoodsReceiptRepository, useClass: GoodsReceiptRepositoryPrisma },
+    { provide: GoodsIssueRepository, useClass: GoodsIssueRepositoryPrisma },
+    { provide: InventoryLotRepository, useClass: InventoryLotRepositoryPrisma },
+    { provide: InventorySerialRepository, useClass: InventorySerialRepositoryPrisma },
+    { provide: PutawayRuleRepository, useClass: PutawayRuleRepositoryPrisma },
+    { provide: PickingRuleRepository, useClass: PickingRuleRepositoryPrisma },
+    { provide: ReplenishmentRuleRepository, useClass: ReplenishmentRuleRepositoryPrisma },
   ],
   // `StockService`/`MovimientosService`/`TiposMovimientoService` exportados
   // para el checkout de POS (FASE 06 Parte 01, `modules/pos/backend`) —
@@ -145,6 +199,12 @@ import { AverageCostHistoryRepositoryPrisma } from './repositories/average-cost-
   // profunda. `ReservasService` exportado para Pedidos de Venta (Módulo de
   // Ventas Enterprise Parte 1, `modules/ventas/backend`) — reserva real de
   // inventario al crear un pedido. Ver `modules/inventario/index.ts`.
-  exports: [StockService, MovimientosService, TiposMovimientoService, ReservasService],
+  exports: [
+    StockService,
+    MovimientosService,
+    TiposMovimientoService,
+    ReservasService,
+    AlmacenesService,
+  ],
 })
 export class InventarioModule {}

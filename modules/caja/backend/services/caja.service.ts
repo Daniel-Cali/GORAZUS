@@ -15,7 +15,12 @@ import { TipoMovimientoCajaRepository } from '../repositories/tipo-movimiento-ca
 import { MovimientoCajaRepository } from '../repositories/movimiento-caja.repository';
 import { EmpresaSucursalLookupRepository } from '../repositories/empresa-sucursal-lookup.repository';
 import { CajaRegistro } from '../entities/caja-registro.entity';
-import type { CrearCajaInput, AbrirCajaInput, CerrarCajaInput } from '../validators/caja.schema';
+import type {
+  CrearCajaInput,
+  AbrirCajaInput,
+  CerrarCajaInput,
+  RegistrarMovimientoManualInput,
+} from '../validators/caja.schema';
 
 export class CajaNoEncontradaException extends DomainException {
   constructor(id: string) {
@@ -58,6 +63,25 @@ export class CajaNoAbiertaException extends DomainException {
 export class AperturaNoEncontradaException extends DomainException {
   constructor(id: string) {
     super('APERTURA_NO_ENCONTRADA', `No existe la apertura de caja "${id}".`, 404);
+  }
+}
+
+/**
+ * P0-3 (auditoría POS) — `registerId` llega desde el body de un request
+ * (ej. `POST /pos/ventas`), nunca validado hasta ahora contra el
+ * `branchId`/`companyId` que llega en el mismo body. RLS por sí solo no
+ * alcanza acá: una caja de otra sucursal de la MISMA empresa/tenant sigue
+ * siendo visible bajo `withTenantScope`, así que sin este chequeo
+ * explícito un usuario autorizado en su propio tenant podría cobrar
+ * contra la caja de una sucursal ajena con solo conocer su id.
+ */
+export class RegistroNoPerteneceASucursalException extends DomainException {
+  constructor(registerId: string, branchId: string, companyId: string) {
+    super(
+      'REGISTRO_NO_PERTENECE_A_SUCURSAL',
+      `La caja "${registerId}" no pertenece a la sucursal "${branchId}" de la empresa "${companyId}".`,
+      409,
+    );
   }
 }
 
@@ -122,6 +146,26 @@ export class CajaService {
   async obtenerRegistro(context: UserContext, id: string): Promise<cash_registers> {
     const caja = await this.cajaRegistroRepository.findById(context, { id });
     if (!caja) throw new CajaNoEncontradaException(id);
+    return caja;
+  }
+
+  /**
+   * P0-3 — valida que `registerId` pertenezca realmente a `branchId`/
+   * `companyId` antes de operar contra esa caja (ej. checkout de POS).
+   * Reutiliza `obtenerRegistro` (RLS ya filtra por tenant ahí) en vez de
+   * duplicar el lookup — esto solo agrega la comparación de pertenencia
+   * que faltaba.
+   */
+  async obtenerRegistroDeSucursal(
+    context: UserContext,
+    registerId: string,
+    branchId: string,
+    companyId: string,
+  ): Promise<cash_registers> {
+    const caja = await this.obtenerRegistro(context, registerId);
+    if (caja.branch_id !== branchId || caja.company_id !== companyId) {
+      throw new RegistroNoPerteneceASucursalException(registerId, branchId, companyId);
+    }
     return caja;
   }
 
@@ -251,6 +295,48 @@ export class CajaService {
       sourceModule: params.sourceModule ?? null,
       sourceEntityId: params.sourceEntityId ?? null,
       observations: params.observations ?? null,
+    });
+  }
+
+  /** Movimientos de una apertura o caja — usado por la UI de Caja para la tabla de movimientos (antes solo se consultaba internamente al cerrar). */
+  async listarMovimientos(
+    context: UserContext,
+    filtros: { openingId?: string; registerId?: string },
+    pagination: PaginationParams,
+  ): Promise<PaginatedResult<cash_movements>> {
+    return this.movimientoCajaRepository.listar(
+      context,
+      {
+        ...(filtros.openingId ? { opening_id: filtros.openingId } : {}),
+        ...(filtros.registerId ? { register_id: filtros.registerId } : {}),
+      },
+      pagination,
+    );
+  }
+
+  /** Catálogo de tipos de movimiento (`cash.cash_movement_types`) — de solo lectura desde la app, mismo criterio que `VentasService.listarEstados`. */
+  async listarTiposMovimiento(context: UserContext) {
+    return this.tipoMovimientoCajaRepository.findMany(context, {}, { page: 1, pageSize: 50 });
+  }
+
+  /**
+   * Ingreso/egreso manual de efectivo (depósito, retiro, corrección) desde
+   * la UI de Caja — reutiliza `registrarMovimiento` (mismo mecanismo que ya
+   * usa POS para cobros), solo agrega los códigos de tipo `ingreso_manual`/
+   * `egreso_manual`. No duplica la validación de apertura activa, ya la
+   * hace `registrarMovimiento`.
+   */
+  async registrarMovimientoManual(
+    context: UserContext,
+    input: RegistrarMovimientoManualInput,
+  ): Promise<cash_movements> {
+    return this.registrarMovimiento(context, {
+      registerId: input.registerId,
+      movementTypeCode: input.direction === 'in' ? 'ingreso_manual' : 'egreso_manual',
+      direction: input.direction,
+      amount: input.amount,
+      sourceModule: 'caja_manual',
+      observations: input.observations,
     });
   }
 }

@@ -17,8 +17,8 @@ repositorio sobre el mismo cliente Prisma, nunca importándose entre sí).
 intentos fallidos, JWT de acceso + refresh rotativo, revocación de sesión
 en logout, 2FA (TOTP) exigido cuando está confirmado, recuperación de
 contraseña por email real (SMTP), protección CSRF en el endpoint de
-refresh. Ver [AUTH_ARCHITECTURE.md](../../AUTH_ARCHITECTURE.md) (raíz del
-repo) para el resumen de arquitectura, `docs/architecture/13-modulo-auth.md`
+refresh. Ver [AUTH_ARCHITECTURE.md](../../docs/reports/auth/AUTH_ARCHITECTURE.md)
+(docs/reports/auth/) para el resumen de arquitectura, `docs/architecture/13-modulo-auth.md`
 para el diseño original detallado, y `CHANGELOG.md` para el historial real
 de qué se construyó en qué sesión. `frontend/` sigue expuesto en `/login`
 (`modules/auth/frontend/routes/auth.routes.tsx`) — no actualizado esta

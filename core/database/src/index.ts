@@ -119,6 +119,38 @@ export type {
   cycle_count_schedules,
 } from '../prisma/schemas/inventory/generated';
 /**
+ * Recepciones de Inventario (Inventario Parte 05, Subfase 1) — cierra el
+ * gap real Compras→Inventario (`RecepcionesCompraService` deja
+ * `inventory_receipt_id` en null a propósito). Agrega `goods_receipts`/
+ * `goods_receipt_lines`, mismo criterio "una tabla a la vez" del resto de
+ * este archivo — el resto de las 34 tablas (salidas, series, lotes,
+ * producción) sigue sin código, ver `INVENTORY_NEXT_PHASE.md`.
+ */
+export type { goods_receipts, goods_receipt_lines } from '../prisma/schemas/inventory/generated';
+/**
+ * Salidas de Inventario (Inventario Parte 05, Subfase 2) — `goods_issues`/
+ * `goods_issue_lines`/`goods_issue_reasons`, mismo criterio que Recepciones.
+ */
+export type {
+  goods_issues,
+  goods_issue_lines,
+  goods_issue_reasons,
+} from '../prisma/schemas/inventory/generated';
+/**
+ * Inventario Parte 05, Subfase 3 (Lotes y Series) — `inventory_lots`/
+ * `inventory_serials` nunca habían sido consumidas por código de aplicación.
+ */
+export type { inventory_lots, inventory_serials } from '../prisma/schemas/inventory/generated';
+/**
+ * Prompt 1 (Foundation Completion) — WMS Basic. Tablas certificadas nunca
+ * antes consumidas por código de aplicación.
+ */
+export type {
+  putaway_rules,
+  picking_rules,
+  replenishment_rules,
+} from '../prisma/schemas/inventory/generated';
+/**
  * Motor de Costeo (FIFO/LIFO/Promedio Ponderado, `ADR-INV-004` fase 1) —
  * agrega las tres tablas de costeo que ya existían en el schema desde
  * Database Parte 02 pero seguían sin código de aplicación (`fifo_cost_layers`/
@@ -213,6 +245,13 @@ export type {
   sales_order_status_history,
 } from '../prisma/schemas/sales/generated';
 /**
+ * P0-1 (auditoría POS) — ledger de idempotencia de `POST /pos/ventas`, ver
+ * `docs/database/sql/48_pos_checkout_idempotency_keys.sql`. Mismo criterio
+ * que `movement_idempotency_keys` (schema `inventory`): tabla separada
+ * porque `invoices` está particionada por `issued_at`.
+ */
+export type { pos_checkout_idempotency_keys } from '../prisma/schemas/sales/generated';
+/**
  * Cliente Prisma del schema `cash` — noveno cliente independiente
  * (`PRISMA_CASH`), mismo criterio que los anteriores. Primer consumidor:
  * `modules/caja/backend` (FASE 06 Parte 01 — `cash_registers`,
@@ -299,6 +338,145 @@ export type {
   income_statement_snapshots,
   cash_flow_snapshots,
 } from '../prisma/schemas/accounting/generated';
+/**
+ * Cliente Prisma del schema `suppliers` — cliente independiente
+ * (`PRISMA_SUPPLIERS`), ya generado y wireado en `database.module.ts`
+ * desde el inicio de este archivo, pero sin consumidor hasta ahora.
+ * Primer consumidor: `modules/proveedores/backend` (Compras FASE 2 —
+ * solo `suppliers.suppliers` + `supplier_block_history`, 2 de las 13
+ * tablas del schema; contactos/direcciones/cuentas bancarias/crédito/
+ * evaluaciones/clasificación/contratos sin código todavía, ver
+ * `docs/AKB/02 Domains/Purchasing.md`).
+ */
+export type {
+  PrismaClient as SuppliersPrismaClient,
+  Prisma as SuppliersPrisma,
+} from '../prisma/schemas/suppliers/generated';
+export type { suppliers, supplier_block_history } from '../prisma/schemas/suppliers/generated';
+/**
+ * Cliente Prisma del schema `purchases` — cliente independiente
+ * (`PRISMA_PURCHASES`), ya generado y wireado en `database.module.ts`
+ * desde el inicio de este archivo, pero sin consumidor hasta ahora.
+ * Primer consumidor: `modules/compras/backend` (Compras FASE 3 —
+ * Purchase Requisition: `purchase_requisitions`/`purchase_requisition_lines`/
+ * `purchase_requisition_status`/`purchase_requisition_status_history`, 4 de
+ * las 27 tablas del schema; Purchase Order/Goods Receipt/Purchase Invoice
+ * y el resto sin código todavía, ver `docs/AKB/02 Domains/Purchasing.md`).
+ */
+export type {
+  PrismaClient as PurchasesPrismaClient,
+  Prisma as PurchasesPrisma,
+} from '../prisma/schemas/purchases/generated';
+export type {
+  purchase_requisitions,
+  purchase_requisition_lines,
+  purchase_requisition_status,
+  purchase_requisition_status_history,
+} from '../prisma/schemas/purchases/generated';
+/** Compras FASE 4 — Purchase Order: `purchase_orders`/`purchase_order_lines`/`purchase_order_status`/`purchase_order_status_history`, 4 tablas más del schema `purchases` (8 de 27 en total). */
+export type {
+  purchase_orders,
+  purchase_order_lines,
+  purchase_order_status,
+  purchase_order_status_history,
+} from '../prisma/schemas/purchases/generated';
+/**
+ * Compras FASE 5 — Goods Receipt: `goods_receipt_notes`/
+ * `goods_receipt_note_lines`, 2 tablas más (10 de 27 en total).
+ * **A diferencia de los demás aggregates de Compras, este par NO tiene
+ * `*_status`/`*_status_history` en el schema real** — verificado leyendo
+ * `schema.prisma` completo, no solo asumido; sin flujo de estados
+ * catalogado, solo `deleted_at` (activa/anulada). No confundir con
+ * `inventory.goods_receipts`/`goods_receipt_lines` (movimiento físico,
+ * dueño Inventario, sin código de aplicación todavía) — dos tablas
+ * distintas para el mismo hecho, documentado en `08_purchases.sql`.
+ */
+export type {
+  goods_receipt_notes,
+  goods_receipt_note_lines,
+} from '../prisma/schemas/purchases/generated';
+/**
+ * Compras FASE 6 — Purchase Invoice: `purchase_invoices`/
+ * `purchase_invoice_lines`/`purchase_invoice_status`/
+ * `purchase_invoice_status_history`, 4 tablas más (14 de 27 en total).
+ * **`purchase_invoices` está particionada por rango de `received_at`,
+ * PK compuesta `(id, received_at)`** — no admite `findUnique`/`update`
+ * por `id` solo (`purchase_invoicesWhereUniqueInput` solo expone
+ * `id_received_at`/`local_id_received_at`); los repositorios usan
+ * `findFirst`/`updateMany` en su lugar. `purchase_invoice_lines`/
+ * `purchase_invoice_status_history` **no tienen FK real** hacia
+ * `purchase_invoices` por el mismo motivo (una tabla particionada no
+ * admite FK simple desde una columna no particionada) — la integridad
+ * se valida en el service, nunca a nivel de Prisma `include`/`create`
+ * anidado.
+ */
+export type {
+  purchase_invoices,
+  purchase_invoice_lines,
+  purchase_invoice_status,
+  purchase_invoice_status_history,
+} from '../prisma/schemas/purchases/generated';
+/**
+ * Compras FASE 7 — Purchase Matching: `purchase_invoice_matching` (3-way
+ * match OC↔Recepción↔Factura), 1 tabla más (15 de 27 en total). Sin
+ * `*_status`/`*_status_history` — es un resultado calculado, no un
+ * documento con flujo de aprobación propio.
+ */
+export type { purchase_invoice_matching } from '../prisma/schemas/purchases/generated';
+/**
+ * Compras FASE 8 — Purchase Returns: `purchase_returns`/
+ * `purchase_return_lines`, 2 tablas más (17 de 27 en total). Mismo
+ * patrón que Goods Receipt ([[ADR-PUR-004]]) — sin `*_status`/
+ * `*_status_history` en el schema real, `purchase_invoice_id` sin FK
+ * real (misma limitación de partición que en `purchase_invoice_lines`).
+ */
+export type {
+  purchase_returns,
+  purchase_return_lines,
+} from '../prisma/schemas/purchases/generated';
+/**
+ * Compras FASE 9 — Purchase Credit Notes: `purchase_credit_notes`/
+ * `purchase_credit_note_lines`, 2 tablas más (19 de 27 en total). Mismo
+ * patrón sin estado que Purchase Returns; a diferencia de Returns, la
+ * cabecera exige `total_amount` (`NOT NULL`, sin default) — las líneas
+ * no llevan precio propio, se deriva del `unit_cost` de la línea de
+ * factura correspondiente (mismo criterio que Purchase Matching).
+ */
+export type {
+  purchase_credit_notes,
+  purchase_credit_note_lines,
+} from '../prisma/schemas/purchases/generated';
+/**
+ * Compras FASE 10 — Purchase Withholdings: `purchase_withholdings`, 1
+ * tabla más (20 de 27 en total). Sin líneas propias (registro a nivel
+ * de cabecera de factura, no por producto) y sin `*_status`/
+ * `*_status_history`. `withholding_rule_id` referencia
+ * `taxes.withholding_rules` (schema distinto, sin FK real ni código
+ * todavía) — integración fiscal completa fuera de alcance, mismo
+ * criterio que `purchase_invoice_lines.tax_id` en [[ADR-PUR-005]].
+ */
+export type { purchase_withholdings } from '../prisma/schemas/purchases/generated';
+/**
+ * Compras FASE 11 — Imports (última fase del roadmap autorizado):
+ * `imports`/`import_status`/`import_status_history`/`import_expenses`,
+ * 4 tablas más (27 de 27 — schema `purchases` completo). Único par de
+ * catálogo/historial de Compras donde el catálogo (`import_status`) no
+ * tiene columna `is_final` (verificado en `schema.prisma`, a diferencia
+ * de `purchase_requisition_status`/`purchase_order_status`/
+ * `purchase_invoice_status`) — se omite ese campo al crear estados
+ * nuevos en caliente, el resto del patrón es idéntico.
+ * `purchase_order_id` en `imports` **sí tiene FK real** (no está
+ * particionada, a diferencia de `purchase_invoice_id` en otras tablas
+ * hijas). `import_expenses` no son "líneas" fijadas al crear — se
+ * agregan incrementalmente durante la vida del expediente (flete
+ * conocido primero, aduana después).
+ */
+export type {
+  imports,
+  import_status,
+  import_status_history,
+  import_expenses,
+} from '../prisma/schemas/purchases/generated';
 // prisma.service.ts (cliente único monolítico) queda superado por el
 // enfoque de 21 clientes por schema en database.module.ts — ver el
 // comentario de cabecera de ese archivo. No se elimina el archivo

@@ -14,6 +14,11 @@ export const registrarMovimientoSchema = z
       .uuid('El id de la entidad origen debe ser un UUID válido')
       .optional(),
     observations: z.string().optional(),
+    /** ISSUE-07: opcional para no romper clientes existentes — sin ella, no hay protección de idempotencia. */
+    idempotencyKey: z.string().min(1).max(255).optional(),
+    /** Inventario Parte 05 Subfase 3: lote/serie de origen o destino — opcionales, solo aplican a productos con `tracks_lot`/`tracks_serial`. */
+    lotId: z.string().uuid('El id de lote debe ser un UUID válido').optional(),
+    serialId: z.string().uuid('El id de serie debe ser un UUID válido').optional(),
   })
   .refine((data) => Boolean(data.sourceModule) === Boolean(data.sourceEntityId), {
     message: 'sourceModule y sourceEntityId deben indicarse juntos, o ninguno de los dos',

@@ -6,8 +6,10 @@ import { PosCheckoutService } from '../services/pos-checkout.service';
 import {
   confirmarVentaSchema,
   suspenderVentaSchema,
+  completarVentaSuspendidaSchema,
   type ConfirmarVentaInput,
   type SuspenderVentaInput,
+  type CompletarVentaSuspendidaInput,
 } from '../validators/pos.schema';
 
 const PERMISO_OPERAR = 'pos.operar_pos';
@@ -77,6 +79,33 @@ export class PosController {
   @Get('ventas/:id')
   async recuperarVenta(@CurrentUser() user: UserContext, @Param('id') id: string) {
     const factura = await this.posCheckoutService.recuperarVenta(user, id);
+    return { data: factura };
+  }
+
+  @ApiOperation({
+    summary: 'Completar una venta suspendida (cobrarla)',
+    description: `Requiere ${PERMISO_OPERAR}. Reutiliza la MISMA factura — nunca crea una segunda. Valida stock real (no el de cuando se suspendió), caja abierta y pagos suficientes. Idempotente (misma filosofía que POST /pos/ventas).`,
+  })
+  @RequirePermission(PERMISO_OPERAR)
+  @Post('ventas/:id/completar')
+  async completarVentaSuspendida(
+    @CurrentUser() user: UserContext,
+    @Param('id') id: string,
+    @Body(new ZodValidationPipe(completarVentaSuspendidaSchema))
+    body: CompletarVentaSuspendidaInput,
+  ) {
+    const resultado = await this.posCheckoutService.completarVentaSuspendida(user, id, body);
+    return { data: resultado };
+  }
+
+  @ApiOperation({
+    summary: 'Cancelar una venta suspendida',
+    description: `Requiere ${PERMISO_OPERAR}. Baja lógica vía Ventas (anular) — nunca borra la factura físicamente.`,
+  })
+  @RequirePermission(PERMISO_OPERAR)
+  @Post('ventas/:id/cancelar')
+  async cancelarVentaSuspendida(@CurrentUser() user: UserContext, @Param('id') id: string) {
+    const factura = await this.posCheckoutService.cancelarVentaSuspendida(user, id);
     return { data: factura };
   }
 }

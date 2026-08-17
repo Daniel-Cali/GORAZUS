@@ -60,6 +60,17 @@ export class FacturasController {
   }
 
   @ApiOperation({
+    summary: 'Listar catálogo de estados de factura',
+    description: `Requiere ${PERMISO_GESTIONAR}. Catálogo de solo lectura (\`invoice_status\`) — declarado antes de ":id" para no colisionar con esa ruta.`,
+  })
+  @RequirePermission(PERMISO_GESTIONAR)
+  @Get('estados')
+  async listarEstados(@CurrentUser() user: UserContext) {
+    const result = await this.ventasService.listarEstados(user);
+    return { data: result.data, meta: result.meta };
+  }
+
+  @ApiOperation({
     summary: 'Obtener factura por id (con líneas)',
     description: `Requiere ${PERMISO_GESTIONAR}.`,
   })

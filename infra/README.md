@@ -6,7 +6,7 @@
 
 | Carpeta       | Qué contiene                                                                                              | README propio                |
 | ------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| `docker/`     | `docker-compose.yml` (base) + `.dev.yml`/`.prod.yml` (overlays), Dockerfiles referenciados desde `apps/*` | —                            |
+| `docker/`     | `docker-compose.yml` (base) + `.dev.yml`/`.prod.yml` (overlays), Dockerfiles referenciados desde `apps/*` | [README](docker/README.md)   |
 | `nginx/`      | `nginx.conf` — único punto de entrada, reutilizado como reglas de Ingress en K8s                          | —                            |
 | `kubernetes/` | `base/` + `overlays/staging/production` (Kustomize) — staging y production reales                         | —                            |
 | `redis/`      | Tuning de Redis (`redis.conf`)                                                                            | —                            |
