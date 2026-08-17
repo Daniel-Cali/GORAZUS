@@ -129,3 +129,16 @@ reportar "tasa de cumplimiento con evidencia" se vuelve real.
 | Campañas           | Ídem                                         | Límite real de alcance (solo leads) frente a las promociones de `sales` (§3)                           |
 | Agenda             | Ídem                                         | Confirmación de consolidación ya hecha, sin trabajo pendiente (§4)                                     |
 | Seguimientos       | Ídem                                         | Distinción tarea vs. bitácora + **gap real encontrado**: sin FK entre ambas (§5)                       |
+
+## 7. Addendum — arquitectura de código (2026-07-25)
+
+Este documento cubre **solo diseño de datos** ("sin código", como se
+declara en la cabecera). La arquitectura de código del módulo (entidades de
+dominio, repositorios, servicios, controladores, recursos API, permisos,
+eventos, notificaciones, estrategia de auditoría) se diseñó por separado en
+[`CRM_ARCHITECTURE.md`](../reports/crm/CRM_ARCHITECTURE.md) — no se
+reescribe nada de §0-§6 acá, ese documento nuevo **extiende** este sin
+contradecirlo (en particular, respeta que `OportunidadGanada` es un comando
+síncrono hacia `ventas`, no un evento, tal como ya fija §2 de este
+documento). Plan de implementación restante en
+[`CRM_ROADMAP.md`](../reports/crm/CRM_ROADMAP.md).

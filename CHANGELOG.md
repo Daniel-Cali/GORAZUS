@@ -90,6 +90,61 @@ no una reescritura del schema. Detalle completo:
 
 ### Diseñado (sin ejecutar — fase de diseño puro, no incrementa versión)
 
+- **Inventario Parte 05 — Subfases 1-3 y Prompt 1 (Foundation Completion), Lotes/Series/WMS Basic
+  (2026-08-06 a 2026-08-07).** Cuatro entregas seguidas sobre la misma base de código, migraciones
+  `46_stock_movements_lot_serial_traceability.sql` y
+  `47_transfers_adjustments_reservations_counts_lot_serial.sql` diseñadas y con `prisma generate`
+  corrido en modo offline (sin `db pull` — Docker/Postgres inactivo toda la sesión).
+  - **Subfase 1 (Recepciones)**: primer código de aplicación sobre `goods_receipts`/
+    `goods_receipt_lines`, conecta `MovimientosService` con `CosteoService` por primera vez.
+  - **Subfase 2 (Salidas)**: dominio `goods_issues` standalone — verificado en código que
+    POS/Ventas ya descuentan stock sin pasarlo (`ISSUE-31`), decisión deliberada de no tocar ese
+    flujo en producción.
+  - **Subfase 3 (Lotes y Series)**: `stock_movements.lot_id`/`serial_id`, `inventory_lots`/
+    `inventory_serials` con identidad única real. Una línea con lote es 1:1; una línea serializada
+    de cantidad N genera N movimientos individuales (quantity=1 c/u).
+  - **Prompt 1 (Foundation Completion)**: lote/serie propagado a Transferencias (reasigna
+    `warehouse_id` del lote/serie al destino solo en transferencia completa — parcial documentado
+    como `ISSUE-32`), Ajustes, Reservas (nuevo índice único parcial
+    `uq_inventory_stock_reservations_active_serial`, "prevent double reservation of serials" a
+    nivel de base de datos), Conteos Físicos (contar por lote/serie) y Conteos Cíclicos (por
+    ubicación/categoría de producto). WMS Basic (Putaway/Picking/Replenishment Rules) implementado
+    sobre tablas certificadas sin código de aplicación previo — sin migración nueva para esa parte.
+  - **229 tests unitarios en verde** (suite completa de `inventario-backend`, sin regresión).
+    Build/lint limpios. 0 tests e2e ejecutados (Docker inactivo).
+  - Ver `Decision Log` (2026-08-06/2026-08-07) e `Issue Register` (`ISSUE-31`, `ISSUE-32`) para el
+    detalle completo.
+
+- **ISSUE-07 — Idempotencia en Movimientos de Inventario y Recepciones de Compra (2026-08-06).**
+  Cierra la brecha señalada en `ADR-INV-003 §2.3`/`ADR-INF-001 §6/§10`: un reintento de red que
+  reenvía la misma solicitud creaba un segundo movimiento/recepción real, sin rechazo.
+  - **Compras** (`goods_receipt_notes`): `idempotency_key TEXT` + índice único parcial
+    `(tenant_id, idempotency_key) WHERE idempotency_key IS NOT NULL` —
+    `docs/database/sql/44_idempotency_key_goods_receipt_notes.sql`. Lookup temprano en
+    `RecepcionesCompraService.crear()` (salta validaciones de negocio en replay) + catch de `P2002`
+    en `RecepcionCompraRepositoryPrisma.crear()` (cierra la ventana de concurrencia real).
+  - **Inventario** (`stock_movements`): **hallazgo real durante la implementación** —
+    `stock_movements` está particionada mensualmente por `created_at`
+    (`docs/database/sql/29_partitioning.sql`); Postgres exige que todo índice único sobre una tabla
+    particionada incluya la columna de partición, así que el mismo patrón de Compras no es viable
+    ahí, e incluir `created_at` en el índice no detectaría reintentos entre particiones distintas.
+    Resuelto con una tabla ledger separada, `inventory.movement_idempotency_keys`
+    (`docs/database/sql/45_movement_idempotency_keys.sql`) — reserva atómica vía `INSERT` (el propio
+    índice único serializa la carrera concurrente en Postgres) + `UPDATE movement_id` dentro de la
+    misma transacción. Sin FK real de `movement_id` hacia `stock_movements` (PK compuesta por el
+    particionamiento) — mismo criterio ya usado en `source_entity_id`.
+  - **29 tests unitarios en verde** (13 Compras + 16 Inventario, incluye no-regresión de los
+    preexistentes). **0 tests e2e ejecutados** — Docker/Postgres inactivo en el entorno donde se
+    escribió, mismo límite ya documentado en el resto del proyecto; los 2 tests e2e (uno por módulo,
+    3 casos cada uno: replay secuencial, concurrencia real vía `Promise.all`, claves distintas) están
+    escritos y listos para correr cuando haya Postgres real.
+  - **Explícitamente fuera de alcance de esta fase** (decisión del usuario): lock distribuido por
+    Redis, formalización de la Domain Policy `P14` en `ddd/16_domain_policies.md` (sigue propuesta,
+    sin autorización), integración de idempotencia con `SolicitudDeMovimiento` (no existe código
+    todavía, solo diseño en `ADR-INV-003`).
+  - Ver `ISSUE-07` en el Issue Register y `Decision Log` (2026-08-06) para el detalle completo de la
+    decisión de diseño (tabla ledger vs. índice particionado).
+
 - **CRM — Parte 01, Diseño de Arquitectura (2026-07-25).** Por pedido explícito ("solo completar la
   arquitectura, no programar lógica de negocio todavía"), se diseñó la arquitectura de código
   completa del módulo CRM — 0 archivos `.ts` escritos. El modelo de datos (17 tablas,

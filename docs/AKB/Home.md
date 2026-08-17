@@ -7,7 +7,7 @@ owner: Chief Software Architect
 domain: meta
 subdomain: knowledge-base
 created: 2026-07-27
-updated: 2026-07-27
+updated: 2026-08-04
 tags: [akb, home, moc]
 related: []
 ---
@@ -70,8 +70,9 @@ notas puente.
 
 ## 02 Domains
 
-- [[Inventory]] (único dominio con contenido real — 21 notas, incluye [[Dynamic Attribute Engine]], [[ADR-INV-004]], [[ADR-INV-005]], [[ADR-INV-006]], [[ADR-INV-007]], [[ADR-INV-008]], [[ADR-INV-009]] y [[ADR-INV-010]])
-- [[Sales]] · [[Purchasing]] · [[Accounting]] · [[CRM]] · [[HR]] (sin ADR propio todavía)
+- [[Inventory]] (21 notas, incluye [[Dynamic Attribute Engine]], [[ADR-INV-004]], [[ADR-INV-005]], [[ADR-INV-006]], [[ADR-INV-007]], [[ADR-INV-008]], [[ADR-INV-009]] y [[ADR-INV-010]])
+- [[Purchasing]] (segundo dominio con contenido real desde 2026-08-04 — [[Suppliers]] + [[ADR-PUR-001]] a [[ADR-PUR-005]], ver [[Business Rules Matrix — Purchasing]])
+- [[Sales]] · [[Accounting]] · [[CRM]] · [[HR]] (sin ADR propio todavía)
 
 ## 03 Shared Kernel
 
@@ -105,3 +106,12 @@ Ver [[ADR Index]] para la lista completa.
 
 - `docs/adr/` — ADRs reales.
 - `docs/architecture/`, `docs/database/`, `docs/ddd/` — documentación de diseño existente, parcialmente incorporada.
+- `docs/PROJECT_CONTEXT.md`, `docs/DOCUMENTATION_INDEX.md`, `docs/ARCHITECTURE_CURRENT.md`,
+  `docs/INFRASTRUCTURE_CURRENT.md`, `docs/SECURITY_BASELINE.md`, `docs/KNOWN_ISSUES.md`,
+  `docs/DO_NOT_TOUCH.md`, `docs/OPERATIONS_COMMANDS.md` — memoria/navegación operativa
+  sincronizada el 2026-08-13 ("Second Brain Sync"), track de infraestructura/operaciones. Vive
+  fuera de esta bóveda a propósito (mismo criterio que `docs/adr/`) — no se migró contenido del
+  AKB hacia esos documentos ni se creó una taxonomía paralela dentro de `docs/AKB/`.
+- `docs/FASE_6_POSTGRES_ROLES_REPORT.md` — roles PostgreSQL recreados (`gorazus_app`,
+  `gorazus_backup`, `gorazus_migrator`, `gorazus_readonly`, `gorazus_audit_writer`), PASSED WITH
+  KNOWN ISSUES (2026-08-13).

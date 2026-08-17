@@ -1,6 +1,10 @@
 # Diccionario de datos — schema `customers`
 
 > Generado automáticamente desde `information_schema` contra la base `gorazus` real. Ver [../DATABASE_DICTIONARY.md](../DATABASE_DICTIONARY.md) para metodología. No editar a mano.
+>
+> Actualizado 2026-07-25 — CRM/Customers, cierre de brechas reales
+> (`sql/36_crm_customer_completion.sql`): +2 tablas (`customer_notes`,
+> `customer_ratings`) y +1 vista (`v_customer_timeline`).
 
 ## customers.customer_addresses
 
@@ -258,6 +262,32 @@
 | points_balance     | `integer`                  | No       | `0`                 |     |                        |
 | tier_code          | `text`                     | Sí       | ``                  |     |                        |
 
+## customers.customer_notes
+
+| Columna        | Tipo                       | Nullable | Default             | PK  | FK                     |
+| -------------- | -------------------------- | -------- | ------------------- | --- | ---------------------- |
+| id             | `uuid`                     | No       | `gen_random_uuid()` | PK  |                        |
+| local_id       | `bigint`                   | No       | ``                  |     |                        |
+| tenant_id      | `uuid`                     | No       | ``                  |     |                        |
+| company_id     | `uuid`                     | No       | ``                  |     |                        |
+| branch_id      | `uuid`                     | Sí       | ``                  |     |                        |
+| created_at     | `timestamp with time zone` | No       | `now()`             |     |                        |
+| updated_at     | `timestamp with time zone` | No       | `now()`             |     |                        |
+| deleted_at     | `timestamp with time zone` | Sí       | ``                  |     |                        |
+| created_by     | `uuid`                     | Sí       | ``                  |     |                        |
+| updated_by     | `uuid`                     | Sí       | ``                  |     |                        |
+| deleted_by     | `uuid`                     | Sí       | ``                  |     |                        |
+| version        | `integer`                  | No       | `1`                 |     |                        |
+| row_version    | `bigint`                   | No       | `0`                 |     |                        |
+| is_active      | `boolean`                  | No       | `true`              |     |                        |
+| is_deleted     | `boolean`                  | Sí       | ``                  |     |                        |
+| observations   | `text`                     | Sí       | ``                  |     |                        |
+| metadata       | `jsonb`                    | No       | `'{}'::jsonb`       |     |                        |
+| customer_id    | `uuid`                     | No       | ``                  |     | customers.customers.id |
+| author_user_id | `uuid`                     | No       | ``                  |     |                        |
+| note_text      | `text`                     | No       | ``                  |     |                        |
+| is_pinned      | `boolean`                  | No       | `false`             |     |                        |
+
 ## customers.customer_price_lists
 
 | Columna       | Tipo                       | Nullable | Default             | PK  | FK                     |
@@ -281,6 +311,33 @@
 | metadata      | `jsonb`                    | No       | `'{}'::jsonb`       |     |                        |
 | customer_id   | `uuid`                     | No       | ``                  |     | customers.customers.id |
 | price_list_id | `uuid`                     | No       | ``                  |     |                        |
+
+## customers.customer_ratings
+
+| Columna          | Tipo                       | Nullable | Default             | PK  | FK                     |
+| ---------------- | -------------------------- | -------- | ------------------- | --- | ---------------------- |
+| id               | `uuid`                     | No       | `gen_random_uuid()` | PK  |                        |
+| local_id         | `bigint`                   | No       | ``                  |     |                        |
+| tenant_id        | `uuid`                     | No       | ``                  |     |                        |
+| company_id       | `uuid`                     | No       | ``                  |     |                        |
+| branch_id        | `uuid`                     | Sí       | ``                  |     |                        |
+| created_at       | `timestamp with time zone` | No       | `now()`             |     |                        |
+| updated_at       | `timestamp with time zone` | No       | `now()`             |     |                        |
+| deleted_at       | `timestamp with time zone` | Sí       | ``                  |     |                        |
+| created_by       | `uuid`                     | Sí       | ``                  |     |                        |
+| updated_by       | `uuid`                     | Sí       | ``                  |     |                        |
+| deleted_by       | `uuid`                     | Sí       | ``                  |     |                        |
+| version          | `integer`                  | No       | `1`                 |     |                        |
+| row_version      | `bigint`                   | No       | `0`                 |     |                        |
+| is_active        | `boolean`                  | No       | `true`              |     |                        |
+| is_deleted       | `boolean`                  | Sí       | ``                  |     |                        |
+| observations     | `text`                     | Sí       | ``                  |     |                        |
+| metadata         | `jsonb`                    | No       | `'{}'::jsonb`       |     |                        |
+| customer_id      | `uuid`                     | No       | ``                  |     | customers.customers.id |
+| rated_by_user_id | `uuid`                     | No       | ``                  |     |                        |
+| rating_type      | `text`                     | No       | `'general'`         |     |                        |
+| score            | `numeric(3,1)`             | No       | ``                  |     |                        |
+| rated_at         | `timestamp with time zone` | No       | `now()`             |     |                        |
 
 ## customers.customer_references
 
@@ -481,3 +538,19 @@
 | open_balance     | `numeric`       | Sí       | ``      |     |     |
 | days_outstanding | `integer`       | Sí       | ``      |     |     |
 | aging_bucket     | `text`          | Sí       | ``      |     |     |
+
+## customers.v_customer_timeline
+
+Vista de solo lectura — `UNION ALL` sobre `customer_notes`, `customer_ratings`,
+`customer_visits`, `customer_block_history`, `customer_credit_limit_history`,
+`crm.call_logs`/`email_logs`/`whatsapp_logs`/`follow_up_activities` (donde
+`customer_id IS NOT NULL`). No almacena datos propios — ver
+`sql/36_crm_customer_completion.sql §4`.
+
+| Columna       | Tipo                       | Nullable | Default | PK  | FK  |
+| ------------- | -------------------------- | -------- | ------- | --- | --- |
+| customer_id   | `uuid`                     | Sí       | ``      |     |     |
+| event_type    | `text`                     | Sí       | ``      |     |     |
+| event_at      | `timestamp with time zone` | Sí       | ``      |     |     |
+| summary       | `text`                     | Sí       | ``      |     |     |
+| actor_user_id | `uuid`                     | Sí       | ``      |     |     |

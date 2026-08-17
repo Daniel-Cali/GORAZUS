@@ -70,3 +70,12 @@ schema). Frontend React 19 + Vite + TanStack Query + Zustand + shadcn/ui.
 - `infra/kubernetes/stateful/` (Postgres/Redis/RabbitMQ/MinIO en alta disponibilidad) necesita un
   ADR formal antes de un despliegue de producción real, per gobernanza ya fijada
   (`docs/architecture/11-gobernanza-y-adrs.md §2`).
+- `configuracion-backend`: `tsconfig.spec.json` sin `@types/multer` en `types` — bloquea la
+  compilación de sus 3 e2e-spec (hallazgo real, 2026-07-26, sin corregir por estar fuera de
+  alcance de la fase que lo encontró).
+- `usuarios.controller.e2e-spec.ts`/`dos-factores.controller.e2e-spec.ts`/
+  `sesiones.controller.e2e-spec.ts` (`seguridad-backend`): no importan `StorageModule` en su
+  `TestingModule` — `AvatarUsuarioService` (dentro de `SeguridadModule`) inyecta `StorageService`,
+  sin el import el árbol de testing queda incompleto y las 3 suites fallan en runtime (no en
+  compilación). Corregido solo en `roles.controller.e2e-spec.ts` (2026-07-26, dentro de alcance de
+  esa fase) — los otros tres quedan pendientes.

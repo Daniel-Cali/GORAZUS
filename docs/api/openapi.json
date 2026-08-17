@@ -320,7 +320,7 @@
       "get": {
         "operationId": "RolesController_listar",
         "summary": "Listar roles",
-        "description": "Requiere seguridad.gestionar_roles.",
+        "description": "Requiere seguridad.gestionar_roles. Filtrable por companyId — sin filtro, devuelve los roles de todo el tenant (todas las empresas).",
         "parameters": [],
         "responses": {
           "200": {
@@ -337,10 +337,90 @@
       "post": {
         "operationId": "RolesController_crear",
         "summary": "Crear rol",
-        "description": "Requiere seguridad.gestionar_roles.",
+        "description": "Requiere seguridad.gestionar_roles. companyId ausente = empresa activa de la sesión; companyId null explícito = rol de todo el tenant.",
         "parameters": [],
         "responses": {
           "201": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/roles/{id}": {
+      "get": {
+        "operationId": "RolesController_obtener",
+        "summary": "Obtener rol por id, con sus permisos asignados",
+        "description": "Requiere seguridad.gestionar_roles.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "RolesController_actualizar",
+        "summary": "Renombrar rol",
+        "description": "Requiere seguridad.gestionar_roles. Un rol de fábrica (isSystemRole) no puede renombrarse.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "RolesController_eliminar",
+        "summary": "Eliminar rol (baja lógica)",
+        "description": "Requiere seguridad.gestionar_roles. Un rol de fábrica (isSystemRole) no puede eliminarse.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
             "description": ""
           }
         },
@@ -369,6 +449,42 @@
         ],
         "responses": {
           "201": {
+            "description": ""
+          }
+        },
+        "tags": ["seguridad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/seguridad/roles/{id}/permisos/{permissionCode}": {
+      "delete": {
+        "operationId": "RolesController_revocarPermiso",
+        "summary": "Revocar permiso de rol",
+        "description": "Requiere seguridad.gestionar_roles.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "permissionCode",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
             "description": ""
           }
         },
@@ -1529,6 +1645,25 @@
         "parameters": [],
         "responses": {
           "201": {
+            "description": ""
+          }
+        },
+        "tags": ["configuracion"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/configuracion/formas-pago": {
+      "get": {
+        "operationId": "FormasPagoController_listar",
+        "summary": "Listar formas de pago",
+        "description": "Requiere configuracion.gestionar_parametros.",
+        "parameters": [],
+        "responses": {
+          "200": {
             "description": ""
           }
         },
@@ -2723,6 +2858,850 @@
         ]
       }
     },
+    "/api/v1/inventario/costeo/entradas": {
+      "post": {
+        "operationId": "CosteoController_registrarEntrada",
+        "summary": "Registrar entrada con costo (crea capa FIFO/LIFO o recalcula Promedio)",
+        "description": "Requiere inventario.gestionar_costeo. Despacha según products.costing_method del producto.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/costeo/salidas": {
+      "post": {
+        "operationId": "CosteoController_resolverCostoDeSalida",
+        "summary": "Resolver costo de una salida (consume capas FIFO/LIFO o lee Promedio vigente)",
+        "description": "Requiere inventario.gestionar_costeo. Política de inventario negativo estricta (ADR-INV-004 §6): rechaza si no hay costo suficiente.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/costeo/productos/{productId}/capas": {
+      "get": {
+        "operationId": "CosteoController_listarCapasActivas",
+        "summary": "Listar capas de costo activas de un producto/almacén",
+        "description": "Requiere inventario.gestionar_costeo. Vacío para productos con costing_method='average' (sin capas, ver costo-vigente).",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "warehouseId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/costeo/productos/{productId}/costo-vigente": {
+      "get": {
+        "operationId": "CosteoController_obtenerCostoVigente",
+        "summary": "Costo vigente de un producto/almacén",
+        "description": "Requiere inventario.gestionar_costeo. Próxima capa a consumir (FIFO/LIFO) o último snapshot de Promedio.",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "warehouseId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/recepciones": {
+      "post": {
+        "operationId": "RecepcionesInventarioController_crear",
+        "summary": "Crear recepción de inventario (borrador)",
+        "description": "Requiere inventario.gestionar_stock. No genera movimientos todavía — eso ocurre en /confirmar.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "RecepcionesInventarioController_listar",
+        "summary": "Listar recepciones de inventario",
+        "description": "Requiere inventario.gestionar_stock. Filtrable por warehouseId.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/recepciones/{id}": {
+      "get": {
+        "operationId": "RecepcionesInventarioController_obtener",
+        "summary": "Obtener recepción de inventario por id (con líneas)",
+        "description": "Requiere inventario.gestionar_stock.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/recepciones/{id}/confirmar": {
+      "post": {
+        "operationId": "RecepcionesInventarioController_confirmar",
+        "summary": "Confirmar recepción (borrador → confirmada)",
+        "description": "Requiere inventario.gestionar_stock. Genera un movimiento \"receipt\" por línea (atómico) y aplica costeo. idempotencyKey opcional para reintentos seguros.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/recepciones/{id}/cancelar": {
+      "post": {
+        "operationId": "RecepcionesInventarioController_cancelar",
+        "summary": "Cancelar recepción (borrador → cancelada)",
+        "description": "Requiere inventario.gestionar_stock. Solo permitido desde borrador — sin movimientos que revertir.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/salidas": {
+      "post": {
+        "operationId": "SalidasInventarioController_crear",
+        "summary": "Crear salida de inventario (borrador)",
+        "description": "Requiere inventario.gestionar_stock. No genera movimientos todavía — eso ocurre en /confirmar.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "SalidasInventarioController_listar",
+        "summary": "Listar salidas de inventario",
+        "description": "Requiere inventario.gestionar_stock. Filtrable por warehouseId.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/salidas/{id}": {
+      "get": {
+        "operationId": "SalidasInventarioController_obtener",
+        "summary": "Obtener salida de inventario por id (con líneas)",
+        "description": "Requiere inventario.gestionar_stock.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/salidas/{id}/confirmar": {
+      "post": {
+        "operationId": "SalidasInventarioController_confirmar",
+        "summary": "Confirmar salida (borrador → confirmada)",
+        "description": "Requiere inventario.gestionar_stock. Genera un movimiento \"issue\" por línea (atómico) y aplica costeo. idempotencyKey opcional para reintentos seguros.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/salidas/{id}/cancelar": {
+      "post": {
+        "operationId": "SalidasInventarioController_cancelar",
+        "summary": "Cancelar salida (borrador → cancelada)",
+        "description": "Requiere inventario.gestionar_stock. Solo permitido desde borrador — sin movimientos que revertir.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/lotes": {
+      "get": {
+        "operationId": "LotesInventarioController_listar",
+        "summary": "Listar lotes (\"find stock by lot\")",
+        "description": "Requiere inventario.gestionar_stock. Filtrable por productId/warehouseId.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/lotes/proximos-a-vencer": {
+      "get": {
+        "operationId": "LotesInventarioController_proximosAVencer",
+        "summary": "Lotes próximos a vencer",
+        "description": "Requiere inventario.gestionar_stock. Parámetro \"dias\" (default 30).",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/lotes/vencidos": {
+      "get": {
+        "operationId": "LotesInventarioController_vencidos",
+        "summary": "Lotes vencidos",
+        "description": "Requiere inventario.gestionar_stock. No implementa destrucción automática — solo consulta.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/lotes/{id}": {
+      "get": {
+        "operationId": "LotesInventarioController_obtener",
+        "summary": "Obtener lote por id",
+        "description": "Requiere inventario.gestionar_stock.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/series/{serialNumber}": {
+      "get": {
+        "operationId": "SeriesInventarioController_obtener",
+        "summary": "Obtener serie por número",
+        "description": "Requiere inventario.gestionar_stock.",
+        "parameters": [
+          {
+            "name": "serialNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/series/{serialNumber}/historial": {
+      "get": {
+        "operationId": "SeriesInventarioController_historial",
+        "summary": "Historial de movimientos de una serie (\"find serial history\")",
+        "description": "Requiere inventario.gestionar_stock. Recepción → Almacén → Transferencia → Venta, vía stock_movements.serial_id.",
+        "parameters": [
+          {
+            "name": "serialNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/putaway-rules": {
+      "get": {
+        "operationId": "PutawayRulesController_listar",
+        "summary": "Listar reglas de putaway",
+        "description": "Requiere inventario.gestionar_almacenes.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "PutawayRulesController_crear",
+        "summary": "Crear regla de putaway",
+        "description": "Requiere inventario.gestionar_almacenes.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/putaway-rules/resolver": {
+      "get": {
+        "operationId": "PutawayRulesController_resolver",
+        "summary": "Resolver zona destino de putaway",
+        "description": "Requiere inventario.gestionar_almacenes. Regla específica de categoría gana sobre la genérica.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/putaway-rules/{id}": {
+      "get": {
+        "operationId": "PutawayRulesController_obtener",
+        "summary": "Obtener regla de putaway por id",
+        "description": "Requiere inventario.gestionar_almacenes.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "PutawayRulesController_actualizar",
+        "summary": "Actualizar regla de putaway",
+        "description": "Requiere inventario.gestionar_almacenes.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/picking-rules": {
+      "get": {
+        "operationId": "PickingRulesController_listar",
+        "summary": "Listar reglas de picking",
+        "description": "Requiere inventario.gestionar_almacenes.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "PickingRulesController_crear",
+        "summary": "Crear regla de picking",
+        "description": "Requiere inventario.gestionar_almacenes.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/picking-rules/resolver": {
+      "get": {
+        "operationId": "PickingRulesController_resolver",
+        "summary": "Resolver estrategia de picking de un almacén",
+        "description": "Requiere inventario.gestionar_almacenes.",
+        "parameters": [
+          {
+            "name": "warehouseId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/picking-rules/{id}": {
+      "get": {
+        "operationId": "PickingRulesController_obtener",
+        "summary": "Obtener regla de picking por id",
+        "description": "Requiere inventario.gestionar_almacenes.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "PickingRulesController_actualizar",
+        "summary": "Actualizar regla de picking",
+        "description": "Requiere inventario.gestionar_almacenes.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/replenishment-rules": {
+      "get": {
+        "operationId": "ReplenishmentRulesController_listar",
+        "summary": "Listar reglas de reposición",
+        "description": "Requiere inventario.gestionar_almacenes.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "ReplenishmentRulesController_crear",
+        "summary": "Crear regla de reposición",
+        "description": "Requiere inventario.gestionar_almacenes.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/replenishment-rules/evaluar": {
+      "get": {
+        "operationId": "ReplenishmentRulesController_evaluar",
+        "summary": "Evaluar si un producto necesita reposición en un almacén",
+        "description": "Requiere inventario.gestionar_almacenes. No dispara ninguna orden — solo evalúa.",
+        "parameters": [
+          {
+            "name": "productId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "warehouseId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/inventario/replenishment-rules/{id}": {
+      "get": {
+        "operationId": "ReplenishmentRulesController_obtener",
+        "summary": "Obtener regla de reposición por id",
+        "description": "Requiere inventario.gestionar_almacenes.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "ReplenishmentRulesController_actualizar",
+        "summary": "Actualizar regla de reposición",
+        "description": "Requiere inventario.gestionar_almacenes.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["inventario"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/productos/unidades-medida": {
       "get": {
         "operationId": "UnidadesMedidaController_listar",
@@ -3173,6 +4152,1740 @@
         ]
       }
     },
+    "/api/v1/proveedores": {
+      "get": {
+        "operationId": "ProveedoresController_listar",
+        "summary": "Listar proveedores",
+        "description": "Requiere proveedores.gestionar_proveedores. Filtrable por isBlocked.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["proveedores"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "ProveedoresController_crear",
+        "summary": "Crear proveedor",
+        "description": "Requiere proveedores.gestionar_proveedores. companyId/legalName/taxId obligatorios.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["proveedores"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/proveedores/{id}": {
+      "get": {
+        "operationId": "ProveedoresController_obtener",
+        "summary": "Obtener proveedor por id",
+        "description": "Requiere proveedores.gestionar_proveedores.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["proveedores"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "ProveedoresController_actualizar",
+        "summary": "Actualizar proveedor",
+        "description": "Requiere proveedores.gestionar_proveedores. PATCH parcial — nunca reasigna companyId ni taxId.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["proveedores"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/proveedores/{id}/bloquear": {
+      "post": {
+        "operationId": "ProveedoresController_bloquear",
+        "summary": "Bloquear proveedor",
+        "description": "Requiere proveedores.gestionar_proveedores. Registra el motivo en el historial de bloqueo.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["proveedores"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/proveedores/{id}/desbloquear": {
+      "post": {
+        "operationId": "ProveedoresController_desbloquear",
+        "summary": "Desbloquear proveedor",
+        "description": "Requiere proveedores.gestionar_proveedores. Registra el motivo en el historial de bloqueo.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["proveedores"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/solicitudes": {
+      "get": {
+        "operationId": "SolicitudesCompraController_listar",
+        "summary": "Listar solicitudes de compra",
+        "description": "Requiere compras.gestionar_solicitudes. Filtrable por branchId/statusId.",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "SolicitudesCompraController_crear",
+        "summary": "Crear solicitud de compra (borrador)",
+        "description": "Requiere compras.gestionar_solicitudes. El solicitante es siempre el usuario autenticado.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/solicitudes/{id}": {
+      "get": {
+        "operationId": "SolicitudesCompraController_obtener",
+        "summary": "Obtener solicitud de compra por id (con líneas)",
+        "description": "Requiere compras.gestionar_solicitudes.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "SolicitudesCompraController_actualizar",
+        "summary": "Editar solicitud de compra (solo mientras sigue en borrador)",
+        "description": "Requiere compras.gestionar_solicitudes. 409 si ya no está en borrador.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "SolicitudesCompraController_eliminar",
+        "summary": "Eliminar solicitud de compra (baja lógica, solo mientras sigue en borrador)",
+        "description": "Requiere compras.gestionar_solicitudes.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/solicitudes/{id}/historial": {
+      "get": {
+        "operationId": "SolicitudesCompraController_historial",
+        "summary": "Consultar historial de estados",
+        "description": "Requiere compras.gestionar_solicitudes.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/solicitudes/{id}/enviar": {
+      "post": {
+        "operationId": "SolicitudesCompraController_enviar",
+        "summary": "Enviar a aprobación",
+        "description": "Requiere compras.gestionar_solicitudes. draft → submitted.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/solicitudes/{id}/aprobar": {
+      "post": {
+        "operationId": "SolicitudesCompraController_aprobar",
+        "summary": "Aprobar solicitud de compra",
+        "description": "Requiere compras.gestionar_solicitudes. submitted → approved.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/solicitudes/{id}/rechazar": {
+      "post": {
+        "operationId": "SolicitudesCompraController_rechazar",
+        "summary": "Rechazar solicitud de compra",
+        "description": "Requiere compras.gestionar_solicitudes. submitted → rejected.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/solicitudes/{id}/cancelar": {
+      "post": {
+        "operationId": "SolicitudesCompraController_cancelar",
+        "summary": "Cancelar solicitud de compra",
+        "description": "Requiere compras.gestionar_solicitudes. draft|submitted → cancelled.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/ordenes": {
+      "get": {
+        "operationId": "OrdenesCompraController_listar",
+        "summary": "Listar órdenes de compra",
+        "description": "Requiere compras.gestionar_ordenes. Filtrable por branchId/supplierId/statusId.",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "OrdenesCompraController_crear",
+        "summary": "Crear orden de compra (borrador)",
+        "description": "Requiere compras.gestionar_ordenes. Proveedor obligatorio y no bloqueado; solicitud de compra opcional.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/ordenes/{id}": {
+      "get": {
+        "operationId": "OrdenesCompraController_obtener",
+        "summary": "Obtener orden de compra por id (con líneas)",
+        "description": "Requiere compras.gestionar_ordenes.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "OrdenesCompraController_actualizar",
+        "summary": "Editar orden de compra (solo mientras sigue en borrador)",
+        "description": "Requiere compras.gestionar_ordenes. 409 si ya no está en borrador.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "OrdenesCompraController_eliminar",
+        "summary": "Eliminar orden de compra (baja lógica, solo mientras sigue en borrador)",
+        "description": "Requiere compras.gestionar_ordenes.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/ordenes/{id}/historial": {
+      "get": {
+        "operationId": "OrdenesCompraController_historial",
+        "summary": "Consultar historial de estados",
+        "description": "Requiere compras.gestionar_ordenes.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/ordenes/{id}/aprobar": {
+      "post": {
+        "operationId": "OrdenesCompraController_aprobar",
+        "summary": "Aprobar orden de compra",
+        "description": "Requiere compras.gestionar_ordenes. draft → approved.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/ordenes/{id}/cancelar": {
+      "post": {
+        "operationId": "OrdenesCompraController_cancelar",
+        "summary": "Cancelar orden de compra",
+        "description": "Requiere compras.gestionar_ordenes. draft|approved → cancelled.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/recepciones": {
+      "get": {
+        "operationId": "RecepcionesCompraController_listar",
+        "summary": "Listar recepciones de compra",
+        "description": "Requiere compras.gestionar_recepciones. Filtrable por purchaseOrderId y rango de fecha (fromDate/toDate, sobre created_at). Solo devuelve recepciones activas — el schema no distingue más estados.",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "RecepcionesCompraController_crear",
+        "summary": "Registrar recepción de compra",
+        "description": "Requiere compras.gestionar_recepciones. La orden debe existir y estar \"approved\"; productos y cantidades se validan contra las líneas de la orden y lo ya recibido.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/recepciones/{id}": {
+      "get": {
+        "operationId": "RecepcionesCompraController_obtener",
+        "summary": "Obtener recepción de compra por id (con líneas)",
+        "description": "Requiere compras.gestionar_recepciones.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "RecepcionesCompraController_actualizar",
+        "summary": "Editar recepción de compra (reemplaza líneas)",
+        "description": "Requiere compras.gestionar_recepciones. Nunca reasigna la orden de compra.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/recepciones/{id}/anular": {
+      "post": {
+        "operationId": "RecepcionesCompraController_anular",
+        "summary": "Anular recepción de compra",
+        "description": "Requiere compras.gestionar_recepciones. Baja lógica — libera la cantidad para futuras recepciones contra la misma orden.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/facturas": {
+      "get": {
+        "operationId": "FacturasCompraController_listar",
+        "summary": "Listar facturas de compra",
+        "description": "Requiere compras.gestionar_facturas. Filtrable por supplierId/statusId/purchaseOrderId.",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "FacturasCompraController_crear",
+        "summary": "Registrar factura de compra (borrador)",
+        "description": "Requiere compras.gestionar_facturas. Proveedor obligatorio; orden de compra opcional; rechaza número de documento del proveedor duplicado.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/facturas/{id}": {
+      "get": {
+        "operationId": "FacturasCompraController_obtener",
+        "summary": "Obtener factura de compra por id (con líneas)",
+        "description": "Requiere compras.gestionar_facturas.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "FacturasCompraController_actualizar",
+        "summary": "Editar factura de compra (solo mientras sigue en borrador)",
+        "description": "Requiere compras.gestionar_facturas. 409 si ya no está en borrador.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "FacturasCompraController_eliminar",
+        "summary": "Eliminar factura de compra (baja lógica, solo mientras sigue en borrador)",
+        "description": "Requiere compras.gestionar_facturas.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/facturas/{id}/historial": {
+      "get": {
+        "operationId": "FacturasCompraController_historial",
+        "summary": "Consultar historial de estados",
+        "description": "Requiere compras.gestionar_facturas.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/facturas/{id}/aprobar": {
+      "post": {
+        "operationId": "FacturasCompraController_aprobar",
+        "summary": "Aprobar factura de compra",
+        "description": "Requiere compras.gestionar_facturas. draft → approved.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/facturas/{id}/contabilizar": {
+      "post": {
+        "operationId": "FacturasCompraController_contabilizar",
+        "summary": "Contabilizar factura de compra",
+        "description": "Requiere compras.gestionar_facturas. approved → posted. A partir de acá la factura queda inmutable (sin asiento contable real — fuera de alcance de esta fase).",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/facturas/{id}/cancelar": {
+      "post": {
+        "operationId": "FacturasCompraController_cancelar",
+        "summary": "Cancelar factura de compra",
+        "description": "Requiere compras.gestionar_facturas. draft|approved → cancelled. No permitido sobre una factura ya contabilizada (\"posted\").",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/cotejos": {
+      "get": {
+        "operationId": "CotejosCompraController_listar",
+        "summary": "Listar cotejos de compra",
+        "description": "Requiere compras.gestionar_cotejos. Filtrable por purchaseOrderId/receiptNoteId/purchaseInvoiceId.",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "CotejosCompraController_ejecutar",
+        "summary": "Ejecutar cotejo (3-way match)",
+        "description": "Requiere compras.gestionar_cotejos. Calcula la discrepancia entre lo ordenado, lo recibido y lo facturado; persiste el resultado.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/cotejos/{id}": {
+      "get": {
+        "operationId": "CotejosCompraController_obtener",
+        "summary": "Obtener cotejo de compra por id",
+        "description": "Requiere compras.gestionar_cotejos.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/cotejos/{id}/anular": {
+      "post": {
+        "operationId": "CotejosCompraController_anular",
+        "summary": "Anular cotejo de compra",
+        "description": "Requiere compras.gestionar_cotejos. Baja lógica — para corregir un cotejo ejecutado con documentos incorrectos.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/devoluciones": {
+      "get": {
+        "operationId": "DevolucionesCompraController_listar",
+        "summary": "Listar devoluciones de compra",
+        "description": "Requiere compras.gestionar_devoluciones. Filtrable por purchaseInvoiceId.",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "DevolucionesCompraController_crear",
+        "summary": "Registrar devolución de compra",
+        "description": "Requiere compras.gestionar_devoluciones. La factura debe existir y no estar cancelada; productos y cantidades se validan contra las líneas de la factura y lo ya devuelto.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/devoluciones/{id}": {
+      "get": {
+        "operationId": "DevolucionesCompraController_obtener",
+        "summary": "Obtener devolución de compra por id (con líneas)",
+        "description": "Requiere compras.gestionar_devoluciones.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "DevolucionesCompraController_actualizar",
+        "summary": "Editar devolución de compra (reemplaza líneas)",
+        "description": "Requiere compras.gestionar_devoluciones. Nunca reasigna la factura de compra.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/devoluciones/{id}/anular": {
+      "post": {
+        "operationId": "DevolucionesCompraController_anular",
+        "summary": "Anular devolución de compra",
+        "description": "Requiere compras.gestionar_devoluciones. Baja lógica — libera la cantidad para futuras devoluciones contra la misma factura.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/notas-credito": {
+      "get": {
+        "operationId": "NotasCreditoCompraController_listar",
+        "summary": "Listar notas de crédito de compra",
+        "description": "Requiere compras.gestionar_notas_credito. Filtrable por purchaseInvoiceId.",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "NotasCreditoCompraController_crear",
+        "summary": "Registrar nota de crédito de compra",
+        "description": "Requiere compras.gestionar_notas_credito. La factura debe existir y no estar cancelada; productos y cantidades se validan contra las líneas de la factura y lo ya acreditado; el monto se calcula server-side.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/notas-credito/{id}": {
+      "get": {
+        "operationId": "NotasCreditoCompraController_obtener",
+        "summary": "Obtener nota de crédito de compra por id (con líneas)",
+        "description": "Requiere compras.gestionar_notas_credito.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "NotasCreditoCompraController_actualizar",
+        "summary": "Editar nota de crédito de compra (reemplaza líneas)",
+        "description": "Requiere compras.gestionar_notas_credito. Nunca reasigna la factura de compra; el monto se recalcula.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/notas-credito/{id}/anular": {
+      "post": {
+        "operationId": "NotasCreditoCompraController_anular",
+        "summary": "Anular nota de crédito de compra",
+        "description": "Requiere compras.gestionar_notas_credito. Baja lógica — libera la cantidad para futuras notas contra la misma factura.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/retenciones": {
+      "get": {
+        "operationId": "RetencionesCompraController_listar",
+        "summary": "Listar retenciones de compra",
+        "description": "Requiere compras.gestionar_retenciones. Filtrable por purchaseInvoiceId.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "RetencionesCompraController_crear",
+        "summary": "Registrar retención de compra",
+        "description": "Requiere compras.gestionar_retenciones. La factura debe existir y no estar cancelada; el monto no puede exceder el total de la factura (acumulado con otras retenciones activas).",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/retenciones/{id}": {
+      "get": {
+        "operationId": "RetencionesCompraController_obtener",
+        "summary": "Obtener retención de compra por id",
+        "description": "Requiere compras.gestionar_retenciones.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "RetencionesCompraController_actualizar",
+        "summary": "Editar retención de compra",
+        "description": "Requiere compras.gestionar_retenciones. Nunca reasigna la factura de compra.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/retenciones/{id}/anular": {
+      "post": {
+        "operationId": "RetencionesCompraController_anular",
+        "summary": "Anular retención de compra",
+        "description": "Requiere compras.gestionar_retenciones. Baja lógica — libera el monto para futuras retenciones contra la misma factura.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/importaciones": {
+      "get": {
+        "operationId": "ImportacionesController_listar",
+        "summary": "Listar expedientes de importación",
+        "description": "Requiere compras.gestionar_importaciones. Filtrable por purchaseOrderId/statusId.",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "ImportacionesController_crear",
+        "summary": "Abrir expediente de importación",
+        "description": "Requiere compras.gestionar_importaciones. La orden de compra debe existir y estar \"approved\".",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/importaciones/{id}": {
+      "get": {
+        "operationId": "ImportacionesController_obtener",
+        "summary": "Obtener expediente de importación por id (con gastos)",
+        "description": "Requiere compras.gestionar_importaciones.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/importaciones/{id}/historial": {
+      "get": {
+        "operationId": "ImportacionesController_historial",
+        "summary": "Consultar historial de estados",
+        "description": "Requiere compras.gestionar_importaciones.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/importaciones/{id}/gastos": {
+      "post": {
+        "operationId": "ImportacionesController_agregarGasto",
+        "summary": "Agregar gasto al expediente",
+        "description": "Requiere compras.gestionar_importaciones. expenseType: freight|insurance|customs|other.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/importaciones/{id}/gastos/{expenseId}/anular": {
+      "post": {
+        "operationId": "ImportacionesController_anularGasto",
+        "summary": "Anular gasto del expediente",
+        "description": "Requiere compras.gestionar_importaciones. Baja lógica.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "expenseId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/importaciones/{id}/avanzar-a-aduana": {
+      "post": {
+        "operationId": "ImportacionesController_avanzarAAduana",
+        "summary": "Avanzar a aduana",
+        "description": "Requiere compras.gestionar_importaciones. in_transit → at_customs.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/importaciones/{id}/nacionalizar": {
+      "post": {
+        "operationId": "ImportacionesController_nacionalizar",
+        "summary": "Nacionalizar (despachar de aduana)",
+        "description": "Requiere compras.gestionar_importaciones. at_customs → cleared.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/importaciones/{id}/cancelar": {
+      "post": {
+        "operationId": "ImportacionesController_cancelar",
+        "summary": "Cancelar expediente de importación",
+        "description": "Requiere compras.gestionar_importaciones. in_transit|at_customs → cancelled.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compras/importaciones/{id}/anular": {
+      "post": {
+        "operationId": "ImportacionesController_anular",
+        "summary": "Anular expediente de importación",
+        "description": "Requiere compras.gestionar_importaciones. Baja lógica — no permitido si ya está \"cleared\".",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["compras"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/clientes": {
       "get": {
         "operationId": "ClientesController_listar",
@@ -3243,6 +5956,350 @@
         "parameters": [
           {
             "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["clientes"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/clientes/{customerId}/contactos": {
+      "get": {
+        "operationId": "ContactosController_listar",
+        "summary": "Listar contactos de un cliente",
+        "description": "Requiere clientes.ver_contactos.",
+        "parameters": [
+          {
+            "name": "customerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["clientes"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "ContactosController_crear",
+        "summary": "Crear contacto",
+        "description": "Requiere clientes.gestionar_contactos.",
+        "parameters": [
+          {
+            "name": "customerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["clientes"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/clientes/{customerId}/contactos/{id}": {
+      "get": {
+        "operationId": "ContactosController_obtener",
+        "summary": "Obtener contacto por id",
+        "description": "Requiere clientes.ver_contactos.",
+        "parameters": [
+          {
+            "name": "customerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["clientes"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "ContactosController_actualizar",
+        "summary": "Actualizar contacto",
+        "description": "Requiere clientes.gestionar_contactos. PATCH parcial.",
+        "parameters": [
+          {
+            "name": "customerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["clientes"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "ContactosController_eliminar",
+        "summary": "Eliminar contacto (baja lógica)",
+        "description": "Requiere clientes.gestionar_contactos.",
+        "parameters": [
+          {
+            "name": "customerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["clientes"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/clientes/{customerId}/direcciones": {
+      "get": {
+        "operationId": "DireccionesController_listar",
+        "summary": "Listar direcciones de un cliente",
+        "description": "Requiere clientes.ver_direcciones.",
+        "parameters": [
+          {
+            "name": "customerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["clientes"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "DireccionesController_crear",
+        "summary": "Crear dirección",
+        "description": "Requiere clientes.gestionar_direcciones.",
+        "parameters": [
+          {
+            "name": "customerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["clientes"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/clientes/{customerId}/direcciones/{id}": {
+      "get": {
+        "operationId": "DireccionesController_obtener",
+        "summary": "Obtener dirección por id",
+        "description": "Requiere clientes.ver_direcciones.",
+        "parameters": [
+          {
+            "name": "customerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["clientes"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "DireccionesController_actualizar",
+        "summary": "Actualizar dirección",
+        "description": "Requiere clientes.gestionar_direcciones. PATCH parcial.",
+        "parameters": [
+          {
+            "name": "customerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["clientes"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "DireccionesController_eliminar",
+        "summary": "Eliminar dirección (baja lógica)",
+        "description": "Requiere clientes.gestionar_direcciones.",
+        "parameters": [
+          {
+            "name": "customerId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["clientes"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/clientes/{customerId}/cuentas-por-cobrar": {
+      "get": {
+        "operationId": "CuentasPorCobrarController_listar",
+        "summary": "Listar cuentas por cobrar abiertas de un cliente",
+        "description": "Requiere clientes.ver_cuentas_por_cobrar. Facturas de `sales` con saldo abierto, agrupadas por antigüedad (aging).",
+        "parameters": [
+          {
+            "name": "customerId",
             "required": true,
             "in": "path",
             "schema": {
@@ -3369,8 +6426,17 @@
       "get": {
         "operationId": "FacturasController_listar",
         "summary": "Listar facturas",
-        "description": "Requiere ventas.gestionar_ventas.",
-        "parameters": [],
+        "description": "Requiere ventas.gestionar_ventas. Filtrable por branchId/customerId/statusId/issuedFrom/issuedTo, ordenable por issued_at/total_amount/document_number.",
+        "parameters": [
+          {
+            "name": "sortDir",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": ""
@@ -3401,6 +6467,25 @@
         ]
       }
     },
+    "/api/v1/ventas/facturas/estados": {
+      "get": {
+        "operationId": "FacturasController_listarEstados",
+        "summary": "Listar catálogo de estados de factura",
+        "description": "Requiere ventas.gestionar_ventas. Catálogo de solo lectura (`invoice_status`) — declarado antes de \":id\" para no colisionar con esa ruta.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/ventas/facturas/{id}": {
       "get": {
         "operationId": "FacturasController_obtener",
@@ -3418,6 +6503,86 @@
         ],
         "responses": {
           "200": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "FacturasController_actualizar",
+        "summary": "Editar factura (solo mientras sigue en borrador)",
+        "description": "Requiere ventas.gestionar_ventas. Recalcula impuestos. 409 si la factura ya no está en borrador.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "FacturasController_eliminar",
+        "summary": "Eliminar factura (baja lógica, solo mientras sigue en borrador)",
+        "description": "Requiere ventas.gestionar_ventas. 409 si la factura ya no está en borrador.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ventas/facturas/{id}/duplicar": {
+      "post": {
+        "operationId": "FacturasController_duplicar",
+        "summary": "Duplicar factura",
+        "description": "Requiere ventas.gestionar_ventas. Crea un borrador nuevo con las mismas líneas — recalcula impuestos con la tasa vigente de hoy.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
             "description": ""
           }
         },
@@ -3478,6 +6643,1211 @@
           }
         },
         "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ventas/facturas/{id}/anular": {
+      "post": {
+        "operationId": "FacturasController_anular",
+        "summary": "Anular factura (borrador o confirmada → cancelled)",
+        "description": "Requiere ventas.gestionar_ventas. 409 si ya estaba anulada — \"cancelled\" es un estado final.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ventas/cotizaciones": {
+      "get": {
+        "operationId": "CotizacionesController_listar",
+        "summary": "Listar cotizaciones",
+        "description": "Requiere ventas.gestionar_cotizaciones. Filtrable por branchId/customerId/statusId, ordenable.",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortDir",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "CotizacionesController_crear",
+        "summary": "Crear cotización (borrador)",
+        "description": "Requiere ventas.gestionar_cotizaciones.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ventas/cotizaciones/estados": {
+      "get": {
+        "operationId": "CotizacionesController_listarEstados",
+        "summary": "Listar catálogo de estados de cotización",
+        "description": "Requiere ventas.gestionar_cotizaciones. Catálogo de solo lectura (`quote_status`) — declarado antes de \":id\" para no colisionar con esa ruta.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ventas/cotizaciones/{id}": {
+      "get": {
+        "operationId": "CotizacionesController_obtener",
+        "summary": "Obtener cotización por id (con líneas)",
+        "description": "Requiere ventas.gestionar_cotizaciones.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "CotizacionesController_actualizar",
+        "summary": "Editar cotización (solo mientras sigue en borrador)",
+        "description": "Requiere ventas.gestionar_cotizaciones. 409 si ya no está en borrador.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "CotizacionesController_eliminar",
+        "summary": "Eliminar cotización (baja lógica, solo mientras sigue en borrador)",
+        "description": "Requiere ventas.gestionar_cotizaciones.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ventas/cotizaciones/{id}/aprobar": {
+      "post": {
+        "operationId": "CotizacionesController_aprobar",
+        "summary": "Aprobar cotización",
+        "description": "Requiere ventas.gestionar_cotizaciones.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ventas/cotizaciones/{id}/rechazar": {
+      "post": {
+        "operationId": "CotizacionesController_rechazar",
+        "summary": "Rechazar cotización",
+        "description": "Requiere ventas.gestionar_cotizaciones.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ventas/cotizaciones/{id}/duplicar": {
+      "post": {
+        "operationId": "CotizacionesController_duplicar",
+        "summary": "Duplicar cotización",
+        "description": "Requiere ventas.gestionar_cotizaciones. Crea un borrador nuevo con las mismas líneas.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ventas/pedidos": {
+      "get": {
+        "operationId": "PedidosVentaController_listar",
+        "summary": "Listar pedidos de venta",
+        "description": "Requiere ventas.gestionar_pedidos. Filtrable por branchId/customerId/statusId, ordenable.",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortDir",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "PedidosVentaController_crear",
+        "summary": "Crear pedido de venta",
+        "description": "Requiere ventas.gestionar_pedidos. Reserva inventario real de cada línea (warehouseId obligatorio).",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ventas/pedidos/estados": {
+      "get": {
+        "operationId": "PedidosVentaController_listarEstados",
+        "summary": "Listar catálogo de estados de pedido",
+        "description": "Requiere ventas.gestionar_pedidos. Catálogo de solo lectura (`sales_order_status`) — declarado antes de \":id\" para no colisionar con esa ruta.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ventas/pedidos/{id}": {
+      "get": {
+        "operationId": "PedidosVentaController_obtener",
+        "summary": "Obtener pedido por id (con líneas)",
+        "description": "Requiere ventas.gestionar_pedidos.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ventas/pedidos/desde-cotizacion/{cotizacionId}": {
+      "post": {
+        "operationId": "PedidosVentaController_crearDesdeCotizacion",
+        "summary": "Convertir una cotización aprobada y vigente en un pedido nuevo",
+        "description": "Requiere ventas.gestionar_pedidos. \"warehouseId\" es obligatorio (reserva de inventario).",
+        "parameters": [
+          {
+            "name": "cotizacionId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "warehouseId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ventas/pedidos/{id}/cancelar": {
+      "post": {
+        "operationId": "PedidosVentaController_cancelar",
+        "summary": "Cancelar pedido",
+        "description": "Requiere ventas.gestionar_pedidos. Solo si ninguna línea tiene facturación parcial/total todavía — libera las reservas de inventario.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/ventas/pedidos/{id}/convertir-a-factura": {
+      "post": {
+        "operationId": "PedidosVentaController_convertirAFactura",
+        "summary": "Convertir el pedido (total o parcialmente) en una factura real",
+        "description": "Requiere ventas.gestionar_pedidos. Sin \"lines\" en el body, factura el saldo pendiente completo de cada línea.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["ventas"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contabilidad/cuentas": {
+      "get": {
+        "operationId": "CuentasContablesController_listar",
+        "summary": "Listar cuentas del plan contable",
+        "description": "Requiere contabilidad.gestionar_plan_cuentas. Filtrable por accountTypeId/parentAccountId.",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "CuentasContablesController_crear",
+        "summary": "Crear cuenta contable",
+        "description": "Requiere contabilidad.gestionar_plan_cuentas.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contabilidad/cuentas/{id}": {
+      "get": {
+        "operationId": "CuentasContablesController_obtener",
+        "summary": "Obtener cuenta contable por id",
+        "description": "Requiere contabilidad.gestionar_plan_cuentas.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "CuentasContablesController_actualizar",
+        "summary": "Editar cuenta contable (código/nombre/acepta movimientos)",
+        "description": "Requiere contabilidad.gestionar_plan_cuentas. Nunca reasigna el tipo de cuenta.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contabilidad/cuentas/{id}/desactivar": {
+      "post": {
+        "operationId": "CuentasContablesController_desactivar",
+        "summary": "Desactivar cuenta contable",
+        "description": "Requiere contabilidad.gestionar_plan_cuentas. Nunca se elimina físicamente — solo se marca inactiva.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contabilidad/centros-costo": {
+      "get": {
+        "operationId": "CentrosCostoController_listar",
+        "summary": "Listar centros de costo",
+        "description": "Requiere contabilidad.gestionar_plan_cuentas.",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "CentrosCostoController_crear",
+        "summary": "Crear centro de costo",
+        "description": "Requiere contabilidad.gestionar_plan_cuentas.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contabilidad/centros-costo/{id}": {
+      "get": {
+        "operationId": "CentrosCostoController_obtener",
+        "summary": "Obtener centro de costo por id",
+        "description": "Requiere contabilidad.gestionar_plan_cuentas.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contabilidad/anios-fiscales": {
+      "post": {
+        "operationId": "PeriodosFiscalesController_crear",
+        "summary": "Crear año fiscal (genera sus 12 períodos mensuales)",
+        "description": "Requiere contabilidad.gestionar_plan_cuentas.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contabilidad/anios-fiscales/{id}": {
+      "get": {
+        "operationId": "PeriodosFiscalesController_obtener",
+        "summary": "Obtener año fiscal por id",
+        "description": "Requiere contabilidad.gestionar_plan_cuentas.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contabilidad/anios-fiscales/{id}/periodos": {
+      "get": {
+        "operationId": "PeriodosFiscalesController_listarPeriodos",
+        "summary": "Listar los períodos mensuales de un año fiscal",
+        "description": "Requiere contabilidad.gestionar_plan_cuentas.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contabilidad/reglas": {
+      "get": {
+        "operationId": "ReglasContablesController_listar",
+        "summary": "Listar reglas contables",
+        "description": "Requiere contabilidad.gestionar_plan_cuentas.",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "ReglasContablesController_crear",
+        "summary": "Crear regla contable",
+        "description": "Requiere contabilidad.gestionar_plan_cuentas. \"amountFormula\" es el nombre de un campo del hecho contable del módulo de origen, no una expresión evaluada.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contabilidad/reglas/{id}": {
+      "get": {
+        "operationId": "ReglasContablesController_obtener",
+        "summary": "Obtener regla contable por id",
+        "description": "Requiere contabilidad.gestionar_plan_cuentas.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "ReglasContablesController_actualizar",
+        "summary": "Editar regla contable (reemplaza sus líneas)",
+        "description": "Requiere contabilidad.gestionar_plan_cuentas.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "ReglasContablesController_eliminar",
+        "summary": "Eliminar regla contable",
+        "description": "Requiere contabilidad.gestionar_plan_cuentas.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contabilidad/asientos": {
+      "get": {
+        "operationId": "AsientosController_listar",
+        "summary": "Libro Diario — listar asientos con filtros",
+        "description": "Requiere contabilidad.ver_reportes. Filtrable por branchId/statusId/rango de fechas, ordenable por posting_date/document_number.",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortDir",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "AsientosController_crear",
+        "summary": "Crear asiento manual (borrador)",
+        "description": "Requiere contabilidad.gestionar_asientos. Debe estar balanceado (Σdébitos = Σcréditos).",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contabilidad/asientos/libro-mayor": {
+      "get": {
+        "operationId": "AsientosController_libroMayor",
+        "summary": "Libro Mayor de una cuenta",
+        "description": "Requiere contabilidad.ver_reportes. Saldo inicial + movimientos del rango + saldo final, solo asientos contabilizados.",
+        "parameters": [
+          {
+            "name": "accountId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "desde",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hasta",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contabilidad/asientos/{id}": {
+      "get": {
+        "operationId": "AsientosController_obtener",
+        "summary": "Obtener asiento por id (con líneas)",
+        "description": "Requiere contabilidad.ver_reportes.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contabilidad/asientos/{id}/contabilizar": {
+      "post": {
+        "operationId": "AsientosController_contabilizar",
+        "summary": "Contabilizar asiento (borrador/pendiente → contabilizado)",
+        "description": "Requiere contabilidad.gestionar_asientos.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contabilidad/asientos/{id}/anular": {
+      "post": {
+        "operationId": "AsientosController_anular",
+        "summary": "Anular asiento",
+        "description": "Requiere contabilidad.gestionar_asientos.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contabilidad/asientos/{id}/revertir": {
+      "post": {
+        "operationId": "AsientosController_revertir",
+        "summary": "Revertir asiento contabilizado (genera un asiento nuevo con las líneas invertidas)",
+        "description": "Requiere contabilidad.gestionar_asientos.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contabilidad/reportes/balance-general": {
+      "get": {
+        "operationId": "EstadosFinancierosController_balanceGeneral",
+        "summary": "Balance General a una fecha de corte",
+        "description": "Requiere contabilidad.ver_reportes. Incluye la utilidad acumulada histórica (sin cierre contable todavía, ver ACCOUNTING_HEALTH_REPORT.md).",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaCorte",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contabilidad/reportes/estado-resultados": {
+      "get": {
+        "operationId": "EstadosFinancierosController_estadoResultados",
+        "summary": "Estado de Resultados en un rango de fechas",
+        "description": "Requiere contabilidad.ver_reportes. Utilidad Bruta/Operativa/Neta. \"costAccountIds\"/\"otherIncomeAccountIds\"/\"otherExpenseAccountIds\" (opcionales, separados por coma) reclasifican cuentas de tipo income/expense — el CHECK real de account_types.code solo admite asset/liability/equity/income/expense, ver ACCOUNTING_HEALTH_REPORT.md.",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "desde",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hasta",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/contabilidad/reportes/flujo-efectivo": {
+      "get": {
+        "operationId": "EstadosFinancierosController_flujoEfectivo",
+        "summary": "Flujo de Efectivo en un rango de fechas",
+        "description": "Requiere contabilidad.ver_reportes. \"cashAccountIds\" (uno o más, separados por coma) es obligatorio — el plan de cuentas todavía no tiene un flag \"cuenta de efectivo\" (ver ACCOUNTING_HEALTH_REPORT.md); desglose aproximado por módulo de origen, no por Operación/Inversión/Financiamiento formal.",
+        "parameters": [
+          {
+            "name": "companyId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "cashAccountIds",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "desde",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "hasta",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["contabilidad"],
         "security": [
           {
             "bearer": []
@@ -3600,6 +7970,514 @@
           }
         },
         "tags": ["pos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pos/ventas/{id}/completar": {
+      "post": {
+        "operationId": "PosController_completarVentaSuspendida",
+        "summary": "Completar una venta suspendida (cobrarla)",
+        "description": "Requiere pos.operar_pos. Reutiliza la MISMA factura — nunca crea una segunda. Valida stock real (no el de cuando se suspendió), caja abierta y pagos suficientes. Idempotente (misma filosofía que POST /pos/ventas).",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["pos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/pos/ventas/{id}/cancelar": {
+      "post": {
+        "operationId": "PosController_cancelarVentaSuspendida",
+        "summary": "Cancelar una venta suspendida",
+        "description": "Requiere pos.operar_pos. Baja lógica vía Ventas (anular) — nunca borra la factura físicamente.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["pos"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/crm/leads": {
+      "get": {
+        "operationId": "LeadsController_listar",
+        "summary": "Listar leads",
+        "description": "Requiere crm.ver_leads. Filtrable por companyId y búsqueda por nombre/email.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["crm"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "LeadsController_crear",
+        "summary": "Crear lead",
+        "description": "Requiere crm.gestionar_leads. Estado inicial siempre \"nuevo\".",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["crm"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/crm/leads/{id}": {
+      "get": {
+        "operationId": "LeadsController_obtener",
+        "summary": "Obtener lead por id",
+        "description": "Requiere crm.ver_leads.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["crm"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/crm/leads/{id}/estado": {
+      "patch": {
+        "operationId": "LeadsController_cambiarEstado",
+        "summary": "Cambiar estado del lead",
+        "description": "Requiere crm.gestionar_leads. Registra el cambio en el historial de estados.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["crm"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/crm/leads/{id}/convertir": {
+      "post": {
+        "operationId": "LeadsController_convertir",
+        "summary": "Convertir lead en cliente",
+        "description": "Requiere crm.gestionar_leads. Idempotente — invoca ClientesService.crear(), nunca escribe directo en customers.customers.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["crm"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/crm/oportunidades": {
+      "get": {
+        "operationId": "OportunidadesController_listar",
+        "summary": "Listar oportunidades",
+        "description": "Requiere crm.ver_oportunidades.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["crm"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "OportunidadesController_crear",
+        "summary": "Crear oportunidad",
+        "description": "Requiere crm.gestionar_oportunidades. Debe originarse en un lead o en un cliente existente.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["crm"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/crm/oportunidades/{id}": {
+      "get": {
+        "operationId": "OportunidadesController_obtener",
+        "summary": "Obtener oportunidad por id",
+        "description": "Requiere crm.ver_oportunidades.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["crm"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/crm/oportunidades/{id}/etapa": {
+      "patch": {
+        "operationId": "OportunidadesController_moverDeEtapa",
+        "summary": "Mover oportunidad de etapa",
+        "description": "Requiere crm.gestionar_oportunidades.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["crm"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/crm/oportunidades/{id}/ganar": {
+      "post": {
+        "operationId": "OportunidadesController_ganar",
+        "summary": "Marcar oportunidad como ganada",
+        "description": "Requiere crm.gestionar_oportunidades. Requiere el id del pedido/factura ya creado en ventas.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["crm"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/crm/oportunidades/{id}/perder": {
+      "post": {
+        "operationId": "OportunidadesController_perder",
+        "summary": "Marcar oportunidad como perdida",
+        "description": "Requiere crm.gestionar_oportunidades. Exige un motivo de pérdida válido.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["crm"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/crm/campanas": {
+      "get": {
+        "operationId": "CampanasController_listar",
+        "summary": "Listar campañas",
+        "description": "Requiere crm.ver_campanas.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["crm"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "CampanasController_crear",
+        "summary": "Crear campaña",
+        "description": "Requiere crm.gestionar_campanas.",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["crm"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/crm/campanas/{id}": {
+      "get": {
+        "operationId": "CampanasController_obtener",
+        "summary": "Obtener campaña por id",
+        "description": "Requiere crm.ver_campanas.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["crm"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/crm/campanas/{id}/miembros": {
+      "post": {
+        "operationId": "CampanasController_agregarMiembro",
+        "summary": "Agregar un lead como miembro de la campaña",
+        "description": "Requiere crm.gestionar_campanas. Solo admite leads, nunca clientes existentes.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["crm"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/crm/agenda": {
+      "get": {
+        "operationId": "AgendaController_listar",
+        "summary": "Listar eventos de agenda",
+        "description": "Requiere crm.ver_agenda.",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["crm"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "AgendaController_crear",
+        "summary": "Crear evento de agenda",
+        "description": "Requiere crm.gestionar_agenda. Puede referenciar un lead u oportunidad (ambos opcionales).",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["crm"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/crm/agenda/{id}": {
+      "get": {
+        "operationId": "AgendaController_obtener",
+        "summary": "Obtener evento por id",
+        "description": "Requiere crm.ver_agenda.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": ["crm"],
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/crm/agenda/{id}/asistentes": {
+      "post": {
+        "operationId": "AgendaController_agregarAsistente",
+        "summary": "Agregar asistente al evento",
+        "description": "Requiere crm.gestionar_agenda. Interno (userId) o externo (externalEmail), nunca ambos.",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": ["crm"],
         "security": [
           {
             "bearer": []

@@ -1,8 +1,6 @@
 # Technical Debt — GORAZUS ERP
 
-> Actualizado Database Finalization — Database Enterprise v1.1.0.
-> Sesión del 2026-07-25, versión de app **0.11.1** (sin cambios —
-> ninguna API/backend de negocio nueva), rama
+> Actualizado 2026-07-26, versión de app **0.21.0**, rama
 > `feature/database-finalization`. Consolida deuda técnica ya dispersa en
 > `CHANGELOG.md` ("Pendiente conocido") y en los reportes de sesiones
 > previas, más lo detectado esta sesión — no repite el detalle completo
@@ -15,6 +13,64 @@ o mantenibilidad a mediano plazo. 🟡 Cosmético o de bajo impacto real.
 Ninguno de los ítems de abajo es nuevo esta sesión salvo donde se indica
 explícitamente "(nuevo)" — esta sesión sí encontró y corrigió dos
 incidentes reales de gravedad 🔴 heredados de Fase 05, ver §0.
+
+## 0.6 CRM/Clientes producción + Roles Enterprise — 3 hallazgos reales corregidos, 2 sin corregir
+
+**Corregidos**: (1) 6 permisos de `clientes` estaban en el código fuente de `seed-rbac.ts` desde
+turnos anteriores pero nunca se habían sembrado de verdad en la base — el script se había editado,
+no re-ejecutado; cualquier usuario, incluido un admin, habría recibido `403` en producción. (2) El
+CHECK `customer_addresses_address_type_check` no estaba reflejado en la validación de Zod ni en la
+entidad de dominio — un valor fuera de rango rompía en un `500` de Postgres sin traducir. (3)
+`RolesService`/Zod de Roles tenían el mismo tipo de gap para `code`/`roleType` — corregido con
+`RolDeFabricaException`/`.max()`/`.regex()`. Detalle completo:
+`docs/reports/crm/CRM_PRODUCTION_READINESS_REPORT.md`, `modules/seguridad/README.md`.
+
+**Sin corregir (🟡, documentado, fuera de alcance de las fases que los encontraron)**:
+
+- `configuracion-backend`: falta `@types/multer` en `tsconfig.spec.json` — bloquea la compilación
+  de 3 e2e-spec (`impuestos`, `monedas`, `empresas`).
+- `seguridad-backend`: `usuarios`/`dos-factores`/`sesiones.controller.e2e-spec.ts` no importan
+  `StorageModule` en su `TestingModule` — mismo gap que tenía `roles.controller.e2e-spec.ts` antes
+  de corregirse ahí. Ver `docs/manuals/TECNICO.md §5`.
+- Patrón sistémico sin resolver: ningún controlador del proyecto valida el formato de un query
+  param `companyId` antes de pasarlo a Prisma como filtro — un valor no-UUID rompe en un error de
+  Postgres sin traducir en cualquier endpoint con ese filtro (`ClientesController`,
+  `RolesController`, otros), no solo en los que ya se probaron explícitamente.
+
+## 0.5 CRM — Parte 02 (Base de Datos) — bug de permisos sistémico encontrado y corregido (4 tablas)
+
+**Corregido, las 4**: ninguna tabla creada después de `sql/30_backup_restore.sql` (el único lugar
+del proyecto que otorga `GRANT` masivo, una única vez por schema — no hay `ALTER DEFAULT PRIVILEGES`
+configurado en ningún schema) hereda permisos automáticamente. Sin `GRANT` explícito, Prisma no
+puede introspectar la tabla ("could not retrieve columns... missing rights") y el modelo
+**desaparece de `schema.prisma`** en cada `db:pull` — una funcionalidad ya commiteada que se pierde
+silenciosamente, no solo un problema cosmético. Encontrado al regenerar Prisma en esta sesión y
+corregido con `GRANT` explícito (`sql/36_crm_customer_completion.sql §6`) en las 4 tablas afectadas:
+las 2 nuevas de esta fase (`customers.customer_notes`, `customers.customer_ratings`) y **2
+preexistentes de la migración 35** que tenían el mismo bug sin detectar hasta ahora
+(`suppliers.supplier_contracts`, `products.product_physical_attributes`).
+
+🟡 **`core.restore_test_logs` tiene el mismo síntoma (sin `GRANT` a `gorazus_app`) — no se tocó**:
+a diferencia de las 4 anteriores, esta es una tabla de simulacros de restauración/DR
+(`08-estrategia-respaldo.md §6`), ya documentada como exclusión intencional de RLS en una sesión
+previa — plausiblemente el acceso restringido también es deliberado (uso operativo, no de
+aplicación). Se deja como está hasta que se confirme explícitamente que necesita ser legible desde
+el backend.
+
+**Recomendación real**: agregar `ALTER DEFAULT PRIVILEGES` por schema en una migración futura, o
+documentar el `GRANT` explícito como paso obligatorio del checklist de "cómo crear una tabla nueva"
+(`docs/standards/MODULE_GUIDELINES.md`) — sin eso, este bug se va a repetir con la próxima tabla que
+alguien cree.
+
+## 0.4 CRM — Parte 01 (Diseño de Arquitectura) — no introduce deuda nueva
+
+Fase de solo diseño (0 archivos `.ts` creados) — no hay deuda de código nueva por definición. Un
+solo hallazgo, ya anticipado antes de esta fase (no descubierto por ella): `core/notifications`
+solo soporta destinatarios internos (`core.users`) hoy — `crm` va a necesitar que se extienda para
+notificar a un lead/cliente externo (WhatsApp/email) antes de que la Parte 05 del roadmap de CRM
+pueda enviar notificaciones reales, no solo registrar bitácora. 🟡 Baja — no bloquea nada de lo
+planificado en Partes 02-04 (Leads, Oportunidades, Campañas, Agenda no dependen de notificaciones
+externas). Ver `docs/reports/crm/CRM_ARCHITECTURE.md §8`.
 
 ## 0.3 Nuevo esta sesión (Database Finalization — Database Enterprise v1.1.0)
 

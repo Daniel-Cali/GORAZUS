@@ -19,8 +19,8 @@
 > real; el "202 REQUIERE_2FA" de §2 es un 200 con
 > `{ requiresTwoFactor: true, challengeToken }` en la implementación real.
 > Fuente de verdad de lo que existe hoy: `CHANGELOG.md` (búsqueda por
-> fecha) y [AUTH_ARCHITECTURE.md](../../AUTH_ARCHITECTURE.md) (raíz del
-> repo, resumen corto). OAuth2 (§3) y API Keys (§10) de este documento
+> fecha) y [AUTH_ARCHITECTURE.md](../reports/auth/AUTH_ARCHITECTURE.md)
+> (docs/reports/auth/, resumen corto). OAuth2 (§3) y API Keys (§10) de este documento
 > siguen sin implementar — ver "Pendiente conocido" en `CHANGELOG.md`.
 
 ## 0. Alcance y propiedad de datos — por qué "Auth" no es un schema propio

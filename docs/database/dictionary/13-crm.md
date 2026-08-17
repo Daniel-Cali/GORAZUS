@@ -1,6 +1,9 @@
 # Diccionario de datos — schema `crm`
 
 > Generado automáticamente desde `information_schema` contra la base `gorazus` real. Ver [../DATABASE_DICTIONARY.md](../DATABASE_DICTIONARY.md) para metodología. No editar a mano.
+>
+> Actualizado 2026-07-25 — `follow_up_activities` +1 columna
+> (`customer_id`), ver `sql/36_crm_customer_completion.sql §1`.
 
 ## crm.calendar_event_attendees
 
@@ -183,6 +186,7 @@
 | assigned_to_user_id | `uuid`                     | No       | ``                  |     |                      |
 | due_at              | `timestamp with time zone` | No       | ``                  |     |                      |
 | completed_at        | `timestamp with time zone` | Sí       | ``                  |     |                      |
+| customer_id         | `uuid`                     | Sí       | ``                  |     |                      |
 
 ## crm.lead_sources
 

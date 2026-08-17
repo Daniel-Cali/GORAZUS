@@ -1,11 +1,22 @@
 # Next Steps — GORAZUS ERP
 
-> Actualizado 2026-07-25 tras cerrar Database Finalization (Database
-> Enterprise v1.1.0, migración real 501→503 tablas), versión de app
-> **0.11.1** sin cambios. Complementa a
-> [PROJECT_STATUS.md](./PROJECT_STATUS.md) (estado actual) y
+> Actualizado 2026-07-26, versión de app **0.21.0** — CRM Partes 02-04,
+> Clientes Parte 02.1 (backend + frontend), y Roles Enterprise (4 fases:
+> CRUD completo, scoping, campos nuevos, eventos de dominio). Complementa
+> a [PROJECT_STATUS.md](./PROJECT_STATUS.md) (estado actual) y
 > [ROADMAP.md](./ROADMAP.md) (estado por módulo) — este documento
 > responde específicamente "¿qué sigue, y por qué en ese orden?".
+>
+> **Próximo inmediato**: Roles Enterprise Subfase 4.2 en adelante
+> ("Phase 03 Part 04") — **esperando aprobación explícita del usuario**
+> antes de continuar (regla del propio pedido). El análisis ya hecho
+> muestra que 4.2 (CRUD)/4.3 (scoping)/buena parte de 4.5 (API REST) ya
+> están satisfechas por trabajo previo — lo genuinamente nuevo si se
+> aprueba continuar es 4.4 (Role Hierarchy, diseño nuevo), 4.6-resto
+> (Policies/rate limiting), 4.7 (90% coverage) y 4.8 (5 documentos
+> formales). Alternativa si cambia la prioridad: Clientes Parte 02.2
+> (Categorías + Clasificaciones) o CRM Parte 05 (Seguimientos) — ver
+> `SESSION_BACKUP.md` para el detalle técnico completo.
 
 ## 1. Lista de prioridad "primero" de FASE 03 — completa
 
@@ -115,6 +126,34 @@ dashboard/tarjetas, indicador visual de campo obligatorio en formularios, audito
 tipo axe-core (bloqueada por el mismo `nx run web:test` roto de abajo), y búsqueda global real en
 `DataTable` (necesita un parámetro de query nuevo en el backend — fuera de alcance de una fase que
 tenía prohibido modificar APIs).
+
+## 6.2 CRM — Parte 01 (Diseño de Arquitectura) — completa, sin código de negocio
+
+Fase transversal de diseño (no de implementación): definió la arquitectura completa de código del
+módulo CRM (entidades, repositorios, servicios, controladores, recursos API, permisos, eventos,
+notificaciones, estrategia de auditoría) reutilizando lo ya construido en `ventas`/`clientes` como
+plantilla, sin escribir ningún archivo `.ts` — ver `docs/reports/crm/CRM_ARCHITECTURE.md`. El
+modelo de datos (17 tablas) y el diseño funcional ya estaban cerrados desde antes
+(`docs/architecture/27-modulo-crm.md`, Prisma ya generado) — esta parte no tocó nada de eso, solo
+agregó la capa de código que faltaba. Plan de implementación de 6 partes restantes en
+`docs/reports/crm/CRM_ROADMAP.md`, empezando por Parte 02 (andamiaje + Leads). Dependencia externa
+real detectada, no bloqueante todavía: `core/notifications` necesita extenderse para destinatarios
+externos (lead/cliente sin cuenta) antes de que la Parte 05 (Seguimientos) pueda enviar WhatsApp
+real, no solo registrar bitácora.
+
+## 6.3 CRM — Parte 02 (Base de Datos) — completa, Database Enterprise v1.2.0
+
+Migración real (`docs/database/sql/36_crm_customer_completion.sql`) tras auditar los 19 requisitos
+pedidos de "base de datos CRM completa" — 16 ya existían (maestro de clientes de 20 tablas, tags y
+documentos genéricos, vendedores en `sales`), no se duplicó nada. 3 gaps reales cerrados:
+`customers.customer_notes`, `customers.customer_ratings`, `crm.follow_up_activities.customer_id` +
+vista `customers.v_customer_timeline`. Ver `docs/reports/crm/CRM_DATABASE_COMPLETION_REPORT.md`
+(los 19 requisitos uno por uno) y `CRM_DATABASE_ER_DIAGRAM.md`. Bug sistémico de permisos
+encontrado y corregido en el camino (`GRANT` faltante en tablas nuevas, sin `ALTER DEFAULT
+PRIVILEGES` en el proyecto) — afectaba también a 2 tablas preexistentes de la fase anterior
+(`suppliers.supplier_contracts`, `products.product_physical_attributes`), corregidas en la misma
+migración. Ver `TECHNICAL_DEBT.md §0.5`. Con esto, el schema ya no bloquea nada de la Parte 02 en adelante del
+roadmap de código de CRM (`CRM_ROADMAP.md`).
 
 ## 7. No bloqueante, pero recomendado antes de seguir sumando módulos
 

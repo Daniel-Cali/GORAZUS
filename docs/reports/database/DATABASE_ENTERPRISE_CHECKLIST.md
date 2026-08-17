@@ -13,7 +13,7 @@
 - [x] Todas las tablas tienen `created_at`/`updated_at`/`deleted_at` (soft delete real) — 503/503
 - [x] Todas las tablas tienen `created_by`/`updated_by`/`deleted_by` — 503/503
 - [x] Todas las tablas nuevas de esta fase tienen comentario (`COMMENT ON TABLE`/`COMMENT ON
-    COLUMN`) explicando su propósito — 2/2 tablas, 13/13 columnas nuevas documentadas
+COLUMN`) explicando su propósito — 2/2 tablas, 13/13 columnas nuevas documentadas
 
 ## Integridad referencial
 
